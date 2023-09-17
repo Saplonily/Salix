@@ -1,0 +1,9 @@
+**/.vs/**
+**/.vscode/**
+**/.VSCodeCounter/**
+**/Debug/**
+**/x64/**
+**/bin/**
+**/obj/**
+**/*.pubxml
+**/*.pubxml.user
