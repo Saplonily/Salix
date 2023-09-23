@@ -9,7 +9,7 @@
 
 extern const wchar_t* Monosand;
 
-// alloc a small block of memory
+// alloc a small block of memory (will NOT be zeroed)
 template<class T>
 inline T* small_alloc()
 {

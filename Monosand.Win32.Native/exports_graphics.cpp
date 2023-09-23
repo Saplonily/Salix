@@ -37,6 +37,7 @@ extern "C"
         vertex_type_handle* h = small_alloc<vertex_type_handle>();
         h->type_ptr = type;
         h->length = len;
+        h->default_vao_id = 0;
         GL_CHECK_ERROR
         return h;
     }
@@ -50,7 +51,7 @@ extern "C"
         if (vertex_type->default_vao_id == 0)
             vertex_type->default_vao_id = make_vao(vertex_type->type_ptr, vertex_type->length);
         ensure_vao(vertex_type->default_vao_id);
-
+            
         glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_DYNAMIC_DRAW);
         glDrawArrays(PrimitiveType_get_glinfo(pt), 0, vertices_to_draw);
     }
@@ -172,6 +173,7 @@ static void ensure_vbo(GLuint vbo)
 
 static GLuint make_vao(VertexElementType* type, int len)
 {
+    GL_CHECK_ERROR
     assert(type != nullptr && len >= 1);
     assert(cur_vbo != 0);
     GLuint vao;

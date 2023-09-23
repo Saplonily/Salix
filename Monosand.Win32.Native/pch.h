@@ -11,7 +11,7 @@ using byte = unsigned char;
 #define GL_CHECK_ERROR {\
 GLenum err = glGetError();\
 if (err != 0)\
-printf("ERROR(line%d): %d\n", __LINE__, err);\
+printf("ERROR %d (%s, line%d)\n", err, __FUNCDNAME__, __LINE__);\
 }\
 
 #endif
