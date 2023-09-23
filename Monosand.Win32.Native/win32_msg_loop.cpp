@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "exports.h"
 
 constexpr int cb_Close = 0;
 constexpr int cb_Resize = 1;

@@ -23,6 +23,14 @@ enum class PrimitiveType
     PointList
 };
 
+// ../Monosand/Graphics/VertexBufferDataUsage.cs
+enum class VertexBufferDataUsage
+{
+    StaticDraw,
+    DynamicDraw,
+    StreamDraw
+};
+
 struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };
 
 inline vertex_element_glinfo VertexElementType_get_glinfo(VertexElementType type)
@@ -41,6 +49,8 @@ inline vertex_element_glinfo VertexElementType_get_glinfo(VertexElementType type
         return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
     }
     assert(false);
+    return vertex_element_glinfo{ -1 , NULL, -1 };
+    // TODO: error handling
 }
 
 inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
@@ -59,6 +69,24 @@ inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
         return GL_POINTS;
     }
     assert(false);
+    return NULL;
+    // TODO: error handling
+}
+
+inline GLenum VertexBufferDataUsage_get_glinfo(VertexBufferDataUsage type)
+{
+    switch (type)
+    {
+    case VertexBufferDataUsage::StaticDraw:
+        return GL_STATIC_DRAW;
+    case VertexBufferDataUsage::DynamicDraw:
+        return GL_DYNAMIC_DRAW;
+    case VertexBufferDataUsage::StreamDraw:
+        return GL_STREAM_DRAW;
+    }
+    assert(false);
+    return NULL;
+    // TODO: error handling
 }
 
 #endif

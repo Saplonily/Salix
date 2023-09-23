@@ -1,12 +1,8 @@
-﻿using System.Drawing;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-namespace Monosand.Win32;
+﻿namespace Monosand.Win32;
 
 public unsafe partial class Win32Platform : Platform
 {
-    public static bool inited = false;
+    private static bool inited = false;
     public Win32Platform() { }
 
     internal override void Init()
@@ -24,4 +20,7 @@ public unsafe partial class Win32Platform : Platform
 
     internal override WinImpl CreateWindowImpl(int width, int height, string title, Window window)
         => new Win32WinImpl(width, height, title, window);
+
+    internal override VertexBufferImpl CreateVertexBufferImpl(WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
+        => new Win32VertexBufferImpl(winImpl, vertexDeclaration, dataUsage);
 }

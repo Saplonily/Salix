@@ -36,10 +36,13 @@ internal unsafe abstract class WinImpl
     /// <summary>Set the viewport of this window.</summary>
     internal abstract void SetViewport(int x, int y, int width, int height);
 
+    /// <summary>Clear the window in a color.</summary>
     internal abstract void Clear(Color color);
 
-    internal abstract void DrawPrimitives<T>(
+    internal unsafe abstract void DrawPrimitives<T>(
         VertexDeclaration vertexDeclaration, PrimitiveType primitiveType,
-        T[] vertices
+        T* vptr, int length
         ) where T : unmanaged;
+
+    internal abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 }

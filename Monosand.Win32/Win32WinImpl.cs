@@ -8,9 +8,9 @@ namespace Monosand.Win32;
 
 internal sealed unsafe class Win32WinImpl : WinImpl
 {
-    private readonly Dictionary<VertexDeclaration, uint> vertexDeclarations;
+    private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private IntPtr handle;
-    private IntPtr Handle => handle == IntPtr.Zero ? throw new ObjectDisposedException(nameof(Win32WinImpl)) : handle;
+    internal IntPtr Handle => handle == IntPtr.Zero ? throw new ObjectDisposedException(nameof(Win32WinImpl)) : handle;
 
     public Win32WinImpl(int width, int height, string title, Window window)
     {
@@ -105,14 +105,9 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     internal override void Clear(Color color)
         => Interop.MsdgClear(Handle, color);
 
-    internal override unsafe void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration,
-        PrimitiveType primitiveType,
-        T[] vertices
-        ) // note that where T : unmanged
+    internal IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
     {
-        uint vertexType;
-        if (!vertexDeclarations.TryGetValue(vertexDeclaration, out vertexType))
+        if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
         {
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
             {
@@ -120,9 +115,22 @@ internal sealed unsafe class Win32WinImpl : WinImpl
                 vertexDeclarations.Add(vertexDeclaration, vertexType);
             }
         }
-        fixed (T* tptr = vertices)
-        {
-            Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, tptr, vertices.Length * sizeof(T), vertices.Length);
-        }
+        return vertexType;
+    }
+
+    internal override unsafe void DrawPrimitives<T>(
+        VertexDeclaration vertexDeclaration,
+        PrimitiveType primitiveType,
+        T* vptr, int length
+        )
+    {
+        IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
+        Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
+    }
+
+    internal override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
+    {
+        Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl;
+        Interop.MsdgDrawBufferPrimitives(handle, impl.bufferHandle, primitiveType, impl.verticesCount);
     }
 }

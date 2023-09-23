@@ -6,7 +6,7 @@ namespace Monosand;
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct VertexPositionColorTexture
 {
-    public static readonly VertexDeclaration VertexDeclatation;
+    public static readonly VertexDeclaration VertexDeclaration;
 
     public Vector3 Position;
     public Vector4 Color;
@@ -14,7 +14,7 @@ public struct VertexPositionColorTexture
 
     static VertexPositionColorTexture()
     {
-        VertexDeclatation = new(VertexElementType.Vector3, VertexElementType.Color, VertexElementType.Vector2);
+        VertexDeclaration = new(VertexElementType.Vector3, VertexElementType.Color, VertexElementType.Vector2);
     }
 
     public VertexPositionColorTexture(Vector3 position, Vector4 color, Vector2 textureCoord)

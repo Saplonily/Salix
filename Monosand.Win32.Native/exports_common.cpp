@@ -118,13 +118,3 @@ extern "C"
         SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
     }
 }
-
-void ensure_context(whandle* handle)
-{
-    static whandle last;
-    if (handle->hglrc != last.hglrc)
-    {
-        last = *handle;
-        wglMakeCurrent(last.hdc, last.hglrc);
-    }
-}

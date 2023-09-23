@@ -2,3 +2,5 @@
 
 # IDE0290: 使用主构造函数
 dotnet_diagnostic.IDE0290.severity = silent
+# IDE0018: 可以内联变量声明
+dotnet_diagnostic.IDE0018.severity = silent

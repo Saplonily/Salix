@@ -1,8 +1,18 @@
 #include "pch.h"
 #include <vector>
+#include "exports_graphics.h"
 #include "whandle.h"
 #include "exports.h"
 #include "enums.h"
+
+static GLuint cur_vao = 0;
+static GLuint default_vbo = 0;
+static GLuint cur_vbo = 0;
+static void ensure_vao(GLuint vao);
+static void ensure_vbo(GLuint vbo);
+
+// make a vao
+static GLuint make_vao(VertexElementType* type, int len);
 
 extern "C"
 {
@@ -13,84 +23,67 @@ extern "C"
 
     EXPORT void CALLCONV MsdgViewport(whandle* handle, int x, int y, int width, int height)
     {
-        ensure_context(handle);
         glViewport(x, y, width, height);
     }
 
-    struct Color { BYTE r, g, b, a; };
     EXPORT void CALLCONV MsdgClear(whandle* handle, Color c)
     {
-        ensure_context(handle);
         glClearColor(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    static GLuint cur_vao = 0;
-    void ensure_vao(GLuint vao)
+    EXPORT void* CALLCONV MsdgRegisterVertexType(whandle*, VertexElementType* type, int len)
     {
-        if (cur_vao != vao)
-        {
-            glBindVertexArray(vao);
-            cur_vao = vao;
-        }
-    }
-
-    static GLuint default_vbo = 0;
-    static GLuint cur_vbo = 0;
-    void ensure_vbo(GLuint vbo)
-    {
-        if (cur_vbo != default_vbo)
-        {
-            assert(default_vbo != 0);
-
-            glBindBuffer(GL_ARRAY_BUFFER, default_vbo);
-            cur_vbo = default_vbo;
-        }
-    }
-
-#pragma warning (disable:4312) // 'int' converted to 'void*'
-    EXPORT uint32_t CALLCONV MsdgRegisterVertexType(whandle* handle, VertexElementType* type, int len)
-    {
-        ensure_context(handle);
-        ensure_vbo(default_vbo);
-        assert(type != nullptr && len >= 1);
-        GLuint vao;
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-        cur_vao = vao;
-        int singleVertexSize = 0;
-        for (int i = 0; i < len; i++)
-        {
-            vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
-            singleVertexSize += t.componentSize * t.count;
-        }
-        int currentOffset = 0;
-
-        for (int i = 0; i < len; i++)
-        {
-            vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
-            glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset);
-            GL_CHECK_ERROR
-            glEnableVertexAttribArray(i);
-            
-            currentOffset += t.componentSize * t.count;
-        }
+        vertex_type_handle* h = small_alloc<vertex_type_handle>();
+        h->type_ptr = type;
+        h->length = len;
         GL_CHECK_ERROR
-        return vao;
+        return h;
     }
 
-    EXPORT void CALLCONV MsdgDrawPrimitives(whandle* handle, uint32_t vertexType, PrimitiveType pt, void* data, int dataSize, int verticesToDraw)
+    EXPORT void CALLCONV MsdgDrawPrimitives(whandle*,
+        vertex_type_handle* vertex_type, PrimitiveType pt,
+        void* data, int data_size, int vertices_to_draw
+    )
     {
-        ensure_context(handle);
-        ensure_vao(vertexType);
         ensure_vbo(default_vbo);
+        if (vertex_type->default_vao_id == 0)
+            vertex_type->default_vao_id = make_vao(vertex_type->type_ptr, vertex_type->length);
+        ensure_vao(vertex_type->default_vao_id);
 
-        glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
-        glDrawArrays(PrimitiveType_get_glinfo(pt), 0, verticesToDraw);
-        cur_vao = 0;
-        cur_vbo = 0;
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_DYNAMIC_DRAW);
+        glDrawArrays(PrimitiveType_get_glinfo(pt), 0, vertices_to_draw);
+    }
+
+    EXPORT void* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type)
+    {
+        GLuint id;
+        glGenBuffers(1, &id);
+        ensure_vbo(id);
+        buffer_handle* h = new buffer_handle;
+        h->vbo_id = id;
+        h->vao_id = make_vao(vertex_type->type_ptr, vertex_type->length); 
+        return h;
+    }
+
+    EXPORT void CALLCONV MsdgSetVertexBufferData(whandle*, buffer_handle* buffer_handle,
+        void* data, int dataSize,
+        VertexBufferDataUsage data_usage)
+    {
+        ensure_vbo(buffer_handle->vbo_id);
+        ensure_vao(buffer_handle->vao_id);
+        glBufferData(GL_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_get_glinfo(data_usage));
+        GL_CHECK_ERROR
+    }
+
+    EXPORT void CALLCONV MsdgDrawBufferPrimitives(whandle* whandle,
+        buffer_handle* buffer_handle, PrimitiveType primitiveType,
+        int verticesCount)
+    {
+        ensure_vbo(buffer_handle->vbo_id);
+        ensure_vao(buffer_handle->vao_id);
+        glDrawArrays(PrimitiveType_get_glinfo(primitiveType), 0, verticesCount);
+        GL_CHECK_ERROR
     }
 }
 
@@ -98,7 +91,7 @@ void window_gl_init()
 {
     glGenBuffers(1, &default_vbo);
 
-    // create our dummy shader
+    // create our default pos-color-tex shader
     const char* vshSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -120,8 +113,11 @@ out vec4 FragColor;
 void main()
 {
     FragColor = vColor;
+    //FragColor = vec4(1.0,1.0,1.0,1.0);
 } 
 )";
+
+    // TODO 'Shader' class
 
     GLuint vsh = glCreateShader(GL_VERTEX_SHADER);
     GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER);
@@ -153,4 +149,51 @@ void main()
     }
 
     GL_CHECK_ERROR
+}
+
+static void ensure_vao(GLuint vao)
+{
+    if (cur_vao != vao)
+    {
+        glBindVertexArray(vao);
+        cur_vao = vao;
+    }
+}
+
+static void ensure_vbo(GLuint vbo)
+{
+    if (cur_vbo != vbo)
+    {
+        assert(vbo != 0);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        cur_vbo = vbo;
+    }
+}
+
+static GLuint make_vao(VertexElementType* type, int len)
+{
+    assert(type != nullptr && len >= 1);
+    assert(cur_vbo != 0);
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    cur_vao = vao;
+    int singleVertexSize = 0;
+    for (int i = 0; i < len; i++)
+    {
+        vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
+        singleVertexSize += t.componentSize * t.count;
+    }
+    byte* currentOffset = 0;
+
+    for (int i = 0; i < len; i++)
+    {
+        vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
+        glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset);
+        glEnableVertexAttribArray(i);
+        GL_CHECK_ERROR
+
+        currentOffset += t.componentSize * t.count;
+    }
+    return vao;
 }

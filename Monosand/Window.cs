@@ -68,7 +68,8 @@ public class Window : IDisposable
     private void InitCreateWindow()
     {
         impl = Game.platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
-        // do not do this at this time
+        OnCreated();
+        // don't do this at this time
         // we can just do this in OnResize()
         // as the Show() will actually call the OnResize()
         //WinImpl.SetViewport(0, 0, Game.DefaultWindowWidth, Game.DefaultWindowHeight);
@@ -92,6 +93,7 @@ public class Window : IDisposable
     public virtual bool OnClosing() => true;
     public virtual void OnMoved(int x, int y) => Moved?.Invoke(this, x, y);
     public virtual void OnResize(int width, int height) => WinImpl.SetViewport(0, 0, width, height);
+    public virtual void OnCreated() { }
 
     internal void RenderInternal()
     {
@@ -102,22 +104,41 @@ public class Window : IDisposable
 
     public virtual void Update()
     {
-
     }
 
-    float a = 0.0f;
     public virtual void Render()
     {
-        a += 0.01f;
-        if (a >= MathF.PI) a = -MathF.PI;
-        var vertices = new VertexPositionColorTexture[]
-        {
-            new(new(0.0f, 0.0f, 0.0f), new(Math.Abs(a), 0.0f, 0.0f, 1.0f), Vector2.Zero),
-            new(new(MathF.Sin(a), 1.0f, 0.0f), new(0.0f, 1.0f, 0.0f, 1.0f), Vector2.Zero),
-            new(new(1.0f, 0.0f, 0.0f), new(0.0f, 0.0f, 1.0f, 1.0f), Vector2.Zero),
-        };
-        WinImpl.DrawPrimitives(VertexPositionColorTexture.VertexDeclatation, PrimitiveType.TriangleList, vertices);
     }
+
+    #region Rendering
+
+    public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, T[] vertices) where T : unmanaged
+    {
+        unsafe
+        {
+            fixed (T* vptr = vertices)
+            {
+                WinImpl.DrawPrimitives(vertexDeclaration, primitiveType, vptr, vertices.Length);
+            }
+        }
+    }
+
+    public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
+    {
+        unsafe
+        {
+            fixed (T* vptr = vertices)
+            {
+                WinImpl.DrawPrimitives(vertexDeclaration, primitiveType, vptr, vertices.Length);
+            }
+        }
+    }
+
+    public void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged
+        => WinImpl.DrawPrimitives(buffer, primitiveType);
+
+
+    #endregion
 
     protected virtual void Dispose(bool disposing)
     {

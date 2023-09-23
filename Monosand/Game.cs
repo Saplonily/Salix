@@ -12,11 +12,12 @@ public class Game
         set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
     }
     internal static Platform Platform => Instance.platform;
+    internal static WinImpl WinImpl => Instance.MainWindow.WinImpl;
 
-    private Window? mainWindow;
+    private Window mainWindow;
     internal Platform platform;
 
-    public Window? MainWindow
+    public Window MainWindow
     {
         get => mainWindow;
         set
@@ -33,12 +34,12 @@ public class Game
         Instance = this;
         this.platform = platform;
         platform.Init();
-        MainWindow = mainWindow;
+        this.mainWindow = null!;
+        MainWindow = mainWindow ?? new Window(this);
     }
 
     public void Run()
     {
-        MainWindow ??= new Window(this);
         MainWindow.Show();
         while (true)
         {

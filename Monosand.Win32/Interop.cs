@@ -6,33 +6,50 @@ namespace Monosand.Win32;
 
 internal unsafe class Interop
 {
-    private const string Dll = "Monosand.Win32.Native";
+    private const string DllPath = "Monosand.Win32.Native.dll";
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct RECT { public int left, top, right, bottom; }
 
-    [DllImport(Dll)] public static extern IntPtr MsdCreateWindow(int width, int height, char* title, IntPtr gcHandle);
-    [DllImport(Dll)] public static extern int MsdInit();
-    [DllImport(Dll)] public static extern void MsdSetMsgCallback(int index, void* func);
-    [DllImport(Dll)] public static extern void MsdPollEvents(IntPtr handle);
-    [DllImport(Dll)] public static extern void MsdShowWindow(IntPtr handle);
-    [DllImport(Dll)] public static extern void MsdHideWindow(IntPtr handle);
-    [DllImport(Dll)] public static extern void MsdDestroyWindow(IntPtr handle);
-    [DllImport(Dll)] public static extern RECT MsdGetWindowRect(IntPtr handle);
-    [DllImport(Dll)] public static extern void MsdSetWindowSize(IntPtr handle, int width, int height);
-    [DllImport(Dll)] public static extern void MsdSetWindowPos(IntPtr handle, int x, int y);
+    [DllImport(DllPath)] public static extern IntPtr MsdCreateWindow(int width, int height, char* title, IntPtr gcHandle);
+    [DllImport(DllPath)] public static extern int MsdInit();
+
+    // TODO, for some tfms(.net5-) don't support UnmanagedCallbackOnlyAttribute, use a sdl2-like event polling
+    [DllImport(DllPath)] public static extern void MsdSetMsgCallback(int index, void* func);
+    [DllImport(DllPath)] public static extern void MsdPollEvents(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdShowWindow(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdHideWindow(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdDestroyWindow(IntPtr handle);
+    [DllImport(DllPath)] public static extern RECT MsdGetWindowRect(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdSetWindowSize(IntPtr handle, int width, int height);
+    [DllImport(DllPath)] public static extern void MsdSetWindowPos(IntPtr handle, int x, int y);
 
 
-    [DllImport(Dll)] public static extern void MsdgSwapBuffers(IntPtr handle);
-    [DllImport(Dll)] public static extern void MsdgViewport(IntPtr handle, int x, int y, int width, int height);
-    [DllImport(Dll)] public static extern void MsdgClear(IntPtr handle, Color color);
+    [DllImport(DllPath)] public static extern void MsdgSwapBuffers(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdgViewport(IntPtr handle, int x, int y, int width, int height);
+    [DllImport(DllPath)] public static extern void MsdgClear(IntPtr handle, Color color);
 
-    [DllImport(Dll)] public static extern uint MsdgRegisterVertexType(IntPtr handle, VertexElementType* vdecl, int len);
-    [DllImport(Dll)]
+    [DllImport(DllPath)] public static extern IntPtr MsdgRegisterVertexType(IntPtr handle, VertexElementType* vdecl, int len);
+
+    [DllImport(DllPath)]
     public static extern void MsdgDrawPrimitives(
         IntPtr handle,
-        uint vertexType,
+        IntPtr vertexType,
         PrimitiveType ptype,
-        void* data, int dataSize, int verticesToDraw
+        void* data, int dataSize, int verticesCount
+        );
+
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateVertexBuffer(IntPtr handle, IntPtr vertexType);
+
+    [DllImport(DllPath)]
+    public static extern void MsdgSetVertexBufferData(
+        IntPtr handle, IntPtr vertexBuffer,
+        void* data, int dataSize, VertexBufferDataUsage dataUsage
+        );
+
+    [DllImport(DllPath)]
+    public static extern void MsdgDrawBufferPrimitives(
+        IntPtr handle, IntPtr bufferHandle, PrimitiveType primitiveType,
+        int verticesCount
         );
 }

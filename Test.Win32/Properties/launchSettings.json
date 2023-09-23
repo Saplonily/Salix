@@ -2,6 +2,9 @@
   "profiles": {
     "Test.Win32": {
       "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_JitDisasmSummary": "0"
+      },
       "nativeDebugging": true
     }
   }

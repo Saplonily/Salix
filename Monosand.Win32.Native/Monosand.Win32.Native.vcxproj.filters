@@ -1,29 +1,52 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="exports_common.cpp" />
     <ClCompile Include="win32_msg_loop.cpp" />
-    <ClCompile Include="exports_graphics.cpp" />
     <ClCompile Include="glad\glad.c">
       <Filter>glad</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="exports_common.cpp">
+      <Filter>exports</Filter>
+    </ClCompile>
+    <ClCompile Include="exports_graphics.cpp">
+      <Filter>exports</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="whandle.h" />
-    <ClInclude Include="exports.h" />
     <ClInclude Include="glad\glad.h">
       <Filter>glad</Filter>
     </ClInclude>
     <ClInclude Include="glad\khrplatform.h">
       <Filter>glad</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="enums.h" />
+    <ClInclude Include="exports.h">
+      <Filter>exports</Filter>
+    </ClInclude>
+    <ClInclude Include="enums.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="whandle.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="exports_graphics.h">
+      <Filter>exports</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="glad">
       <UniqueIdentifier>{561bf0b0-9f1d-41d2-9a95-9aa2c95d339c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="exports">
+      <UniqueIdentifier>{d00f9a0e-dda9-47f4-8668-3d036ce42790}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{9d56a1fc-417a-40ee-ac5a-0b82576dee15}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
