@@ -3,17 +3,17 @@
 namespace Monosand;
 
 /// <summary>Represents a RGBA (Red, Green, Blue, Alpha) color. 4bytes per component.</summary>
-[StructLayout(LayoutKind.Explicit)]
+[StructLayout(LayoutKind.Sequential)]
 public partial struct Color
 {
     /// <summary>Red component</summary>
-    [FieldOffset(0)] public byte R;
+    public byte R;
     /// <summary>Green component</summary>
-    [FieldOffset(1)] public byte G;
+    public byte G;
     /// <summary>Blue component</summary>
-    [FieldOffset(2)] public byte B;
+    public byte B;
     /// <summary>Alpha component</summary>
-    [FieldOffset(3)] public byte A;
+    public byte A;
 
     /// <summary>
     /// Construct a color with RGBA with bytes.
@@ -22,7 +22,7 @@ public partial struct Color
     /// <param name="g">Green</param>
     /// <param name="b">Blue</param>
     /// <param name="a">Alpha</param>
-    public Color(byte r, byte g, byte b, byte a = 255)
+    public Color(byte r, byte g, byte b, byte a = byte.MaxValue)
         => (R, G, B, A) = (r, g, b, a);
 
     /// <summary>
