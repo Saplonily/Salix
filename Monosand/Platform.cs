@@ -18,8 +18,10 @@ public abstract class Platform
     internal abstract WinImpl CreateWindowImpl(int width, int height, string title, Window window);
 
     internal abstract VertexBufferImpl CreateVertexBufferImpl(
-        WinImpl winImpl, 
-        VertexDeclaration vertexDeclaration, 
+        WinImpl winImpl,
+        VertexDeclaration vertexDeclaration,
         VertexBufferDataUsage dataUsage
         );
+
+    internal abstract Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height);
 }

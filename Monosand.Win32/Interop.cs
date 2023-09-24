@@ -40,6 +40,7 @@ internal unsafe class Interop
         );
 
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateVertexBuffer(IntPtr handle, IntPtr vertexType);
+    [DllImport(DllPath)] public static extern void MsdgDeleteVertexBuffer(IntPtr handle, IntPtr bufferHandle);
 
     [DllImport(DllPath)]
     public static extern void MsdgSetVertexBufferData(
@@ -52,4 +53,11 @@ internal unsafe class Interop
         IntPtr handle, IntPtr bufferHandle, PrimitiveType primitiveType,
         int verticesCount
         );
+
+    [DllImport(DllPath, CharSet = CharSet.Ansi)]
+    public static extern void* MsdLoadTextureFromFileRGBA(string fileName, out int width, out int height);
+    [DllImport(DllPath)] public static extern void MsdFreeTexture(void* texData);
+    [DllImport(DllPath)] public static extern void MsdgSetTextureData(IntPtr handle, IntPtr texHandle, int width, int height, void* data);
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateTexture(IntPtr handle, int width, int height);
+
 }

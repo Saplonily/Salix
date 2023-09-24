@@ -6,13 +6,19 @@ namespace Monosand;
 /// A type of Buffer used to store vertices data
 /// </summary>
 /// <typeparam name="T">Vertex type, must be unmanged</typeparam>
-public sealed class VertexBuffer<T> where T : unmanaged
+public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
 {
-    internal readonly VertexBufferImpl impl;
-    internal readonly VertexDeclaration vertexDeclaration;
+    internal VertexBufferImpl? impl;
+    internal VertexDeclaration? vertexDeclaration;
+
+    public bool Disposed => impl is null;
+    public VertexDeclaration VertexDeclaration => vertexDeclaration ?? throw new ObjectDisposedException(nameof(VertexBuffer<T>));
 
     public VertexBuffer(VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage = VertexBufferDataUsage.StaticDraw)
     {
+        if (vertexDeclaration is null)
+            throw new ArgumentNullException(nameof(vertexDeclaration));
+
         impl = Game.Platform.CreateVertexBufferImpl(Game.WinImpl, vertexDeclaration, dataUsage);
         this.vertexDeclaration = vertexDeclaration;
     }
@@ -24,7 +30,7 @@ public sealed class VertexBuffer<T> where T : unmanaged
         {
             fixed (T* ptr = array)
             {
-                impl.SetData(ptr, array.Length);
+                impl!.SetData(ptr, array.Length);
             }
         }
     }
@@ -36,7 +42,7 @@ public sealed class VertexBuffer<T> where T : unmanaged
         {
             fixed (T* ptr = span)
             {
-                impl.SetData(ptr, span.Length);
+                impl!.SetData(ptr, span.Length);
             }
         }
     }
@@ -45,8 +51,18 @@ public sealed class VertexBuffer<T> where T : unmanaged
     [CLSCompliant(false)]
     public unsafe void SetData(T* ptr, int length)
     {
-        impl.SetData(ptr, length);
+        impl!.SetData(ptr, length);
     }
 
-    // TODO dispose impl
+    ~VertexBuffer() => Dispose();
+
+    public void Dispose()
+    {
+        if (impl is not null)
+        {
+            impl.Dispose();
+            impl = null;
+            GC.SuppressFinalize(this);
+        }
+    }
 }

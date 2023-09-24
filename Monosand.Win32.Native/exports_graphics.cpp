@@ -13,6 +13,8 @@ static void ensure_vbo(GLuint vbo);
 
 // make a vao
 static GLuint make_vao(VertexElementType* type, int len);
+static void* load_texture(const char* fileName, int* x, int* y, int* channels, int desiredChannels);
+static void free_texture(void* data);
 
 extern "C"
 {
@@ -38,7 +40,7 @@ extern "C"
         h->type_ptr = type;
         h->length = len;
         h->default_vao_id = 0;
-        GL_CHECK_ERROR
+        GL_CHECK_ERROR;
         return h;
     }
 
@@ -51,30 +53,38 @@ extern "C"
         if (vertex_type->default_vao_id == 0)
             vertex_type->default_vao_id = make_vao(vertex_type->type_ptr, vertex_type->length);
         ensure_vao(vertex_type->default_vao_id);
-            
+
         glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_DYNAMIC_DRAW);
         glDrawArrays(PrimitiveType_get_glinfo(pt), 0, vertices_to_draw);
     }
 
-    EXPORT void* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type)
+    EXPORT buffer_handle* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type)
     {
         GLuint id;
         glGenBuffers(1, &id);
         ensure_vbo(id);
         buffer_handle* h = new buffer_handle;
         h->vbo_id = id;
-        h->vao_id = make_vao(vertex_type->type_ptr, vertex_type->length); 
+        h->vao_id = make_vao(vertex_type->type_ptr, vertex_type->length);
         return h;
     }
 
-    EXPORT void CALLCONV MsdgSetVertexBufferData(whandle*, buffer_handle* buffer_handle,
+    EXPORT void CALLCONV MsdgDeleteVertexBuffer(whandle*, buffer_handle* buffer)
+    {
+        glDeleteVertexArrays(1, &buffer->vao_id);
+        glDeleteBuffers(1, &buffer->vbo_id);
+        GL_CHECK_ERROR;
+    }
+
+    EXPORT void CALLCONV MsdgSetVertexBufferData(whandle*,
+        buffer_handle* buffer_handle,
         void* data, int dataSize,
         VertexBufferDataUsage data_usage)
     {
         ensure_vbo(buffer_handle->vbo_id);
         ensure_vao(buffer_handle->vao_id);
         glBufferData(GL_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_get_glinfo(data_usage));
-        GL_CHECK_ERROR
+        GL_CHECK_ERROR;
     }
 
     EXPORT void CALLCONV MsdgDrawBufferPrimitives(whandle* whandle,
@@ -84,8 +94,65 @@ extern "C"
         ensure_vbo(buffer_handle->vbo_id);
         ensure_vao(buffer_handle->vao_id);
         glDrawArrays(PrimitiveType_get_glinfo(primitiveType), 0, verticesCount);
-        GL_CHECK_ERROR
+        GL_CHECK_ERROR;
     }
+
+    EXPORT void* CALLCONV MsdgCreateTexture(whandle* whandle, int width, int height)
+    {
+        GLuint tex;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        const float borderColor[] = { 0.0f };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        return (void*)tex;
+    }
+
+    // TODO support not only RGBA but also other formats
+    EXPORT void CALLCONV MsdgSetTextureData(whandle* whandle, void* texHandle, int width, int height, void* data)
+    {
+        GLuint tex = (GLuint)texHandle;
+        glBindTexture(GL_TEXTURE_2D, tex);
+        int align = (width % 2 == 0) ? 8 : 4;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, align);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        // test
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        GLint l = glGetUniformLocation(3, "tex");
+        glUniform1i(l, 0);
+        GL_CHECK_ERROR;
+    }
+
+    EXPORT void* CALLCONV MsdLoadTextureFromFileRGBA(const char* fileName, int* x, int* y)
+    {
+        int channels;
+        void* data = load_texture(fileName, x, y, &channels, 4);
+        assert(channels == 4);
+        return data;
+    }
+
+    EXPORT void CALLCONV MsdFreeTexture(void* texData)
+    {
+        free_texture(texData);
+    }
+}
+
+// hm, just temporarily use stb_image cuz it's head-only
+// you can always switch to other libraries you like easily here
+static void* load_texture(const char* fileName, int* x, int* y, int* channels, int desiredChannels)
+{
+    return stbi_load(fileName, x, y, channels, desiredChannels);
+}
+
+static void free_texture(void* data)
+{
+    stbi_image_free(data);
 }
 
 void window_gl_init()
@@ -99,22 +166,26 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTex;
 out vec4 vColor;
+out vec2 vTex;
 
 void main()
 {
     vColor = aColor;
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    vTex = aTex;
+    gl_Position = vec4(aPos, 1.0);
 }
 )";
     const char* fshSource = R"(
 #version 330 core
-in vec4 vColor;
 out vec4 FragColor;
+in vec4 vColor;
+in vec2 vTex;
+
+uniform sampler2D tex;
 
 void main()
 {
-    FragColor = vColor;
-    //FragColor = vec4(1.0,1.0,1.0,1.0);
+    FragColor = texture(tex, vTex) * vColor;
 } 
 )";
 
@@ -134,22 +205,7 @@ void main()
     glDeleteShader(fsh);
     glUseProgram(prog);
 
-    int  success;
-    char infoLog[512];
-    glGetShaderiv(vsh, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vsh, 512, NULL, infoLog);
-        printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-    glGetShaderiv(fsh, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fsh, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-
-    GL_CHECK_ERROR
+    GL_CHECK_ERROR;
 }
 
 static void ensure_vao(GLuint vao)
@@ -173,7 +229,7 @@ static void ensure_vbo(GLuint vbo)
 
 static GLuint make_vao(VertexElementType* type, int len)
 {
-    GL_CHECK_ERROR
+    GL_CHECK_ERROR;
     assert(type != nullptr && len >= 1);
     assert(cur_vbo != 0);
     GLuint vao;
@@ -193,7 +249,7 @@ static GLuint make_vao(VertexElementType* type, int len)
         vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
         glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset);
         glEnableVertexAttribArray(i);
-        GL_CHECK_ERROR
+        GL_CHECK_ERROR;
 
         currentOffset += t.componentSize * t.count;
     }

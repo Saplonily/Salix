@@ -2,8 +2,8 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="win32_msg_loop.cpp" />
-    <ClCompile Include="glad\glad.c">
-      <Filter>glad</Filter>
+    <ClCompile Include="thirdparty\glad\glad.c">
+      <Filter>thirdparty\glad</Filter>
     </ClCompile>
     <ClCompile Include="exports_common.cpp">
       <Filter>exports</Filter>
@@ -14,13 +14,14 @@
     <ClCompile Include="pch.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="thirdparty\headonly_impl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="glad\glad.h">
-      <Filter>glad</Filter>
+    <ClInclude Include="thirdparty\glad\glad.h">
+      <Filter>thirdparty\glad</Filter>
     </ClInclude>
-    <ClInclude Include="glad\khrplatform.h">
-      <Filter>glad</Filter>
+    <ClInclude Include="thirdparty\glad\khrplatform.h">
+      <Filter>thirdparty\glad</Filter>
     </ClInclude>
     <ClInclude Include="exports.h">
       <Filter>exports</Filter>
@@ -37,16 +38,20 @@
     <ClInclude Include="exports_graphics.h">
       <Filter>exports</Filter>
     </ClInclude>
+    <ClInclude Include="thirdparty\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="glad">
-      <UniqueIdentifier>{561bf0b0-9f1d-41d2-9a95-9aa2c95d339c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="exports">
       <UniqueIdentifier>{d00f9a0e-dda9-47f4-8668-3d036ce42790}</UniqueIdentifier>
     </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{9d56a1fc-417a-40ee-ac5a-0b82576dee15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty">
+      <UniqueIdentifier>{a0f6055f-5ad5-4a8e-9cbf-d43c6556b264}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thirdparty\glad">
+      <UniqueIdentifier>{561bf0b0-9f1d-41d2-9a95-9aa2c95d339c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

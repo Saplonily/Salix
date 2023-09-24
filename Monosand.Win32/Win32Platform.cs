@@ -23,4 +23,7 @@ public unsafe partial class Win32Platform : Platform
 
     internal override VertexBufferImpl CreateVertexBufferImpl(WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
         => new Win32VertexBufferImpl(winImpl, vertexDeclaration, dataUsage);
+
+    internal override Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height)
+        => new Win32Texture2DImpl(winImpl, width, height);
 }

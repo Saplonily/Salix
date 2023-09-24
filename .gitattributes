@@ -1,2 +1,2 @@
 *.h linguist-language=c++
-**/glad/** linguist-vendored
+**/thirdparty/** linguist-vendored

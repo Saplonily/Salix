@@ -2,8 +2,8 @@
 
 internal unsafe class Win32VertexBufferImpl : VertexBufferImpl
 {
-    private readonly IntPtr winHandle;
-    internal readonly IntPtr bufferHandle;
+    private IntPtr winHandle;
+    internal IntPtr bufferHandle;
     private readonly VertexBufferDataUsage dataUsage;
     internal int verticesCount;
 
@@ -18,5 +18,13 @@ internal unsafe class Win32VertexBufferImpl : VertexBufferImpl
     {
         verticesCount = length;
         Interop.MsdgSetVertexBufferData(winHandle, bufferHandle, data, sizeof(T) * length, dataUsage);
+    }
+
+    internal override void Dispose()
+    {
+        Interop.MsdgDeleteVertexBuffer(winHandle, bufferHandle);
+        winHandle = IntPtr.Zero;
+        bufferHandle = IntPtr.Zero;
+        verticesCount = -1;
     }
 }

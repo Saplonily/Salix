@@ -107,6 +107,8 @@ internal sealed unsafe class Win32WinImpl : WinImpl
 
     internal IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
     {
+        if (vertexDeclaration is null)
+            throw new ArgumentNullException(nameof(vertexDeclaration));
         if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
         {
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
@@ -124,13 +126,17 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         T* vptr, int length
         )
     {
+        if (vertexDeclaration is null)
+            throw new ArgumentNullException(nameof(vertexDeclaration));
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
         Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
     }
 
     internal override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
     {
-        Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl;
+        if (buffer.Disposed)
+            throw new ObjectDisposedException(nameof(buffer));
+        Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl!;
         Interop.MsdgDrawBufferPrimitives(handle, impl.bufferHandle, primitiveType, impl.verticesCount);
     }
 }

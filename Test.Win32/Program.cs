@@ -10,22 +10,27 @@ public class MyMainWindow : Window
 {
     VertexBuffer<VertexPositionColorTexture> vertexBuffer = null!;
 
-    public ReadOnlySpan<VertexPositionColorTexture> Vertices => new VertexPositionColorTexture[]
+    public VertexPositionColorTexture[] Vertices = new VertexPositionColorTexture[]
     {
-        new(new(-0.8f, -0.8f, 0.0f), new(Math.Abs(a), 0.0f, 0.0f, 1.0f), new(-1f, -1f)),
-        new(new(0.8f, 0.8f, 0.0f), new(0.0f, 1.0f, 0.0f, 1.0f), Vector2.Zero),
-        new(new(0.8f, -0.8f, 0.0f), new(0.0f, 0.0f, 1.0f, 1.0f), Vector2.Zero),
+        new(new(-0.8f, -0.8f, 0.0f), Vector4.One, new(0f, 0f)),
+        new(new( 0.8f,  0.8f, 0.0f), Vector4.One, new(1f, 1f)),
+        new(new( 0.8f, -0.8f, 0.0f), Vector4.One, new(1f, 0f)),
 
-        new(new(-0.8f, -0.8f, 0.0f), new(1.0f, 0.0f, 0.0f, 1.0f), Vector2.Zero),
-        new(new(-0.8f, 0.8f, 0.0f), new(0.0f, 1.0f, 0.0f, 1.0f), Vector2.Zero),
-        new(new(0.8f, 0.8f, 0.0f), new(0.0f, Math.Abs(a), 1.0f, 1.0f), Vector2.Zero),
+        new(new(-0.8f, -0.8f, 0.0f), Vector4.One, new(0f, 0f)),
+        new(new(-0.8f,  0.8f, 0.0f), Vector4.One, new(0f, 1f)),
+        new(new( 0.8f,  0.8f, 0.0f), Vector4.One, new(1f, 1f)),
     };
 
     float a = 0.0f;
-    public override void OnCreated()
+    public unsafe override void OnCreated()
     {
         vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration);
         vertexBuffer.SetData(Vertices);
+
+        void* data = Interop.MsdLoadTextureFromFileRGBA("665x680.png", out int width, out int height);
+        Texture2D tex = new(width, height, data);
+
+        Interop.MsdFreeTexture(data);
     }
 
     public unsafe override void Render()
@@ -37,7 +42,7 @@ public class MyMainWindow : Window
         DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);
 
         a += 0.5f;
-        DrawPrimitives(VertexPositionColorTexture.VertexDeclaration, PrimitiveType.TriangleList, Vertices);
+        //DrawPrimitives(VertexPositionColorTexture.VertexDeclaration, PrimitiveType.TriangleList, Vertices);
         a -= 0.5f;
     }
 }
@@ -46,14 +51,7 @@ public class Program
 {
     public static void Main()
     {
-        Stopwatch sw = new();
-        sw.Start();
-
-        Window win = new MyMainWindow();
-        Platform pf = new Win32Platform();
-
-
-        Game game = new(pf, win);
+        Game game = new(new Win32Platform(), new MyMainWindow());
         game.Run();
     }
 }

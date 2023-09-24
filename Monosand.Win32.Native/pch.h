@@ -5,7 +5,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <assert.h>
-#include "glad/glad.h"
+#include "thirdparty/glad/glad.h"
+#include "thirdparty/stb_image.h"
 
 using byte = unsigned char;
 #define GL_CHECK_ERROR {\

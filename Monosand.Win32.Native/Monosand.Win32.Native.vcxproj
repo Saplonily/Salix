@@ -13,7 +13,7 @@
   <ItemGroup>
     <ClCompile Include="exports_common.cpp" />
     <ClCompile Include="exports_graphics.cpp" />
-    <ClCompile Include="glad\glad.c">
+    <ClCompile Include="thirdparty\glad\glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -21,15 +21,20 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="thirdparty\headonly_impl.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="win32_msg_loop.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="enums.h" />
     <ClInclude Include="exports.h" />
     <ClInclude Include="exports_graphics.h" />
-    <ClInclude Include="glad\glad.h" />
-    <ClInclude Include="glad\khrplatform.h" />
+    <ClInclude Include="thirdparty\glad\glad.h" />
+    <ClInclude Include="thirdparty\glad\khrplatform.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="thirdparty\stb_image.h" />
     <ClInclude Include="whandle.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
