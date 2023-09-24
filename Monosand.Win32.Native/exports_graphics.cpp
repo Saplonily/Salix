@@ -13,8 +13,8 @@ static void ensure_vbo(GLuint vbo);
 
 // make a vao
 static GLuint make_vao(VertexElementType* type, int len);
-static void* load_texture(const char* fileName, int* x, int* y, int* channels, int desiredChannels);
-static void free_texture(void* data);
+static void* load_image(void* mem, int length, int* x, int* y, int* channels);
+static void free_image(void* data);
 
 extern "C"
 {
@@ -113,7 +113,7 @@ extern "C"
     }
 
     // TODO support not only RGBA but also other formats
-    EXPORT void CALLCONV MsdgSetTextureData(whandle* whandle, void* texHandle, int width, int height, void* data)
+    EXPORT void CALLCONV MsdgSetTextureData(whandle* whandle, void* texHandle, int width, int height, void* data, int channels)
     {
         GLuint tex = (GLuint)texHandle;
         glBindTexture(GL_TEXTURE_2D, tex);
@@ -129,28 +129,25 @@ extern "C"
         GL_CHECK_ERROR;
     }
 
-    EXPORT void* CALLCONV MsdLoadTextureFromFileRGBA(const char* fileName, int* x, int* y)
+    EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)
     {
-        int channels;
-        void* data = load_texture(fileName, x, y, &channels, 4);
-        assert(channels == 4);
-        return data;
+        return load_image(mem, length, x, y, channels);
     }
 
-    EXPORT void CALLCONV MsdFreeTexture(void* texData)
+    EXPORT void CALLCONV MsdFreeImage(void* texData)
     {
-        free_texture(texData);
+        free_image(texData);
     }
 }
 
 // hm, just temporarily use stb_image cuz it's head-only
 // you can always switch to other libraries you like easily here
-static void* load_texture(const char* fileName, int* x, int* y, int* channels, int desiredChannels)
+static void* load_image(void* mem, int length, int* x, int* y, int* channels)
 {
-    return stbi_load(fileName, x, y, channels, desiredChannels);
+    return stbi_load_from_memory((stbi_uc*)mem, length, x, y, channels, 0);
 }
 
-static void free_texture(void* data)
+static void free_image(void* data)
 {
     stbi_image_free(data);
 }

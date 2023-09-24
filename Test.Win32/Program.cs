@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.Versioning;
 
 using Monosand;
 using Monosand.Win32;
+[assembly: SupportedOSPlatform("windows")]
 
 namespace Test.Win32;
 
@@ -27,10 +29,7 @@ public class MyMainWindow : Window
         vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration);
         vertexBuffer.SetData(Vertices);
 
-        void* data = Interop.MsdLoadTextureFromFileRGBA("665x680.png", out int width, out int height);
-        Texture2D tex = new(width, height, data);
-
-        Interop.MsdFreeTexture(data);
+        var tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
     }
 
     public unsafe override void Render()

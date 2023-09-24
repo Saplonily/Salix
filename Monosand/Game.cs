@@ -17,6 +17,8 @@ public class Game
     private Window mainWindow;
     internal Platform platform;
 
+    public ResourceLoader ResourceLoader { get; }
+
     public Window MainWindow
     {
         get => mainWindow;
@@ -31,11 +33,17 @@ public class Game
 
     public Game(Platform platform, Window? mainWindow = null)
     {
+        if (platform is null)
+            throw new ArgumentNullException(nameof(platform));
         Instance = this;
         this.platform = platform;
         platform.Init();
         this.mainWindow = null!;
         MainWindow = mainWindow ?? new Window(this);
+
+        ResourceLoader = new ResourceLoader(this);
+
+        MainWindow.OnCreated();
     }
 
     public void Run()

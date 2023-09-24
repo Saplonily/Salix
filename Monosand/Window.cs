@@ -68,7 +68,6 @@ public class Window : IDisposable
     private void InitCreateWindow()
     {
         impl = Game.platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
-        OnCreated();
         // don't do this at this time
         // we can just do this in OnResize()
         // as the Show() will actually call the OnResize()

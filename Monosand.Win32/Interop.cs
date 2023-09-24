@@ -54,9 +54,9 @@ internal unsafe class Interop
         int verticesCount
         );
 
-    [DllImport(DllPath, CharSet = CharSet.Ansi)]
-    public static extern void* MsdLoadTextureFromFileRGBA(string fileName, out int width, out int height);
-    [DllImport(DllPath)] public static extern void MsdFreeTexture(void* texData);
+    [DllImport(DllPath)]
+    public static extern void* MsdLoadImage(void* memory, int length, out int width, out int height, out int channels);
+    [DllImport(DllPath)] public static extern void MsdFreeImage(void* texData);
     [DllImport(DllPath)] public static extern void MsdgSetTextureData(IntPtr handle, IntPtr texHandle, int width, int height, void* data);
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateTexture(IntPtr handle, int width, int height);
 

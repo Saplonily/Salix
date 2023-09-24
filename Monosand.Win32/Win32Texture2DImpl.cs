@@ -23,5 +23,7 @@ internal sealed class Win32Texture2DImpl : Texture2DImpl
     {
         winHandle = IntPtr.Zero;
         texHandle = IntPtr.Zero;
+        // TODO delete texture in opengl side
+        throw new NotImplementedException();
     }
 }
