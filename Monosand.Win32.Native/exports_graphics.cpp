@@ -113,20 +113,20 @@ extern "C"
     }
 
     // TODO support not only RGBA but also other formats
-    EXPORT void CALLCONV MsdgSetTextureData(whandle* whandle, void* texHandle, int width, int height, void* data, int channels)
+    EXPORT void CALLCONV MsdgSetTextureData(whandle*, void* texHandle, int width, int height, void* data, int channels)
     {
         GLuint tex = (GLuint)texHandle;
         glBindTexture(GL_TEXTURE_2D, tex);
         int align = (width % 2 == 0) ? 8 : 4;
         glPixelStorei(GL_UNPACK_ALIGNMENT, align);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-        // test
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        GLint l = glGetUniformLocation(3, "tex");
-        glUniform1i(l, 0);
         GL_CHECK_ERROR;
+    }
+
+    EXPORT void CALLCONV MsdgSetTexture(whandle*, int index, void* texHandle)
+    {
+        glActiveTexture(GL_TEXTURE0 + index);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)texHandle);
     }
 
     EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)
@@ -178,11 +178,11 @@ out vec4 FragColor;
 in vec4 vColor;
 in vec2 vTex;
 
-uniform sampler2D tex;
+uniform sampler2D tex0;
 
 void main()
 {
-    FragColor = texture(tex, vTex) * vColor;
+    FragColor = texture(tex0, vTex) * vColor;
 } 
 )";
 
@@ -201,6 +201,7 @@ void main()
     glDeleteShader(vsh);
     glDeleteShader(fsh);
     glUseProgram(prog);
+    glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
 
     GL_CHECK_ERROR;
 }

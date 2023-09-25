@@ -24,25 +24,26 @@ public class MyMainWindow : Window
     };
 
     float a = 0.0f;
+    Texture2D tex = null!;
+    Texture2D tex2 = null!;
     public unsafe override void OnCreated()
     {
         vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration);
         vertexBuffer.SetData(Vertices);
 
-        var tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
+        tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
+        tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
     }
 
     public unsafe override void Render()
     {
         base.Render();
-        a += 0.01f;
-        if (a >= MathF.PI) a = -MathF.PI;
+        a += 0.1f;
+        if (a >= MathF.PI)
+            a = -MathF.PI;
 
+        RenderContext.SetTexture(0, a > 0 ? tex : tex2);
         RenderContext.DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);
-
-        a += 0.5f;
-        //RenderContext.DrawPrimitives(VertexPositionColorTexture.VertexDeclaration, PrimitiveType.TriangleList, Vertices);
-        a -= 0.5f;
     }
 }
 

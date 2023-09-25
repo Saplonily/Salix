@@ -3,7 +3,7 @@
 internal sealed class Win32Texture2DImpl : Texture2DImpl
 {
     private IntPtr winHandle;
-    private IntPtr texHandle;
+    internal IntPtr texHandle;
     internal int width, height;
 
     internal Win32Texture2DImpl(Win32WinImpl winImpl, int width, int height)

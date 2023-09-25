@@ -22,6 +22,8 @@ public abstract class RenderContext
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
     public abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 
+    public abstract void SetTexture(int index, Texture2D tex);
+
     public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
     {
         unsafe
@@ -32,4 +34,6 @@ public abstract class RenderContext
             }
         }
     }
+
+
 }

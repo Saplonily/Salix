@@ -59,5 +59,5 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdFreeImage(void* texData);
     [DllImport(DllPath)] public static extern void MsdgSetTextureData(IntPtr handle, IntPtr texHandle, int width, int height, void* data);
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateTexture(IntPtr handle, int width, int height);
-
+    [DllImport(DllPath)] public static extern void MsdgSetTexture(IntPtr handle, int index, IntPtr texHandle);
 }

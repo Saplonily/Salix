@@ -31,7 +31,7 @@ public class Win32RenderContext : RenderContext
         {
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
             {
-                vertexType = Interop.MsdgRegisterVertexType(handle, ptr, vertexDeclaration.Count);
+                vertexType = Interop.MsdgRegisterVertexType(Handle, ptr, vertexDeclaration.Count);
                 vertexDeclarations.Add(vertexDeclaration, vertexType);
             }
         }
@@ -48,7 +48,7 @@ public class Win32RenderContext : RenderContext
         if (vertexDeclaration is null)
             throw new ArgumentNullException(nameof(vertexDeclaration));
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
-        Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
+        Interop.MsdgDrawPrimitives(Handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
     }
 
     public override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
@@ -56,6 +56,13 @@ public class Win32RenderContext : RenderContext
         if (buffer.Disposed)
             throw new ObjectDisposedException(nameof(buffer));
         Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl!;
-        Interop.MsdgDrawBufferPrimitives(handle, impl.bufferHandle, primitiveType, impl.verticesCount);
+        Interop.MsdgDrawBufferPrimitives(Handle, impl.bufferHandle, primitiveType, impl.verticesCount);
+    }
+
+    public override void SetTexture(int index, Texture2D tex)
+    {
+        if (index < 0)
+            throw new ArgumentOutOfRangeException(nameof(index), $"'{nameof(index)}' must be greater than 0.");
+        Interop.MsdgSetTexture(Handle, index, ((Win32Texture2DImpl)tex.Impl).texHandle);
     }
 }
