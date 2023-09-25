@@ -12,50 +12,50 @@ public class Game
         set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
     }
     internal static Platform Platform => Instance.platform;
-    internal static WinImpl WinImpl => Instance.MainWindow.WinImpl;
+    internal static WinImpl WinImpl => Instance.Window.WinImpl;
 
-    private Window mainWindow;
+    private Window window;
     internal Platform platform;
 
     public ResourceLoader ResourceLoader { get; }
 
-    public Window MainWindow
+    public Window Window
     {
-        get => mainWindow;
+        get => window;
         set
         {
             if (value is null)
                 throw new ArgumentNullException(nameof(value));
-            mainWindow = value;
-            mainWindow.Game = this;
+            window = value;
+            window.Game = this;
         }
     }
 
-    public Game(Platform platform, Window? mainWindow = null)
+    public Game(Platform platform, Window? window = null)
     {
         if (platform is null)
             throw new ArgumentNullException(nameof(platform));
         Instance = this;
         this.platform = platform;
         platform.Init();
-        this.mainWindow = null!;
-        MainWindow = mainWindow ?? new Window(this);
+        this.window = null!;
+        Window = window ?? new Window(this);
 
         ResourceLoader = new ResourceLoader(this);
 
-        MainWindow.OnCreated();
+        Window.OnCreated();
     }
 
     public void Run()
     {
-        MainWindow.Show();
+        Window.Show();
         while (true)
         {
-            MainWindow.PollEvents();
-            if (MainWindow.IsInvalid) break;
+            Window.PollEvents();
+            if (Window.IsInvalid) break;
 
-            MainWindow.Update();
-            MainWindow.RenderInternal();
+            Window.Update();
+            Window.RenderInternal();
             Thread.Sleep(10);
         }
     }

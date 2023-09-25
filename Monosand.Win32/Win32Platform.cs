@@ -22,10 +22,10 @@ public unsafe partial class Win32Platform : Platform
         => new Win32WinImpl(width, height, title, window);
 
     internal override VertexBufferImpl CreateVertexBufferImpl(WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
-        => new Win32VertexBufferImpl(winImpl, vertexDeclaration, dataUsage);
+        => new Win32VertexBufferImpl((Win32WinImpl)winImpl, vertexDeclaration, dataUsage);
 
     internal override Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height)
-        => new Win32Texture2DImpl(winImpl, width, height);
+        => new Win32Texture2DImpl((Win32WinImpl)winImpl, width, height);
 
     internal override Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
@@ -45,7 +45,7 @@ public unsafe partial class Win32Platform : Platform
     internal override void FreeImage(Span<byte> image)
     {
         if (image.IsEmpty)
-            throw new ArgumentException("Span<byte> image is null.", nameof(image));
+            throw new ArgumentException("'Span<byte> image' is null.", nameof(image));
 
         fixed (void* ptr = image)
         {

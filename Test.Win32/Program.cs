@@ -38,10 +38,10 @@ public class MyMainWindow : Window
         a += 0.01f;
         if (a >= MathF.PI) a = -MathF.PI;
 
-        DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);
+        RenderContext.DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);
 
         a += 0.5f;
-        //DrawPrimitives(VertexPositionColorTexture.VertexDeclaration, PrimitiveType.TriangleList, Vertices);
+        //RenderContext.DrawPrimitives(VertexPositionColorTexture.VertexDeclaration, PrimitiveType.TriangleList, Vertices);
         a -= 0.5f;
     }
 }

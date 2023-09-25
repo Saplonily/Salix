@@ -28,21 +28,6 @@ internal unsafe abstract class WinImpl
     /// <summary>Set the size of this window.</summary>
     internal abstract void SetSize(int width, int height);
 
-    // Rendering
-
-    /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
-    internal abstract void SwapBuffers();
-
-    /// <summary>Set the viewport of this window.</summary>
-    internal abstract void SetViewport(int x, int y, int width, int height);
-
-    /// <summary>Clear the window in a color.</summary>
-    internal abstract void Clear(Color color);
-
-    internal unsafe abstract void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration, PrimitiveType primitiveType,
-        T* vptr, int length
-        ) where T : unmanaged;
-
-    internal abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
+    /// <summary>Get the RenderContext of this window.</summary>
+    internal abstract RenderContext GetRenderContext();
 }

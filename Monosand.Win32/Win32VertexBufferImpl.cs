@@ -3,15 +3,15 @@
 internal unsafe class Win32VertexBufferImpl : VertexBufferImpl
 {
     private IntPtr winHandle;
-    internal IntPtr bufferHandle;
     private readonly VertexBufferDataUsage dataUsage;
+    internal IntPtr bufferHandle;
     internal int verticesCount;
 
-    internal Win32VertexBufferImpl(WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
+    internal Win32VertexBufferImpl(Win32WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
     {
         this.dataUsage = dataUsage;
-        IntPtr vtype = ((Win32WinImpl)winImpl).SafeGetVertexType(vertexDeclaration);
-        bufferHandle = Interop.MsdgCreateVertexBuffer(winHandle = ((Win32WinImpl)winImpl).Handle, vtype);
+        IntPtr vtype = winImpl.renderContext.SafeGetVertexType(vertexDeclaration);
+        bufferHandle = Interop.MsdgCreateVertexBuffer(winHandle = winImpl.Handle, vtype);
     }
 
     internal override void SetData<T>(T* data, int length)

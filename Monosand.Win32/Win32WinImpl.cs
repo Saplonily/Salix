@@ -8,8 +8,8 @@ namespace Monosand.Win32;
 
 internal sealed unsafe class Win32WinImpl : WinImpl
 {
-    private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private IntPtr handle;
+    internal Win32RenderContext renderContext;
     internal IntPtr Handle => handle == IntPtr.Zero ? throw new ObjectDisposedException(nameof(Win32WinImpl)) : handle;
 
     public Win32WinImpl(int width, int height, string title, Window window)
@@ -27,13 +27,13 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         }
 
         this.handle = handle;
-        vertexDeclarations = new();
+        renderContext = new(this.handle);
     }
 
     internal static void InitMsgCallbacks()
     {
         // set our callbacks
-        // table at ../Monosand.Win32.Native/msg_callbacks.cpp
+        // table at ../Monosand.Win32.Native/win32_msg_loop.cpp
         Interop.MsdSetMsgCallback(0, (delegate* unmanaged[Stdcall]<IntPtr, byte>)&OnMsgClose);
         Interop.MsdSetMsgCallback(1, (delegate* unmanaged[Stdcall]<int, int, IntPtr, void>)&OnMsgResize);
         Interop.MsdSetMsgCallback(2, (delegate* unmanaged[Stdcall]<int, int, IntPtr, void>)&OnMsgMove);
@@ -68,6 +68,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     {
         Interop.MsdDestroyWindow(Handle);
         handle = IntPtr.Zero;
+        renderContext.handle = IntPtr.Zero;
     }
     internal override Point GetPosition()
     {
@@ -96,47 +97,5 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     internal override void SetSize(int width, int height)
         => Interop.MsdSetWindowSize(Handle, width, height);
 
-    internal override void SwapBuffers()
-        => Interop.MsdgSwapBuffers(Handle);
-
-    internal override void SetViewport(int x, int y, int width, int height)
-        => Interop.MsdgViewport(Handle, x, y, width, height);
-
-    internal override void Clear(Color color)
-        => Interop.MsdgClear(Handle, color);
-
-    internal IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
-    {
-        if (vertexDeclaration is null)
-            throw new ArgumentNullException(nameof(vertexDeclaration));
-        if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
-        {
-            fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
-            {
-                vertexType = Interop.MsdgRegisterVertexType(handle, ptr, vertexDeclaration.Count);
-                vertexDeclarations.Add(vertexDeclaration, vertexType);
-            }
-        }
-        return vertexType;
-    }
-
-    internal override unsafe void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration,
-        PrimitiveType primitiveType,
-        T* vptr, int length
-        )
-    {
-        if (vertexDeclaration is null)
-            throw new ArgumentNullException(nameof(vertexDeclaration));
-        IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
-        Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
-    }
-
-    internal override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
-    {
-        if (buffer.Disposed)
-            throw new ObjectDisposedException(nameof(buffer));
-        Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl!;
-        Interop.MsdgDrawBufferPrimitives(handle, impl.bufferHandle, primitiveType, impl.verticesCount);
-    }
+    internal override RenderContext GetRenderContext() => renderContext;
 }
