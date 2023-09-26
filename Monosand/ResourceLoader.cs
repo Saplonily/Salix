@@ -8,18 +8,16 @@ public class ResourceLoader
     private readonly Game game;
 
     internal ResourceLoader(Game game)
-    {
-        this.game = game;
-    }
+        => this.game = game;
 
     public Stream OpenReadStream(string fileName)
         => game.platform.OpenReadStream(fileName);
 
-    public Texture2D LoadTexture2D(string fileName)
+    public Texture2D LoadTexture2D(Stream stream)
     {
         unsafe
         {
-            using var fs = OpenReadStream(fileName);
+            var fs = stream;
             var length = fs.Length;
             void* mem = Marshal.AllocHGlobal((nint)length).ToPointer();
             fs.Read(new Span<byte>(mem, (int)length));
@@ -32,5 +30,11 @@ public class ResourceLoader
             Marshal.FreeHGlobal((nint)mem);
             return tex;
         }
+    }
+
+    public Texture2D LoadTexture2D(string fileName)
+    {
+        using var fs = OpenReadStream(fileName);
+        return LoadTexture2D(fs);
     }
 }
