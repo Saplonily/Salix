@@ -3,7 +3,9 @@
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
-
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>all</AnalysisMode>
+    
     <!-- hm, just magic -->
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

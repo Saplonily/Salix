@@ -1,10 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
 /// <summary>Represents a RGBA (Red, Green, Blue, Alpha) color. 4bytes per component.</summary>
 [StructLayout(LayoutKind.Sequential)]
-public partial struct Color
+public partial struct Color : IEquatable<Color>
 {
     /// <summary>Red component</summary>
     public byte R;
@@ -52,4 +53,19 @@ public partial struct Color
     [CLSCompliant(false)]
     public static implicit operator Color(uint packedValue)
         => new(packedValue);
+
+    public static bool operator ==(Color left, Color right)
+        => left.Equals(right);
+
+    public static bool operator !=(Color left, Color right)
+        => !(left == right);
+
+    public readonly override bool Equals(object? obj)
+        => obj is Color color && Equals(color);
+    
+    public readonly bool Equals(Color other)
+        => R == other.R && G == other.G && B == other.B && A == other.A;
+
+    public readonly override int GetHashCode()
+        => HashCode.Combine(R, G, B, A);
 }

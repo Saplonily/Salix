@@ -2,6 +2,7 @@
 
 public enum GraphicsBackend
 {
+    Unknown = 0,
     Opengl33 = 1,
     DirectX11 = 2,
 }

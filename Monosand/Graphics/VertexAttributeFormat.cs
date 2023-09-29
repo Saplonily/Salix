@@ -1,5 +1,8 @@
-﻿namespace Monosand;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace Monosand;
+
+[SuppressMessage("Usage", "CA1720")]
 public enum VertexAttributeFormat
 {
     Single,
