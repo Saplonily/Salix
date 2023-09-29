@@ -43,12 +43,12 @@ public partial struct Color
 
     [CLSCompliant(false)]
     public Color(uint packedValue)
-        => (R, G, B, A) = 
-        ((byte)(packedValue >> 24), 
+        => (R, G, B, A) =
+        ((byte)(packedValue >> 24),
         (byte)((packedValue >> 16) & 0x00ffffff),
         (byte)((packedValue >> 8) & 0x0000ffff),
         (byte)packedValue);
-    
+
     [CLSCompliant(false)]
     public static implicit operator Color(uint packedValue)
         => new(packedValue);

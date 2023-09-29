@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
-using System.Numerics;
+﻿using System.Drawing;
 
 namespace Monosand;
 

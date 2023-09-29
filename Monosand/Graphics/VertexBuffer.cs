@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Monosand;
+﻿namespace Monosand;
 
 /// <summary>
 /// A type of Buffer used to store vertices data

@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace Monosand;
+﻿namespace Monosand;
 
 public abstract class Platform
 {

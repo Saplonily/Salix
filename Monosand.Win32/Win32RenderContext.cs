@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata;
-
-namespace Monosand.Win32;
+﻿namespace Monosand.Win32;
 
 public class Win32RenderContext : RenderContext
 {
