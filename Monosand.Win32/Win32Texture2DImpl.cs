@@ -9,7 +9,7 @@ internal sealed class Win32Texture2DImpl : Texture2DImpl
     internal Win32Texture2DImpl(Win32WinImpl winImpl, int width, int height)
     {
         (this.width, this.height) = (width, height);
-        winHandle = winImpl.Handle;
+        winHandle = winImpl.GetHandle();
         texHandle = Interop.MsdgCreateTexture(winHandle, width, height);
     }
 

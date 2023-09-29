@@ -3,14 +3,13 @@
 public sealed class Texture2D : IDisposable
 {
     private Texture2DImpl? impl;
-    internal Texture2DImpl Impl => impl ?? throw new ObjectDisposedException(nameof(Texture2D));
 
     [CLSCompliant(false)]
     public unsafe Texture2D(int width, int height, void* data)
         : this(width, height)
     {
         if (data != null)
-            Impl.SetData(width, height, data);
+            impl!.SetData(width, height, data);
     }
 
     public Texture2D(int width, int height)
@@ -24,7 +23,10 @@ public sealed class Texture2D : IDisposable
 
     [CLSCompliant(false)]
     public unsafe void SetData(int width, int height, void* data)
-        => Impl.SetData(width, height, data);
+    {
+        EnsureState();
+        impl!.SetData(width, height, data);
+    }
 
     public void SetData(int width, int height, ReadOnlySpan<byte> data)
     {
@@ -47,5 +49,16 @@ public sealed class Texture2D : IDisposable
             impl = null;
             GC.SuppressFinalize(this);
         }
+    }
+
+    private void EnsureState()
+    {
+        ThrowHelper.ThrowIfDisposed(impl is null, this);
+    }
+
+    internal Texture2DImpl GetImpl()
+    {
+        EnsureState();
+        return impl!;
     }
 }

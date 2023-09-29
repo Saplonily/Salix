@@ -4,26 +4,19 @@ public unsafe partial class Win32Platform : Platform
 {
     private GraphicsBackend graphicsBackend;
     private MonosandPlatform identifier;
-    private static bool inited = false;
-    public Win32Platform() { }
 
     public override GraphicsBackend GraphicsBackend => graphicsBackend;
-
     public override MonosandPlatform Identifier => identifier;
 
+    public Win32Platform() { }
     internal override void Init()
     {
-        if (!inited)
-        {
-            // TODO error handle
-            Win32WinImpl.InitMsgCallbacks();
-            inited = true;
-            int a = Interop.MsdInit();
-            if (a != 0)
-                throw new OperationFailedException("Interop.MsdInit() return non-zero value.");
-            graphicsBackend = Interop.MsdgGetGraphicsBackend();
-            identifier = MonosandPlatform.Win32;
-        }
+        // TODO error handle
+        Win32WinImpl.InitMsgCallbacks();
+        if (Interop.MsdInit() != 0)
+            throw new OperationFailedException("Interop.MsdInit() return non-zero value.");
+        graphicsBackend = Interop.MsdgGetGraphicsBackend();
+        identifier = MonosandPlatform.Win32;
     }
 
     internal override WinImpl CreateWindowImpl(int width, int height, string title, Window window)
@@ -34,6 +27,8 @@ public unsafe partial class Win32Platform : Platform
 
     internal override Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height)
         => new Win32Texture2DImpl((Win32WinImpl)winImpl, width, height);
+
+    // other api
 
     internal override Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);

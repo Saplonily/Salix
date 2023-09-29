@@ -9,12 +9,11 @@ namespace Monosand.Win32;
 internal sealed unsafe class Win32WinImpl : WinImpl
 {
     private IntPtr handle;
-    internal Win32RenderContext renderContext;
-    internal IntPtr Handle => handle == IntPtr.Zero ? throw new ObjectDisposedException(nameof(Win32WinImpl)) : handle;
+    private Win32RenderContext? renderContext;
 
     public Win32WinImpl(int width, int height, string title, Window window)
     {
-        IntPtr handle = IntPtr.Zero;
+        IntPtr handle;
         fixed (char* ptitle = title)
         {
             handle = Interop.MsdCreateWindow(width, height, ptitle, (nint)GCHandle.Alloc(window, GCHandleType.Weak));
@@ -22,8 +21,8 @@ internal sealed unsafe class Win32WinImpl : WinImpl
 
         if (handle == IntPtr.Zero)
         {
-            // TODO error handle
-            throw new NotImplementedException("TODO: error handle");
+            // TODO error handling
+            throw new NotImplementedException("TODO: error handling");
         }
 
         this.handle = handle;
@@ -66,36 +65,70 @@ internal sealed unsafe class Win32WinImpl : WinImpl
 
     internal override void Destroy()
     {
-        Interop.MsdDestroyWindow(Handle);
+        EnsureState();
+        Interop.MsdDestroyWindow(handle);
         handle = IntPtr.Zero;
-        renderContext.handle = IntPtr.Zero;
+        renderContext = null;
     }
     internal override Point GetPosition()
     {
-        Interop.RECT r = Interop.MsdGetWindowRect(Handle);
+        EnsureState(); 
+        Interop.RECT r = Interop.MsdGetWindowRect(handle);
         return new(r.left, r.top);
     }
 
     internal override Size GetSize()
     {
-        Interop.RECT r = Interop.MsdGetWindowRect(Handle);
+        EnsureState(); 
+        Interop.RECT r = Interop.MsdGetWindowRect(handle);
         return new(r.right - r.left, r.bottom - r.top);
     }
 
     internal override void PollEvents()
-        => Interop.MsdPollEvents(Handle);
+    { 
+        EnsureState(); 
+        Interop.MsdPollEvents(handle);
+    }
 
     internal override void Show()
-        => Interop.MsdShowWindow(Handle);
+    {
+        EnsureState(); 
+        Interop.MsdShowWindow(handle);
+    }
 
     internal override void Hide()
-        => Interop.MsdHideWindow(Handle);
+    {
+        EnsureState(); 
+        Interop.MsdHideWindow(handle);
+    }
 
     internal override void SetPosition(int x, int y)
-        => Interop.MsdSetWindowPos(Handle, x, y);
+    {
+        EnsureState();
+        Interop.MsdSetWindowPos(handle, x, y);
+    }
 
     internal override void SetSize(int width, int height)
-        => Interop.MsdSetWindowSize(Handle, width, height);
+    {
+        EnsureState();
+        Interop.MsdSetWindowSize(handle, width, height);
+    }
 
-    internal override RenderContext GetRenderContext() => renderContext;
+    internal override Win32RenderContext GetRenderContext()
+    {
+        EnsureState();
+        return renderContext!;
+    }
+
+    internal IntPtr GetHandle()
+    {
+        EnsureState();
+        return handle;
+    }
+    
+    private void EnsureState()
+    {
+        ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);
+        ThrowHelper.ThrowIfDisposed(renderContext is null, this);
+    }
 }

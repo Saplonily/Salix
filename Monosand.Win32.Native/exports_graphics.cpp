@@ -6,8 +6,8 @@
 #include "enums.h"
 
 static GLuint cur_vao = 0;
-static GLuint default_vbo = 0;
 static GLuint cur_vbo = 0;
+static GLuint default_vbo = 0;
 static void ensure_vao(GLuint vao);
 static void ensure_vbo(GLuint vbo);
 
@@ -120,23 +120,17 @@ extern "C"
         const float borderColor[] = { 0.0f };
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); GL_CHECK_ERROR;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); GL_CHECK_ERROR;
-        return (void*)tex;
+        return (void*)(size_t)tex;
     }
 
     // TODO support not only RGBA but also other formats
-    EXPORT void CALLCONV MsdgSetTextureData(whandle*, void* texHandle, int width, int height, void* data, int channels)
+    EXPORT void CALLCONV MsdgSetTextureData(whandle*, void* tex_handle, int width, int height, void* data, int channels)
     {
-        GLuint tex = (GLuint)texHandle;
+        GLuint tex = (GLuint)(size_t)tex_handle;
         glBindTexture(GL_TEXTURE_2D, tex);
         int align = (width % 2 == 0) ? 8 : 4;
         glPixelStorei(GL_UNPACK_ALIGNMENT, align); GL_CHECK_ERROR;
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
-    }
-
-    EXPORT void CALLCONV MsdgSetTexture(whandle*, int index, void* texHandle)
-    {
-        glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
-        glBindTexture(GL_TEXTURE_2D, (GLuint)texHandle); GL_CHECK_ERROR;
     }
 
     EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)
@@ -147,6 +141,36 @@ extern "C"
     EXPORT void CALLCONV MsdFreeImage(void* texData)
     {
         free_image(texData);
+    }
+
+    EXPORT void CALLCONV MsdgSetTexture(whandle*, int index, void* tex_handle)
+    {
+        glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
+        glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
+    }
+
+    EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(whandle*, const char* vsh_source, const char* fsh_source)
+    {
+        GLuint vsh = glCreateShader(GL_VERTEX_SHADER); GL_CHECK_ERROR;
+        GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER); GL_CHECK_ERROR;
+        glShaderSource(vsh, 1, &vsh_source, nullptr); GL_CHECK_ERROR;
+        glShaderSource(fsh, 1, &fsh_source, nullptr); GL_CHECK_ERROR;
+        glCompileShader(vsh); GL_CHECK_ERROR;
+        glCompileShader(fsh); GL_CHECK_ERROR;
+        GLuint prog = glCreateProgram(); GL_CHECK_ERROR;
+        glAttachShader(prog, vsh); GL_CHECK_ERROR;
+        glAttachShader(prog, fsh); GL_CHECK_ERROR;
+        glLinkProgram(prog); GL_CHECK_ERROR;
+        glDeleteShader(vsh); GL_CHECK_ERROR;
+        glDeleteShader(fsh); GL_CHECK_ERROR;
+
+        return (void*)(size_t)prog;
+    }
+
+    EXPORT void CALLCONV MsdgUseShader(whandle*, void* shader_handle)
+    {
+        GLuint prog = (GLuint)(size_t)shader_handle;
+        glUseProgram(prog);
     }
 }
 
@@ -165,9 +189,10 @@ static void free_image(void* data)
 void window_gl_init()
 {
     glGenBuffers(1, &default_vbo);
+    GL_CHECK_ERROR;
 
     // create our default pos-color-tex shader
-    const char* vshSource = R"(
+    const char* vsh_source = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -182,7 +207,7 @@ void main()
     gl_Position = vec4(aPos, 1.0);
 }
 )";
-    const char* fshSource = R"(
+    const char* fsh_source = R"(
 #version 330 core
 out vec4 FragColor;
 in vec4 vColor;
@@ -197,30 +222,15 @@ void main()
 )";
 
     // TODO 'Shader' class
-
-    GLuint vsh = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(vsh, 1, &vshSource, nullptr);
-    glShaderSource(fsh, 1, &fshSource, nullptr);
-    glCompileShader(vsh);
-    glCompileShader(fsh);
-    GLuint prog = glCreateProgram();
-    glAttachShader(prog, vsh);
-    glAttachShader(prog, fsh);
-    glLinkProgram(prog);
-    glDeleteShader(vsh);
-    glDeleteShader(fsh);
-    glUseProgram(prog);
-    glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-
-    GL_CHECK_ERROR;
+    
+    MsdgUseShader(nullptr, MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source));
 }
 
 static void ensure_vao(GLuint vao)
 {
     if (cur_vao != vao)
     {
-        glBindVertexArray(vao);
+        glBindVertexArray(vao); GL_CHECK_ERROR;
         cur_vao = vao;
     }
 }
@@ -230,19 +240,18 @@ static void ensure_vbo(GLuint vbo)
     if (cur_vbo != vbo)
     {
         assert(vbo != 0);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo); GL_CHECK_ERROR;
         cur_vbo = vbo;
     }
 }
 
 static GLuint make_vao(VertexElementType* type, int len)
 {
-    GL_CHECK_ERROR;
     assert(type != nullptr && len >= 1);
     assert(cur_vbo != 0);
     GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    glGenVertexArrays(1, &vao); GL_CHECK_ERROR;
+    glBindVertexArray(vao); GL_CHECK_ERROR;
     cur_vao = vao;
     int singleVertexSize = 0;
     for (int i = 0; i < len; i++)
@@ -255,10 +264,8 @@ static GLuint make_vao(VertexElementType* type, int len)
     for (int i = 0; i < len; i++)
     {
         vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
-        glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset);
-        glEnableVertexAttribArray(i);
-        GL_CHECK_ERROR;
-
+        glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset); GL_CHECK_ERROR;
+        glEnableVertexAttribArray(i); GL_CHECK_ERROR;
         currentOffset += t.componentSize * t.count;
     }
     return vao;

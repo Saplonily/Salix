@@ -10,12 +10,11 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     internal VertexDeclaration? vertexDeclaration;
 
     public bool Disposed => impl is null;
-    public VertexDeclaration VertexDeclaration => vertexDeclaration ?? throw new ObjectDisposedException(nameof(VertexBuffer<T>));
+    public VertexDeclaration VertexDeclaration { get { EnsureState(); return vertexDeclaration!; } }
 
     public VertexBuffer(VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage = VertexBufferDataUsage.StaticDraw)
     {
-        if (vertexDeclaration is null)
-            throw new ArgumentNullException(nameof(vertexDeclaration));
+        ThrowHelper.ThrowIfNull(vertexDeclaration);
 
         impl = Game.Platform.CreateVertexBufferImpl(Game.WinImpl, vertexDeclaration, dataUsage);
         this.vertexDeclaration = vertexDeclaration;
@@ -24,6 +23,7 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     /// <summary>Copy and set the data from an <paramref name="array"/></summary>
     public void SetData(T[] array)
     {
+        EnsureState();
         unsafe
         {
             fixed (T* ptr = array)
@@ -36,6 +36,7 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     /// <summary>Copy and set the data from a <paramref name="span"/></summary>
     public void SetData(ReadOnlySpan<T> span)
     {
+        EnsureState();
         unsafe
         {
             fixed (T* ptr = span)
@@ -49,6 +50,7 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     [CLSCompliant(false)]
     public unsafe void SetData(T* ptr, int length)
     {
+        EnsureState();
         impl!.SetData(ptr, length);
     }
 
@@ -62,5 +64,10 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
             impl = null;
             GC.SuppressFinalize(this);
         }
+    }
+
+    private void EnsureState()
+    {
+        ThrowHelper.ThrowIfDisposed(impl is null, this);
     }
 }

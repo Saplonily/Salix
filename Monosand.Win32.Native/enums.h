@@ -33,6 +33,7 @@ enum class VertexBufferDataUsage
 
 enum class GraphicsBackend
 {
+    Unknown = 0,
     Opengl33 = 1,
     DirectX11 = 2,
 };

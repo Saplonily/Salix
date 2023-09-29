@@ -1,10 +1,10 @@
 ﻿namespace Monosand.Win32;
 
+// TODO dispose impl
 public class Win32RenderContext : RenderContext
 {
     private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
-    internal IntPtr handle;
-    private IntPtr Handle => handle == IntPtr.Zero ? throw new ObjectDisposedException(nameof(Win32WinImpl)) : handle;
+    private IntPtr handle;
 
     internal Win32RenderContext(IntPtr handle)
     {
@@ -13,23 +13,33 @@ public class Win32RenderContext : RenderContext
     }
 
     internal override void SwapBuffers()
-    => Interop.MsdgSwapBuffers(Handle);
+    {
+        EnsureState();
+        Interop.MsdgSwapBuffers(handle);
+    }
 
     internal override void SetViewport(int x, int y, int width, int height)
-        => Interop.MsdgViewport(Handle, x, y, width, height);
+    {
+        EnsureState(); 
+        Interop.MsdgViewport(handle, x, y, width, height);
+    }
 
     public override void Clear(Color color)
-        => Interop.MsdgClear(Handle, color);
+    {
+        EnsureState(); 
+        Interop.MsdgClear(handle, color);
+    }
 
     internal unsafe IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
     {
-        if (vertexDeclaration is null)
-            throw new ArgumentNullException(nameof(vertexDeclaration));
+        EnsureState();
+
+        ThrowHelper.ThrowIfNull(vertexDeclaration);
         if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
         {
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
             {
-                vertexType = Interop.MsdgRegisterVertexType(Handle, ptr, vertexDeclaration.Count);
+                vertexType = Interop.MsdgRegisterVertexType(handle, ptr, vertexDeclaration.Count);
                 vertexDeclarations.Add(vertexDeclaration, vertexType);
             }
         }
@@ -43,24 +53,30 @@ public class Win32RenderContext : RenderContext
         T* vptr, int length
         )
     {
-        if (vertexDeclaration is null)
-            throw new ArgumentNullException(nameof(vertexDeclaration));
+        EnsureState();
+        ThrowHelper.ThrowIfNull(vertexDeclaration);
+
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
-        Interop.MsdgDrawPrimitives(Handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
+        Interop.MsdgDrawPrimitives(handle, vertexType, primitiveType, vptr, length * sizeof(T), length);
     }
 
     public override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
     {
-        if (buffer.Disposed)
-            throw new ObjectDisposedException(nameof(buffer));
+        EnsureState();
+        ThrowHelper.ThrowIfDisposed(buffer.Disposed, nameof(buffer));
+
         Win32VertexBufferImpl impl = (Win32VertexBufferImpl)buffer.impl!;
-        Interop.MsdgDrawBufferPrimitives(Handle, impl.bufferHandle, primitiveType, impl.verticesCount);
+        Interop.MsdgDrawBufferPrimitives(handle, impl.bufferHandle, primitiveType, impl.verticesCount);
     }
 
-    public override void SetTexture(int index, Texture2D tex)
+    internal override void SetTexture(int index, Texture2DImpl texImpl)
     {
-        if (index < 0)
-            throw new ArgumentOutOfRangeException(nameof(index), $"'{nameof(index)}' must be greater than 0.");
-        Interop.MsdgSetTexture(Handle, index, ((Win32Texture2DImpl)tex.Impl).texHandle);
+        EnsureState();
+        ThrowHelper.ThrowIfNegative(index);
+
+        Interop.MsdgSetTexture(handle, index, ((Win32Texture2DImpl)texImpl).texHandle);
     }
+
+    private void EnsureState()
+        => ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);
 }

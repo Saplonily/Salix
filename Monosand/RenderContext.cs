@@ -1,6 +1,7 @@
 ﻿namespace Monosand;
 #pragma warning disable CS3011
 
+// TODO dispose impl
 public abstract class RenderContext
 {
     /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
@@ -22,7 +23,10 @@ public abstract class RenderContext
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
     public abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 
-    public abstract void SetTexture(int index, Texture2D tex);
+    internal abstract void SetTexture(int index, Texture2DImpl texImpl);
+
+    public void SetTexture(int index, Texture2D texture2D)
+        => SetTexture(index, texture2D.GetImpl());
 
     public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
     {
@@ -34,6 +38,4 @@ public abstract class RenderContext
             }
         }
     }
-
-
 }
