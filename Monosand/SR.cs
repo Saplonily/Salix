@@ -1,4 +1,6 @@
-﻿namespace Monosand;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Monosand;
 
 internal static class SR
 {
@@ -13,4 +15,10 @@ internal static class SR
 
     internal static Exception PropNotSet(string propName)
         => new InvalidOperationException($"The '{propName}' property has NOT been set or inited.");
+
+    internal static void EnsureNotDisposed([NotNull] object? obj, string objName)
+    {
+        if (obj is null)
+            throw new ObjectDisposedException(objName);
+    }
 }

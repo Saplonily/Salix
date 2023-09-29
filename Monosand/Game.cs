@@ -6,17 +6,18 @@ public class Game
     public const int DefaultWindowHeight = 720;
 
     private static Game? instance;
+    private Window window;
+    internal Platform platform;
+
+    internal static WinImpl WinImpl => Instance.Window.WinImpl;
+
     public static Game Instance
     {
         get => instance ?? throw SR.GameNotNewed;
         set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
     }
-    internal static Platform Platform => Instance.platform;
-    internal static WinImpl WinImpl => Instance.Window.WinImpl;
 
-    private Window window;
-    internal Platform platform;
-
+    public static Platform Platform => Instance.platform;
     public ResourceLoader ResourceLoader { get; }
 
     public Window Window

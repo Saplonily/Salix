@@ -31,6 +31,12 @@ enum class VertexBufferDataUsage
     StreamDraw
 };
 
+enum class GraphicsBackend
+{
+    Opengl33 = 1,
+    DirectX11 = 2,
+};
+
 struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };
 
 inline vertex_element_glinfo VertexElementType_get_glinfo(VertexElementType type)

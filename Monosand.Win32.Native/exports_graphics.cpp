@@ -18,6 +18,11 @@ static void free_image(void* data);
 
 extern "C"
 {
+    EXPORT GraphicsBackend CALLCONV MsdgGetGraphicsBackend()
+    {
+        return GraphicsBackend::Opengl33;
+    }
+
     EXPORT void CALLCONV MsdgSwapBuffers(whandle* handle)
     {
         SwapBuffers(handle->hdc);
@@ -26,12 +31,15 @@ extern "C"
     EXPORT void CALLCONV MsdgViewport(whandle* handle, int x, int y, int width, int height)
     {
         glViewport(x, y, width, height);
+        GL_CHECK_ERROR;
     }
 
     EXPORT void CALLCONV MsdgClear(whandle* handle, Color c)
     {
         glClearColor(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f);
+        GL_CHECK_ERROR;
         glClear(GL_COLOR_BUFFER_BIT);
+        GL_CHECK_ERROR;
     }
 
     EXPORT void* CALLCONV MsdgRegisterVertexType(whandle*, VertexElementType* type, int len)
@@ -40,7 +48,6 @@ extern "C"
         h->type_ptr = type;
         h->length = len;
         h->default_vao_id = 0;
-        GL_CHECK_ERROR;
         return h;
     }
 
@@ -55,13 +62,16 @@ extern "C"
         ensure_vao(vertex_type->default_vao_id);
 
         glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_DYNAMIC_DRAW);
+        GL_CHECK_ERROR;
         glDrawArrays(PrimitiveType_get_glinfo(pt), 0, vertices_to_draw);
+        GL_CHECK_ERROR;
     }
 
     EXPORT buffer_handle* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type)
     {
         GLuint id;
         glGenBuffers(1, &id);
+        GL_CHECK_ERROR;
         ensure_vbo(id);
         buffer_handle* h = new buffer_handle;
         h->vbo_id = id;
@@ -72,6 +82,7 @@ extern "C"
     EXPORT void CALLCONV MsdgDeleteVertexBuffer(whandle*, buffer_handle* buffer)
     {
         glDeleteVertexArrays(1, &buffer->vao_id);
+        GL_CHECK_ERROR;
         glDeleteBuffers(1, &buffer->vbo_id);
         GL_CHECK_ERROR;
     }
@@ -100,15 +111,15 @@ extern "C"
     EXPORT void* CALLCONV MsdgCreateTexture(whandle* whandle, int width, int height)
     {
         GLuint tex;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glGenTextures(1, &tex); GL_CHECK_ERROR;
+        glBindTexture(GL_TEXTURE_2D, tex); GL_CHECK_ERROR;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); GL_CHECK_ERROR;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); GL_CHECK_ERROR;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); GL_CHECK_ERROR;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); GL_CHECK_ERROR;
         const float borderColor[] = { 0.0f };
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); GL_CHECK_ERROR;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); GL_CHECK_ERROR;
         return (void*)tex;
     }
 
@@ -118,15 +129,14 @@ extern "C"
         GLuint tex = (GLuint)texHandle;
         glBindTexture(GL_TEXTURE_2D, tex);
         int align = (width % 2 == 0) ? 8 : 4;
-        glPixelStorei(GL_UNPACK_ALIGNMENT, align);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        GL_CHECK_ERROR;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, align); GL_CHECK_ERROR;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
     }
 
     EXPORT void CALLCONV MsdgSetTexture(whandle*, int index, void* texHandle)
     {
-        glActiveTexture(GL_TEXTURE0 + index);
-        glBindTexture(GL_TEXTURE_2D, (GLuint)texHandle);
+        glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
+        glBindTexture(GL_TEXTURE_2D, (GLuint)texHandle); GL_CHECK_ERROR;
     }
 
     EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)

@@ -2,8 +2,14 @@
 
 public unsafe partial class Win32Platform : Platform
 {
+    private GraphicsBackend graphicsBackend;
+    private MonosandPlatform identifier;
     private static bool inited = false;
     public Win32Platform() { }
+
+    public override GraphicsBackend GraphicsBackend => graphicsBackend;
+
+    public override MonosandPlatform Identifier => identifier;
 
     internal override void Init()
     {
@@ -15,6 +21,8 @@ public unsafe partial class Win32Platform : Platform
             int a = Interop.MsdInit();
             if (a != 0)
                 throw new OperationFailedException("Interop.MsdInit() return non-zero value.");
+            graphicsBackend = Interop.MsdgGetGraphicsBackend();
+            identifier = MonosandPlatform.Win32;
         }
     }
 

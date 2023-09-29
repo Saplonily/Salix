@@ -4,6 +4,12 @@ namespace Monosand;
 
 public abstract class Platform
 {
+    /// <summary>Current platform.</summary>
+    public abstract MonosandPlatform Identifier { get; }
+
+    /// <summary>The graphics backend current using.</summary>
+    public abstract GraphicsBackend GraphicsBackend { get; }
+
     /// <summary>Init this platform.</summary>
     internal abstract void Init();
 
