@@ -7,9 +7,11 @@
 
 static GLuint cur_vao = 0;
 static GLuint cur_vbo = 0;
+static GLuint cur_shd = 0;
 static GLuint default_vbo = 0;
 static void ensure_vao(GLuint vao);
 static void ensure_vbo(GLuint vbo);
+static void ensure_shd(GLuint shd);
 
 // make a vao
 static GLuint make_vao(VertexElementType* type, int len);
@@ -170,8 +172,29 @@ extern "C"
     EXPORT void CALLCONV MsdgUseShader(whandle*, void* shader_handle)
     {
         GLuint prog = (GLuint)(size_t)shader_handle;
-        glUseProgram(prog);
+        ensure_shd(prog);
     }
+
+#pragma region uniform 'set's
+
+    EXPORT int CALLCONV MsdgGetShaderParamLocation(whandle*, void* shaderHandle, const char* nameUtf8)
+    {
+        return glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8);
+    }
+
+    EXPORT void CALLCONV MsdgSetShaderParamInt(whandle*, void* shader_handle, int loc, int value)
+    {
+        ensure_shd((GLuint)(size_t)shader_handle);
+        glUniform1i(loc, value);
+    }
+
+    EXPORT void CALLCONV MsdgSetShaderParamFloat(whandle*, void* shader_handle, int loc, float value)
+    {
+        ensure_shd((GLuint)(size_t)shader_handle);
+        glUniform1f(loc, value);
+    }
+
+#pragma endregion
 }
 
 // hm, just temporarily use stb_image cuz it's head-only
@@ -222,7 +245,7 @@ void main()
 )";
 
     // TODO 'Shader' class
-    
+
     MsdgUseShader(nullptr, MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source));
 }
 
@@ -242,6 +265,16 @@ static void ensure_vbo(GLuint vbo)
         assert(vbo != 0);
         glBindBuffer(GL_ARRAY_BUFFER, vbo); GL_CHECK_ERROR;
         cur_vbo = vbo;
+    }
+}
+
+static void ensure_shd(GLuint shd)
+{
+    if (cur_shd != shd)
+    {
+        assert(shd != 0);
+        glUseProgram(shd);
+        cur_shd = shd;
     }
 }
 

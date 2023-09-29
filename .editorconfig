@@ -4,3 +4,5 @@
 dotnet_diagnostic.IDE0290.severity = silent
 # IDE0018: 可以内联变量声明
 dotnet_diagnostic.IDE0018.severity = silent
+# IDE0090: 可简化'new'表达式
+dotnet_diagnostic.IDE0090.severity = silent

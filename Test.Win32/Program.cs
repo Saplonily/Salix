@@ -25,6 +25,7 @@ public class MyMainWindow : Window
     float a = 0.0f;
     Texture2D tex = null!;
     Texture2D tex2 = null!;
+    Shader ourShader = null!;
     public unsafe override void OnCreated()
     {
         vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration);
@@ -32,6 +33,7 @@ public class MyMainWindow : Window
 
         tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
         tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
+        ourShader = Game.ResourceLoader.LoadGlslShader("test.vsh", "test.fsh");
     }
 
     public unsafe override void Render()
@@ -40,6 +42,8 @@ public class MyMainWindow : Window
         a += 0.1f;
         if (a >= MathF.PI)
             a = -MathF.PI;
+        ourShader.Use();
+        ourShader.GetParameter("tex0"u8).Set(0);
 
         RenderContext.SetTexture(0, a > 0 ? tex : tex2);
         RenderContext.DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);

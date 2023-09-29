@@ -55,4 +55,7 @@ public unsafe partial class Win32Platform : Platform
             Interop.MsdFreeImage(ptr);
         }
     }
+
+    internal override unsafe ShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource)
+        => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vshSource, fshSource);
 }

@@ -61,4 +61,22 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateTexture(IntPtr handle, int width, int height);
     [DllImport(DllPath)] public static extern void MsdgSetTexture(IntPtr handle, int index, IntPtr texHandle);
     [DllImport(DllPath)] public static extern GraphicsBackend MsdgGetGraphicsBackend();
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(IntPtr handle, byte* vshSource, byte* fshSource);
+    [DllImport(DllPath)] public static extern void MsdgUseShader(IntPtr handle, IntPtr shaderHandle);
+
+    #region Shader Parameter
+
+    [DllImport(DllPath)]
+    public static extern int MsdgGetShaderParamLocation(IntPtr handle, IntPtr shaderHandle, byte* nameUtf8);
+
+    [DllImport(DllPath)]
+    public static extern int MsdgGetShaderParamLocation(IntPtr handle, IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
+
+    [DllImport(DllPath)]
+    public static extern void MsdgSetShaderParamInt(IntPtr handle, IntPtr shaderHandle, int location, int value);
+
+    [DllImport(DllPath)]
+    public static extern void MsdgSetShaderParamFloat(IntPtr handle, IntPtr shaderHandle, int location, float value);
+
+    #endregion
 }

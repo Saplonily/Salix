@@ -24,6 +24,8 @@ public abstract class Platform
     /// <summary>Create a <see cref="Texture2DImpl"/>.</summary>
     internal abstract Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height);
 
+    internal unsafe abstract ShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource);
+
     /// <summary>
     /// <para>Open a file stream to read.</para>
     /// <para>It returns a <see cref="Stream"/> instead of a <see cref="FileStream"/>

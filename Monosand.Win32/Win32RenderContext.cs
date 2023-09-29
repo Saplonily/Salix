@@ -77,6 +77,12 @@ public class Win32RenderContext : RenderContext
         Interop.MsdgSetTexture(handle, index, ((Win32Texture2DImpl)texImpl).texHandle);
     }
 
+    internal IntPtr GetHandle()
+    {
+        EnsureState();
+        return handle;
+    }
+
     private void EnsureState()
         => ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);
 }
