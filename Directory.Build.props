@@ -3,8 +3,11 @@
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    
+    <!-- wait a minute, not now
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>all</AnalysisMode>
+    -->
     
     <!-- hm, just magic -->
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
