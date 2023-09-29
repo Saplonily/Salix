@@ -1,2 +1,4 @@
 *.h linguist-language=c++
+*.vsh linguist-language=glsl
+*.fsh linguist-language=glsl
 **/thirdparty/** linguist-vendored
