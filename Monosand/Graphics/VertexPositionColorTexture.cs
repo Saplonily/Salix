@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Monosand;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct VertexPositionColorTexture
+public struct VertexPositionColorTexture : IEquatable<VertexPositionColorTexture>
 {
     public static readonly VertexDeclaration VertexDeclaration;
 
@@ -23,4 +23,23 @@ public struct VertexPositionColorTexture
         Color = color;
         TextureCoord = textureCoord;
     }
+
+    public readonly override bool Equals(object? obj)
+        => obj is VertexPositionColorTexture texture && Equals(texture);
+
+
+    public readonly bool Equals(VertexPositionColorTexture other)
+        => Position.Equals(other.Position) &&
+           Color.Equals(other.Color) &&
+           TextureCoord.Equals(other.TextureCoord);
+
+    public readonly override int GetHashCode()
+        => HashCode.Combine(Position, Color, TextureCoord);
+
+    public static bool operator ==(VertexPositionColorTexture left, VertexPositionColorTexture right)
+        => left.Equals(right);
+
+
+    public static bool operator !=(VertexPositionColorTexture left, VertexPositionColorTexture right)
+        => !(left == right);
 }
