@@ -15,6 +15,7 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="thirdparty\headonly_impl.cpp" />
+    <ClCompile Include="thirdparty\glad\glad_wgl.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="thirdparty\glad\glad.h">
@@ -39,6 +40,7 @@
       <Filter>exports</Filter>
     </ClInclude>
     <ClInclude Include="thirdparty\stb_image.h" />
+    <ClInclude Include="thirdparty\glad\glad_wgl.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="exports">

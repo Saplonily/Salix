@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "thirdparty/glad/glad_wgl.h"
 #include "exports.h"
 #include "whandle.h"
 
@@ -66,6 +67,24 @@ extern "C"
         HGLRC hglrc = wglCreateContext(hdc);
         wglMakeCurrent(hdc, hglrc);
         gladLoadGL();
+        gladLoadWGL(hdc);
+        wglMakeCurrent(nullptr, nullptr);
+        wglDeleteContext(hglrc);
+
+        GLint attribs[] = {
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+            WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+        #if _DEBUG
+            WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+        #endif
+            0
+        };
+
+        hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
+        assert(hglrc != nullptr);
+        wglMakeCurrent(hdc, hglrc);
+
         window_gl_init();
 
         SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);

@@ -214,6 +214,8 @@ void window_gl_init()
     glGenBuffers(1, &default_vbo);
     GL_CHECK_ERROR;
 
+#pragma region default shader
+
     // create our default pos-color-tex shader
     const char* vsh_source = R"(
 #version 330 core
@@ -244,9 +246,9 @@ void main()
 } 
 )";
 
-    // TODO 'Shader' class
-
     MsdgUseShader(nullptr, MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source));
+
+#pragma endregion
 }
 
 static void ensure_vao(GLuint vao)
