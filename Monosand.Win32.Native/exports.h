@@ -4,6 +4,7 @@
 
 #include <WinUser.h>
 #include "whandle.h"
+#include "enums.h"
 #define EXPORT __declspec(dllexport)
 #define CALLCONV __stdcall
 
@@ -23,5 +24,11 @@ inline void small_free(T* ptr)
 {
     delete ptr;
 }
+
+#define GL_CHECK_ERROR {\
+GLenum err = glGetError();\
+if (err != 0)\
+printf("[glGetError] [%s:%d] %s\n", __FUNCTION__, __LINE__, gl_get_error_msg(err));\
+}\
 
 #endif

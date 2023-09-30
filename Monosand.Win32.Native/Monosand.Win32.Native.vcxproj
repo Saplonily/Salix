@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="exports_common.cpp" />
     <ClCompile Include="exports_graphics.cpp" />
+    <ClCompile Include="gl_debug_callback.cpp" />
     <ClCompile Include="thirdparty\glad\glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>

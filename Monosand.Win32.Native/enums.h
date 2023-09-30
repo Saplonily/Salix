@@ -96,4 +96,19 @@ inline GLenum VertexBufferDataUsage_get_glinfo(VertexBufferDataUsage type)
     // TODO: error handling
 }
 
+inline const char* gl_get_error_msg(GLenum err)
+{
+#define make_case(a) case a: return #a
+    switch (err)
+    {
+        make_case(GL_INVALID_ENUM);
+        make_case(GL_INVALID_VALUE);
+        make_case(GL_INVALID_OPERATION);
+        make_case(GL_OUT_OF_MEMORY);
+        make_case(GL_INVALID_FRAMEBUFFER_OPERATION);
+    default: return "UNKNOWN_ERROR";
+    }
+#undef make_case
+}
+
 #endif

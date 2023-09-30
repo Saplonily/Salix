@@ -1,11 +1,13 @@
 #include "pch.h"
-#include "thirdparty/glad/glad_wgl.h"
 #include "exports.h"
 #include "whandle.h"
 
 const wchar_t* Monosand = L"Monosand";
 extern void* MsgCallbacks[];
 
+#if _DEBUG
+void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
+#endif
 void window_gl_init();
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
@@ -70,7 +72,6 @@ extern "C"
         gladLoadWGL(hdc);
         wglMakeCurrent(nullptr, nullptr);
         wglDeleteContext(hglrc);
-
         GLint attribs[] = {
             WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
             WGL_CONTEXT_MINOR_VERSION_ARB, 3,
@@ -80,19 +81,20 @@ extern "C"
         #endif
             0
         };
-
         hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
         assert(hglrc != nullptr);
         wglMakeCurrent(hdc, hglrc);
-
-        window_gl_init();
-
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
         // we'll delete it at MsdDestroyWindow
         whandle* handle = new whandle;
         handle->hwnd = hwnd;
         handle->hdc = hdc;
         handle->hglrc = hglrc;
+    #if _DEBUG
+        glDebugMessageCallbackARB(gl_debug_callback, handle);
+    #endif
+
+        window_gl_init();
+        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
         return handle;
     }
 

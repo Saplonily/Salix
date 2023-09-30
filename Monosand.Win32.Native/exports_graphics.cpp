@@ -224,7 +224,6 @@ layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTex;
 out vec4 vColor;
 out vec2 vTex;
-
 void main()
 {
     vColor = aColor;
@@ -275,7 +274,7 @@ static void ensure_shd(GLuint shd)
     if (cur_shd != shd)
     {
         assert(shd != 0);
-        glUseProgram(shd);
+        glUseProgram(shd); GL_CHECK_ERROR;
         cur_shd = shd;
     }
 }
