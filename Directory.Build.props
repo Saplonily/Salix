@@ -3,7 +3,10 @@
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
-    
+
+    <PathMap Condition="'$(SolutionDir)'==''">$(MSBuildProjectDirectory)=~/$(MSBuildProjectName)</PathMap>
+    <PathMap Condition="'$(SolutionDir)'!=''">$(SolutionDir)=/</PathMap>
+
     <!-- wait a minute, not now
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>all</AnalysisMode>
