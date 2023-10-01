@@ -188,10 +188,12 @@ extern "C"
     }
 
     EXPORT void CALLCONV MsdgSetShaderParamInt(whandle*, int loc, int value) { glUniform1i(loc, value); GL_CHECK_ERROR; }
-
     EXPORT void CALLCONV MsdgSetShaderParamFloat(whandle*, int loc, float value) { glUniform1f(loc, value); GL_CHECK_ERROR; }
-
     EXPORT void CALLCONV MsdgSetShaderParamVec4(whandle*, int loc, float* vec) { glUniform4fv(loc, 1, vec); GL_CHECK_ERROR; }
+    EXPORT void CALLCONV MsdgSetShaderParamMat4(whandle*, int loc, float* mat, byte transpose)
+    { 
+        glUniformMatrix4fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
+    }
 
 #pragma endregion
 }

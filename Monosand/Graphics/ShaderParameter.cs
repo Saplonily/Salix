@@ -14,8 +14,14 @@ public readonly struct ShaderParameter : IEquatable<ShaderParameter>
         this.location = location;
     }
 
+    public void Set<T>(ref T value) where T : unmanaged
+        => shader.SetParameter(in this, ref value);
+
     public void Set<T>(T value) where T : unmanaged
-        => shader.SetParameter(in this, value);
+    {
+        T v = value;
+        Set(ref v);
+    }
 
     #region Equality
 

@@ -10,8 +10,8 @@ public class Shader : GraphicsResource
     internal Shader(RenderContext context, IShaderImpl impl)
         => (this.impl, this.context) = (impl, context);
 
-    public void SetParameter<T>(in ShaderParameter param, T value) where T : unmanaged
-        => impl.SetParameter(param.Location, value);
+    public void SetParameter<T>(in ShaderParameter param, ref T value) where T : unmanaged
+        => impl.SetParameter(param.Location, ref value);
 
     public ShaderParameter GetParameter(string name)
         => new(this, impl.GetParameterLocation(name));

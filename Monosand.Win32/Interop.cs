@@ -73,14 +73,10 @@ internal unsafe class Interop
     [DllImport(DllPath)]
     public static extern int MsdgGetShaderParamLocation(IntPtr handle, IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
-    [DllImport(DllPath)]
-    public static extern void MsdgSetShaderParamInt(IntPtr handle, int location, int value);
-
-    [DllImport(DllPath)]
-    public static extern void MsdgSetShaderParamFloat(IntPtr handle, int location, float value);
-
-    [DllImport(DllPath)]
-    public static extern void MsdgSetShaderParamVec4(IntPtr handle, int location, Vector4* value);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamInt(IntPtr handle, int location, int value);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamFloat(IntPtr handle, int location, float value);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamVec4(IntPtr handle, int location, float* value);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat4(IntPtr handle, int location, float* value, bool transpose);
 
     #endregion
 }

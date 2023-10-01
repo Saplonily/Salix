@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Monosand.Win32;
 
@@ -7,7 +8,7 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
     private Win32RenderContext context;
     private IntPtr shaderHandle;
 
-    private Win32ShaderImpl(Win32RenderContext context) 
+    private Win32ShaderImpl(Win32RenderContext context)
         : base(context.GetWinHandle())
     {
         this.context = context;
@@ -40,7 +41,7 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
         }
     }
 
-    unsafe void IShaderImpl.SetParameter<T>(int location, T value)
+    unsafe void IShaderImpl.SetParameter<T>(int location, ref T value)
     {
         EnsureState();
         EnsureCurrentState();
@@ -48,20 +49,28 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
 
         if (typeof(T) == typeof(int))
         {
-            Interop.MsdgSetShaderParamInt(winHandle, location, (int)(object)value);
+            Interop.MsdgSetShaderParamInt(winHandle, location, Unsafe.As<T, int>(ref value));
             return;
         }
 
         if (typeof(T) == typeof(float))
         {
-            Interop.MsdgSetShaderParamFloat(winHandle, location, (float)(object)value);
+            Interop.MsdgSetShaderParamFloat(winHandle, location, Unsafe.As<T, float>(ref value));
             return;
         }
 
         if (typeof(T) == typeof(Vector4))
         {
-            Vector4 vec = (Vector4)(object)value;
-            Interop.MsdgSetShaderParamVec4(winHandle, location, &vec);
+            ref var vec = ref Unsafe.As<T, Vector4>(ref value);
+            Interop.MsdgSetShaderParamVec4(winHandle, location, (float*)Unsafe.AsPointer(ref vec));
+            return;
+        }
+
+        if (typeof(T) == typeof(Matrix4x4))
+        {
+            ref var mat = ref Unsafe.As<T, Matrix4x4>(ref value);
+            Interop.MsdgSetShaderParamMat4(winHandle, location, (float*)Unsafe.AsPointer(ref mat), false);
+            return;
         }
 
         throw new NotSupportedException($"Type of {typeof(T)} is not supported in shader parameter.");
