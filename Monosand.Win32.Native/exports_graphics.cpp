@@ -134,6 +134,13 @@ extern "C"
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
     }
 
+    EXPORT void CALLCONV MSdgDeleteTexture(whandle*, void* tex_handle)
+    {
+        GLuint tex = (GLuint)(size_t)tex_handle;
+        assert(tex != 0);
+        glDeleteTextures(1, &tex); GL_CHECK_ERROR;
+    }
+
     EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)
     {
         return load_image(mem, length, x, y, channels);
@@ -168,6 +175,13 @@ extern "C"
         return (void*)(size_t)prog;
     }
 
+    EXPORT void CALLCONV MsdgDeleteShader(whandle*, void* shader_handle)
+    {
+        GLuint prog = (GLuint)(size_t)shader_handle;
+        assert(prog != 0);
+        glDeleteShader(prog); GL_CHECK_ERROR;
+    }
+
     static GLuint cur_shd = 0;
     EXPORT void CALLCONV MsdgSetShader(whandle*, void* shader_handle)
     {
@@ -191,7 +205,7 @@ extern "C"
     EXPORT void CALLCONV MsdgSetShaderParamFloat(whandle*, int loc, float value) { glUniform1f(loc, value); GL_CHECK_ERROR; }
     EXPORT void CALLCONV MsdgSetShaderParamVec4(whandle*, int loc, float* vec) { glUniform4fv(loc, 1, vec); GL_CHECK_ERROR; }
     EXPORT void CALLCONV MsdgSetShaderParamMat4(whandle*, int loc, float* mat, byte transpose)
-    { 
+    {
         glUniformMatrix4fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace Monosand.Win32;
 
-internal unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBufferImpl
+internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBufferImpl
 {
     private VertexBufferDataUsage dataUsage;
     private IntPtr bufferHandle;

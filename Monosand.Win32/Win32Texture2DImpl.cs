@@ -23,9 +23,8 @@ internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
         base.Dispose(disposing);
         if (texHandle != IntPtr.Zero)
         {
+            Interop.MSdgDeleteTexture(winHandle, texHandle);
             texHandle = IntPtr.Zero;
-            // TODO delete texture in opengl side
-            throw new NotImplementedException();
         }
     }
 }
