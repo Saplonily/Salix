@@ -95,5 +95,6 @@ public sealed class Win32RenderContext : RenderContext
         {
             Interop.MsdgSetShader(winHandle, IntPtr.Zero);
         }
+        currentShader = shader;
     }
 }
