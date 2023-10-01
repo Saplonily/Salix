@@ -35,9 +35,6 @@ public class MyMainWindow : Window
         tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
         tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
         ourShader = Game.ResourceLoader.LoadGlslShader("test.vert", "test.frag");
-        mat = Matrix4x4.Identity;
-        mat *= Matrix4x4.CreateTranslation(-Width / 2f, -Height / 2f, 0f);
-        mat *= Matrix4x4.CreateScale(2f / Width, -2f / Height, 1f);
     }
 
     public override void OnResize(int width, int height)
