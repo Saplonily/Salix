@@ -125,7 +125,7 @@ extern "C"
     EXPORT RECT CALLCONV MsdGetWindowRect(whandle* handle)
     {
         RECT rect{};
-        GetWindowRect(handle->hwnd, &rect);
+        GetClientRect(handle->hwnd, &rect);
         return rect;
     }
 
