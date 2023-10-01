@@ -13,13 +13,13 @@ public class MyMainWindow : Window
 
     public VertexPositionColorTexture[] Vertices = new VertexPositionColorTexture[]
     {
-        new(new( 000f,  000f, 0.0f), Vector4.One, new(0f, 0f)),
-        new(new( 300f,  300f, 0.0f), Vector4.One, new(1f, 1f)),
-        new(new( 300f,  000f, 0.0f), Vector4.One, new(1f, 0f)),
+        new(new(000f,  000f, 0f), Vector4.One, new(0f, 0f)),
+        new(new(300f,  300f, 0f), Vector4.One, new(1f, 1f)),
+        new(new(300f,  000f, 0f), Vector4.One, new(1f, 0f)),
 
-        new(new( 000f,  000f, 0.0f), Vector4.One, new(0f, 0f)),
-        new(new( 000f,  300f, 0.0f), Vector4.One, new(0f, 1f)),
-        new(new( 300f,  300f, 0.0f), Vector4.One, new(1f, 1f)),
+        new(new(000f,  000f, 0f), Vector4.One, new(0f, 0f)),
+        new(new(000f,  300f, 0f), Vector4.One, new(0f, 1f)),
+        new(new(300f,  300f, 0f), Vector4.One, new(1f, 1f)),
     };
 
     float a = 0.0f;

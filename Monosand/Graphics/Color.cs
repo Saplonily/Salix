@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Monosand;
 
@@ -62,7 +61,7 @@ public partial struct Color : IEquatable<Color>
 
     public readonly override bool Equals(object? obj)
         => obj is Color color && Equals(color);
-    
+
     public readonly bool Equals(Color other)
         => R == other.R && G == other.G && B == other.B && A == other.A;
 

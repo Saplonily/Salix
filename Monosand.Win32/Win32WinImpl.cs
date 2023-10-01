@@ -72,33 +72,33 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     }
     internal override Point GetPosition()
     {
-        EnsureState(); 
+        EnsureState();
         Interop.RECT r = Interop.MsdGetWindowRect(handle);
         return new(r.left, r.top);
     }
 
     internal override Size GetSize()
     {
-        EnsureState(); 
+        EnsureState();
         Interop.RECT r = Interop.MsdGetWindowRect(handle);
         return new(r.right - r.left, r.bottom - r.top);
     }
 
     internal override void PollEvents()
-    { 
-        EnsureState(); 
+    {
+        EnsureState();
         Interop.MsdPollEvents(handle);
     }
 
     internal override void Show()
     {
-        EnsureState(); 
+        EnsureState();
         Interop.MsdShowWindow(handle);
     }
 
     internal override void Hide()
     {
-        EnsureState(); 
+        EnsureState();
         Interop.MsdHideWindow(handle);
     }
 
@@ -125,7 +125,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         EnsureState();
         return handle;
     }
-    
+
     private void EnsureState()
     {
         ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);

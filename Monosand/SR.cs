@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Monosand;
+﻿namespace Monosand;
 
 internal static class SR
 {

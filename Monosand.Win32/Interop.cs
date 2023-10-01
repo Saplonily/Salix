@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Monosand.Win32;
 

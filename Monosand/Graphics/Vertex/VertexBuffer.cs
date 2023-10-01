@@ -47,7 +47,7 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     [CLSCompliant(false)]
     public unsafe void SetData(T* ptr, int length)
         => impl.SetData(ptr, length);
-    
+
 
     public void Dispose()
         => impl.Dispose();

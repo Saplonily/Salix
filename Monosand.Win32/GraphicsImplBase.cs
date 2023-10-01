@@ -12,7 +12,7 @@ internal class GraphicsImplBase : IDisposable
     protected virtual void Dispose(bool disposing)
         => winHandle = IntPtr.Zero;
 
-    ~GraphicsImplBase() 
+    ~GraphicsImplBase()
         => Dispose(false);
 
     protected void EnsureState()

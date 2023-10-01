@@ -36,6 +36,6 @@ public sealed class Texture2D : GraphicsResource
     public override void Dispose()
         => impl.Dispose();
 
-    internal ITexture2DImpl GetImpl() 
+    internal ITexture2DImpl GetImpl()
         => impl;
 }
