@@ -7,9 +7,10 @@ public class Game
 
     private static Game? instance;
     private Window window;
-    internal Platform platform;
+    private Platform platform;
 
-    internal static WinImpl WinImpl => Instance.Window.WinImpl;
+    internal WinImpl WinImpl => Instance.Window.WinImpl;
+    internal RenderContext RenderContext => WinImpl.GetRenderContext();
 
     public static Game Instance
     {
@@ -17,7 +18,7 @@ public class Game
         set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
     }
 
-    public static Platform Platform => Instance.platform;
+    public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
 
     public Window Window

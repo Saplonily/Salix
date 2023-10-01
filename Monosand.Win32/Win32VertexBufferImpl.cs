@@ -1,34 +1,44 @@
 ﻿namespace Monosand.Win32;
 
-internal unsafe class Win32VertexBufferImpl : VertexBufferImpl
+internal unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBufferImpl
 {
-    private IntPtr winHandle;
     private VertexBufferDataUsage dataUsage;
-    internal IntPtr bufferHandle;
-    internal int verticesCount;
+    private IntPtr bufferHandle;
+    private int verticesCount;
 
-    internal Win32VertexBufferImpl(Win32WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
+    internal Win32VertexBufferImpl(Win32RenderContext context, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
+        : base(context.GetWinHandle())
     {
         this.dataUsage = dataUsage;
-        IntPtr vtype = winImpl.GetRenderContext().SafeGetVertexType(vertexDeclaration);
-        bufferHandle = Interop.MsdgCreateVertexBuffer(winHandle = winImpl.GetHandle(), vtype);
+        IntPtr vtype = context.SafeGetVertexType(vertexDeclaration);
+        bufferHandle = Interop.MsdgCreateVertexBuffer(winHandle, vtype);
     }
 
-    internal override void SetData<T>(T* data, int length)
+    void IVertexBufferImpl.SetData<T>(T* data, int length)
     {
         verticesCount = length;
         Interop.MsdgSetVertexBufferData(winHandle, bufferHandle, data, sizeof(T) * length, dataUsage);
     }
 
-    internal override void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        if (winHandle != IntPtr.Zero)
+        base.Dispose(disposing);
+        if (bufferHandle != IntPtr.Zero)
         {
             Interop.MsdgDeleteVertexBuffer(winHandle, bufferHandle);
-            winHandle = IntPtr.Zero;
             bufferHandle = IntPtr.Zero;
-            dataUsage = (VertexBufferDataUsage)(-1);
-            verticesCount = -1;
         }
+    }
+
+    internal IntPtr GetBufferHandle()
+    {
+        EnsureState();
+        return bufferHandle;
+    }
+
+    internal int GetVerticesCount()
+    {
+        EnsureState();
+        return verticesCount;
     }
 }

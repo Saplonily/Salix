@@ -67,7 +67,7 @@ public class Window : IDisposable
 
     private void InitCreateWindow()
     {
-        impl = Game.platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
+        impl = Game.Platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
         rc = impl.GetRenderContext();
         // don't do this at this time
         // we can just do this in OnResize()

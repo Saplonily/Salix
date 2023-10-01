@@ -22,11 +22,15 @@ public unsafe partial class Win32Platform : Platform
     internal override WinImpl CreateWindowImpl(int width, int height, string title, Window window)
         => new Win32WinImpl(width, height, title, window);
 
-    internal override VertexBufferImpl CreateVertexBufferImpl(WinImpl winImpl, VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage)
-        => new Win32VertexBufferImpl((Win32WinImpl)winImpl, vertexDeclaration, dataUsage);
+    internal override IVertexBufferImpl CreateVertexBufferImpl(
+        RenderContext context,
+        VertexDeclaration vertexDeclaration,
+        VertexBufferDataUsage dataUsage
+        )
+        => new Win32VertexBufferImpl((Win32RenderContext)context, vertexDeclaration, dataUsage);
 
-    internal override Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height)
-        => new Win32Texture2DImpl((Win32WinImpl)winImpl, width, height);
+    internal override ITexture2DImpl CreateTexture2DImpl(RenderContext context, int width, int height)
+        => new Win32Texture2DImpl((Win32RenderContext)context, width, height);
 
     // other api
 
@@ -56,6 +60,6 @@ public unsafe partial class Win32Platform : Platform
         }
     }
 
-    internal override unsafe ShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource)
+    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource)
         => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vshSource, fshSource);
 }

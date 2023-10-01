@@ -6,29 +6,27 @@
 /// <typeparam name="T">Vertex type, must be unmanged</typeparam>
 public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
 {
-    internal VertexBufferImpl? impl;
-    internal VertexDeclaration? vertexDeclaration;
+    internal IVertexBufferImpl impl;
+    internal VertexDeclaration vertexDeclaration;
 
-    public bool Disposed => impl is null;
-    public VertexDeclaration VertexDeclaration { get { EnsureState(); return vertexDeclaration!; } }
+    public VertexDeclaration VertexDeclaration => vertexDeclaration;
 
     public VertexBuffer(VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage = VertexBufferDataUsage.StaticDraw)
     {
         ThrowHelper.ThrowIfNull(vertexDeclaration);
 
-        impl = Game.Platform.CreateVertexBufferImpl(Game.WinImpl, vertexDeclaration, dataUsage);
+        impl = Game.Instance.Platform.CreateVertexBufferImpl(Game.Instance.RenderContext, vertexDeclaration, dataUsage);
         this.vertexDeclaration = vertexDeclaration;
     }
 
     /// <summary>Copy and set the data from an <paramref name="array"/></summary>
     public void SetData(T[] array)
     {
-        EnsureState();
         unsafe
         {
             fixed (T* ptr = array)
             {
-                impl!.SetData(ptr, array.Length);
+                impl.SetData(ptr, array.Length);
             }
         }
     }
@@ -36,12 +34,11 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     /// <summary>Copy and set the data from a <paramref name="span"/></summary>
     public void SetData(ReadOnlySpan<T> span)
     {
-        EnsureState();
         unsafe
         {
             fixed (T* ptr = span)
             {
-                impl!.SetData(ptr, span.Length);
+                impl.SetData(ptr, span.Length);
             }
         }
     }
@@ -49,25 +46,9 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
     /// <summary>Copy and set the data from a pointer <paramref name="ptr"/></summary>
     [CLSCompliant(false)]
     public unsafe void SetData(T* ptr, int length)
-    {
-        EnsureState();
-        impl!.SetData(ptr, length);
-    }
-
-    ~VertexBuffer() => Dispose();
+        => impl.SetData(ptr, length);
+    
 
     public void Dispose()
-    {
-        if (impl is not null)
-        {
-            impl.Dispose();
-            impl = null;
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    private void EnsureState()
-    {
-        ThrowHelper.ThrowIfDisposed(impl is null, this);
-    }
+        => impl.Dispose();
 }

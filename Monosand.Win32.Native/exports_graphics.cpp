@@ -7,11 +7,10 @@
 
 static GLuint cur_vao = 0;
 static GLuint cur_vbo = 0;
-static GLuint cur_shd = 0;
 static GLuint default_vbo = 0;
+static GLuint default_shd = 0;
 static void ensure_vao(GLuint vao);
 static void ensure_vbo(GLuint vbo);
-static void ensure_shd(GLuint shd);
 
 // make a vao
 static GLuint make_vao(VertexElementType* type, int len);
@@ -169,30 +168,30 @@ extern "C"
         return (void*)(size_t)prog;
     }
 
-    EXPORT void CALLCONV MsdgUseShader(whandle*, void* shader_handle)
+    static GLuint cur_shd = 0;
+    EXPORT void CALLCONV MsdgSetShader(whandle*, void* shader_handle)
     {
         GLuint prog = (GLuint)(size_t)shader_handle;
-        ensure_shd(prog);
+        prog = prog == 0 ? default_shd : prog;
+        if (cur_shd != prog)
+        {
+            glUseProgram(prog); GL_CHECK_ERROR;
+            cur_shd = prog;
+        }
     }
 
 #pragma region uniform 'set's
 
     EXPORT int CALLCONV MsdgGetShaderParamLocation(whandle*, void* shaderHandle, const char* nameUtf8)
     {
-        return glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8);
+        return glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8); GL_CHECK_ERROR;
     }
 
-    EXPORT void CALLCONV MsdgSetShaderParamInt(whandle*, void* shader_handle, int loc, int value)
-    {
-        ensure_shd((GLuint)(size_t)shader_handle);
-        glUniform1i(loc, value);
-    }
+    EXPORT void CALLCONV MsdgSetShaderParamInt(whandle*, int loc, int value) { glUniform1i(loc, value); GL_CHECK_ERROR; }
 
-    EXPORT void CALLCONV MsdgSetShaderParamFloat(whandle*, void* shader_handle, int loc, float value)
-    {
-        ensure_shd((GLuint)(size_t)shader_handle);
-        glUniform1f(loc, value);
-    }
+    EXPORT void CALLCONV MsdgSetShaderParamFloat(whandle*, int loc, float value) { glUniform1f(loc, value); GL_CHECK_ERROR; }
+
+    EXPORT void CALLCONV MsdgSetShaderParamVec4(whandle*, int loc, float* vec) { glUniform4fv(loc, 1, vec); GL_CHECK_ERROR; }
 
 #pragma endregion
 }
@@ -244,8 +243,9 @@ void main()
     FragColor = texture(tex0, vTex) * vColor;
 } 
 )";
-
-    MsdgUseShader(nullptr, MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source));
+    void* s = MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source);
+    MsdgSetShader(nullptr, s);
+    default_shd = (GLuint)(size_t)s;
 
 #pragma endregion
 }
@@ -269,15 +269,6 @@ static void ensure_vbo(GLuint vbo)
     }
 }
 
-static void ensure_shd(GLuint shd)
-{
-    if (cur_shd != shd)
-    {
-        assert(shd != 0);
-        glUseProgram(shd); GL_CHECK_ERROR;
-        cur_shd = shd;
-    }
-}
 
 static GLuint make_vao(VertexElementType* type, int len)
 {

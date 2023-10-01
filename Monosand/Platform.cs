@@ -14,17 +14,17 @@ public abstract class Platform
     /// <summary>Create a <see cref="WinImpl"/>.</summary>
     internal abstract WinImpl CreateWindowImpl(int width, int height, string title, Window window);
 
-    /// <summary>Create a <see cref="VertexBufferImpl"/>.</summary>
-    internal abstract VertexBufferImpl CreateVertexBufferImpl(
-        WinImpl winImpl,
+    /// <summary>Create a <see cref="IVertexBufferImpl"/>.</summary>
+    internal abstract IVertexBufferImpl CreateVertexBufferImpl(
+        RenderContext context,
         VertexDeclaration vertexDeclaration,
         VertexBufferDataUsage dataUsage
         );
 
-    /// <summary>Create a <see cref="Texture2DImpl"/>.</summary>
-    internal abstract Texture2DImpl CreateTexture2DImpl(WinImpl winImpl, int width, int height);
+    /// <summary>Create a <see cref="ITexture2DImpl"/>.</summary>
+    internal abstract ITexture2DImpl CreateTexture2DImpl(RenderContext context, int width, int height);
 
-    internal unsafe abstract ShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource);
+    internal unsafe abstract IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource);
 
     /// <summary>
     /// <para>Open a file stream to read.</para>

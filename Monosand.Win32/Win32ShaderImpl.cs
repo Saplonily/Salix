@@ -1,69 +1,86 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
-using System.Xml.Linq;
+﻿using System.Numerics;
 
 namespace Monosand.Win32;
 
-internal class Win32ShaderImpl : ShaderImpl
+internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
 {
-    private IntPtr winHandle;
-    private IntPtr nativeHandle;
+    private Win32RenderContext context;
+    private IntPtr shaderHandle;
 
-    private Win32ShaderImpl(IntPtr winHandle) { this.winHandle = winHandle; }
+    private Win32ShaderImpl(Win32RenderContext context) 
+        : base(context.GetWinHandle())
+    {
+        this.context = context;
+    }
 
     internal unsafe static Win32ShaderImpl FromGlsl(Win32RenderContext context, byte* vshSource, byte* fshSource)
     {
-        Win32ShaderImpl impl = new(context.GetHandle());
-        impl.nativeHandle = Interop.MsdgCreateShaderFromGlsl(impl.winHandle, vshSource, fshSource);
+        Win32ShaderImpl impl = new(context);
+        impl.shaderHandle = Interop.MsdgCreateShaderFromGlsl(impl.winHandle, vshSource, fshSource);
         return impl;
     }
 
-    internal override int GetParameterLocation(string name)
+    int IShaderImpl.GetParameterLocation(string name)
     {
         EnsureState();
-        return Interop.MsdgGetShaderParamLocation(winHandle, nativeHandle, name);
+        EnsureCurrentState();
+        return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, name);
     }
 
-    internal override int GetParameterLocation(ReadOnlySpan<byte> nameUtf8)
+    int IShaderImpl.GetParameterLocation(ReadOnlySpan<byte> nameUtf8)
     {
         EnsureState();
+        EnsureCurrentState();
         unsafe
         {
             fixed (byte* ptr = nameUtf8)
             {
-                return Interop.MsdgGetShaderParamLocation(winHandle, nativeHandle, ptr);
+                return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, ptr);
             }
         }
     }
 
-    internal override void SetParameter<T>(int location, T value)
+    unsafe void IShaderImpl.SetParameter<T>(int location, T value)
     {
         EnsureState();
+        EnsureCurrentState();
         // our jit god will do the optimization
 
         if (typeof(T) == typeof(int))
         {
-            Interop.MsdgSetShaderParamInt(winHandle, nativeHandle, location, (int)(object)value);
+            Interop.MsdgSetShaderParamInt(winHandle, location, (int)(object)value);
             return;
         }
 
         if (typeof(T) == typeof(float))
         {
-            Interop.MsdgSetShaderParamFloat(winHandle, nativeHandle, location, (float)(object)value);
+            Interop.MsdgSetShaderParamFloat(winHandle, location, (float)(object)value);
             return;
+        }
+
+        if (typeof(T) == typeof(Vector4))
+        {
+            Vector4 vec = (Vector4)(object)value;
+            Interop.MsdgSetShaderParamVec4(winHandle, location, &vec);
         }
 
         throw new NotSupportedException($"Type of {typeof(T)} is not supported in shader parameter.");
     }
 
-    internal override void Use()
+    internal IntPtr GetShaderHandle()
     {
         EnsureState();
-        Interop.MsdgUseShader(winHandle, nativeHandle);
+        return shaderHandle;
     }
 
-    private void EnsureState()
+    private void EnsureCurrentState()
     {
-        ThrowHelper.ThrowIfDisposed(nativeHandle == IntPtr.Zero, this);
+        ThrowHelper.ThrowIfInvalid(context.GetCurrentShader()?.GetImpl() != this, "This operation required this shader to be current.");
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        throw new NotImplementedException();
     }
 }

@@ -1,29 +1,31 @@
 ﻿namespace Monosand.Win32;
 
-internal sealed class Win32Texture2DImpl : Texture2DImpl
+internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
 {
-    private IntPtr winHandle;
     internal IntPtr texHandle;
     internal int width, height;
 
-    internal Win32Texture2DImpl(Win32WinImpl winImpl, int width, int height)
+    internal Win32Texture2DImpl(Win32RenderContext context, int width, int height)
+        : base(context.GetWinHandle())
     {
         (this.width, this.height) = (width, height);
-        winHandle = winImpl.GetHandle();
         texHandle = Interop.MsdgCreateTexture(winHandle, width, height);
     }
 
-    internal override unsafe void SetData(int width, int height, void* data)
+    unsafe void ITexture2DImpl.SetData(int width, int height, void* data)
     {
         (this.width, this.height) = (width, height);
         Interop.MsdgSetTextureData(winHandle, texHandle, width, height, data);
     }
 
-    internal override void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        winHandle = IntPtr.Zero;
-        texHandle = IntPtr.Zero;
-        // TODO delete texture in opengl side
-        throw new NotImplementedException();
+        base.Dispose(disposing);
+        if (texHandle != IntPtr.Zero)
+        {
+            texHandle = IntPtr.Zero;
+            // TODO delete texture in opengl side
+            throw new NotImplementedException();
+        }
     }
 }

@@ -43,6 +43,9 @@ public class MyMainWindow : Window
         if (a >= MathF.PI)
             a = -MathF.PI;
         ourShader.Use();
+        ourShader.GetParameter("tex0"u8).Set(1);
+        RenderContext.SetTexture(1, tex);
+        RenderContext.SetShader(null);
         ourShader.GetParameter("tex0"u8).Set(0);
 
         RenderContext.SetTexture(0, a > 0 ? tex : tex2);

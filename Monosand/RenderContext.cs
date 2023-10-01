@@ -4,6 +4,8 @@
 // TODO dispose impl
 public abstract class RenderContext
 {
+    protected Shader? currentShader;
+
     /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
     internal abstract void SwapBuffers();
 
@@ -23,10 +25,16 @@ public abstract class RenderContext
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
     public abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 
-    internal abstract void SetTexture(int index, Texture2DImpl texImpl);
+    internal abstract void SetTexture(int index, ITexture2DImpl texImpl);
+
+    public abstract void SetShader(Shader? shader);
+
+    public Shader? GetCurrentShader()
+        => currentShader;
 
     public void SetTexture(int index, Texture2D texture2D)
         => SetTexture(index, texture2D.GetImpl());
+
 
     public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
     {

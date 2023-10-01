@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Monosand.Win32;
 
@@ -62,7 +63,7 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetTexture(IntPtr handle, int index, IntPtr texHandle);
     [DllImport(DllPath)] public static extern GraphicsBackend MsdgGetGraphicsBackend();
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(IntPtr handle, byte* vshSource, byte* fshSource);
-    [DllImport(DllPath)] public static extern void MsdgUseShader(IntPtr handle, IntPtr shaderHandle);
+    [DllImport(DllPath)] public static extern void MsdgSetShader(IntPtr handle, IntPtr shaderHandle);
 
     #region Shader Parameter
 
@@ -73,10 +74,13 @@ internal unsafe class Interop
     public static extern int MsdgGetShaderParamLocation(IntPtr handle, IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
     [DllImport(DllPath)]
-    public static extern void MsdgSetShaderParamInt(IntPtr handle, IntPtr shaderHandle, int location, int value);
+    public static extern void MsdgSetShaderParamInt(IntPtr handle, int location, int value);
 
     [DllImport(DllPath)]
-    public static extern void MsdgSetShaderParamFloat(IntPtr handle, IntPtr shaderHandle, int location, float value);
+    public static extern void MsdgSetShaderParamFloat(IntPtr handle, int location, float value);
+
+    [DllImport(DllPath)]
+    public static extern void MsdgSetShaderParamVec4(IntPtr handle, int location, Vector4* value);
 
     #endregion
 }

@@ -6,12 +6,13 @@ namespace Monosand;
 public class ResourceLoader
 {
     private readonly Game game;
+    private readonly Platform platform;
 
     internal ResourceLoader(Game game)
-        => this.game = game;
+        => (this.game, platform) = (game, game.Platform);
 
     public Stream OpenReadStream(string fileName)
-        => game.platform.OpenReadStream(fileName);
+        => platform.OpenReadStream(fileName);
 
     public Texture2D LoadTexture2D(Stream stream)
     {
@@ -25,11 +26,11 @@ public class ResourceLoader
             void* mem = Marshal.AllocHGlobal(length).ToPointer();
             fs.Read(new Span<byte>(mem, length));
 
-            var img = game.platform.LoadImage(new ReadOnlySpan<byte>(mem, length), out int width, out int height, out int channels);
+            var img = platform.LoadImage(new ReadOnlySpan<byte>(mem, length), out int width, out int height, out int channels);
             // support rgba just for now
             Debug.Assert(channels == 4);
             Texture2D tex = new(width, height, img);
-            game.platform.FreeImage(img);
+            platform.FreeImage(img);
             Marshal.FreeHGlobal((nint)mem);
             return tex;
         }
@@ -45,8 +46,9 @@ public class ResourceLoader
             {
                 fixed (byte* fshPtr = fsh)
                 {
-                    var impl = game.platform.CreateShaderImplFromGlsl(game.Window.RenderContext, vshPtr, fshPtr);
-                    Shader shader = new(impl);
+                    var context = game.Window.RenderContext;
+                    var impl = platform.CreateShaderImplFromGlsl(context, vshPtr, fshPtr);
+                    Shader shader = new(context, impl);
                     return shader;
                 }
             }

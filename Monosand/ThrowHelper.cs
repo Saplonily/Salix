@@ -20,4 +20,9 @@ public static class ThrowHelper
         if (argument < 0)
             throw new ArgumentOutOfRangeException(paramName, "Can't be negative.");
     }
+
+    public static void ThrowIfInvalid([DoesNotReturnIf(true)] bool condition, string? msg = null)
+    {
+        if (condition) throw new InvalidOperationException(msg);
+    }
 }
