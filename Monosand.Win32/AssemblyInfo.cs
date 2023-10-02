@@ -10,6 +10,3 @@ using System.Runtime.Versioning;
 
 [assembly: DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
 [assembly: SuppressMessage("Usage", "CA2216")]
-
-// for some uncomplete api
-[assembly: InternalsVisibleTo("Test.Win32")]

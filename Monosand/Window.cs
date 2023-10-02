@@ -7,6 +7,7 @@ public class Window : IDisposable
     private WinImpl? impl;
     private Game? game;
     private RenderContext? rc;
+    private KeyboardState keyboardState;
 
     public bool IsInvalid => impl == null || game == null;
     public Game Game
@@ -51,15 +52,17 @@ public class Window : IDisposable
         get => WinImpl.GetSize();
         set => WinImpl.SetSize(value.Width, value.Height);
     }
+    public KeyboardState KeyboardState => keyboardState;
 
     public event Action<Window>? Closed;
     public event Action<Window, int, int>? Moved;
 
     public Window()
     {
+        keyboardState = new(this);
     }
 
-    public Window(Game game)
+    public Window(Game game) : this()
     {
         this.game = game;
         InitCreateWindow();
@@ -94,6 +97,8 @@ public class Window : IDisposable
     public virtual void OnMoved(int x, int y) => Moved?.Invoke(this, x, y);
     public virtual void OnResized(int width, int height) => RenderContext.SetViewport(0, 0, width, height);
     public virtual void OnCreated() { }
+    public virtual void OnKeyPressed(Key key) { KeyboardState.SetTrue(key); }
+    public virtual void OnKeyReleased(Key key) { KeyboardState.SetFalse(key); }
 
     internal void RenderInternal()
     {

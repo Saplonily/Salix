@@ -50,6 +50,7 @@
     <ClInclude Include="thirdparty\stb_image.h">
       <Filter>thirdparty</Filter>
     </ClInclude>
+    <ClInclude Include="key_map.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="exports">

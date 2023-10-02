@@ -67,23 +67,13 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             Window win = HandleToWin(v);
             switch (e[i])
             {
-            case 1:
-                bool close = win.OnClosing();
-                if (close)
-                    Interop.MsdDestroyWindow(GetWinHandle());
-                break;
-            case 2:
-                win.OnCallbackDestroy();
-                break;
-            case 3:
-                win.OnMoved(e[i + 1], e[i + 2]);
-                break;
-            case 4:
-                win.OnResized(e[i + 1], e[i + 2]);
-                break;
-            default:
-                Debug.Fail("Unknown event type.");
-                break;
+            case 1: if (win.OnClosing()) Interop.MsdDestroyWindow(GetWinHandle()); break;
+            case 2: win.OnCallbackDestroy(); break;
+            case 3: win.OnMoved(e[i + 1], e[i + 2]); break;
+            case 4: win.OnResized(e[i + 1], e[i + 2]); break;
+            case 5: win.OnKeyPressed((Key)e[i + 1]); break;
+            case 6: win.OnKeyReleased((Key)e[i + 1]); break;
+            default: Debug.Fail("Unknown event type."); break;
             }
         }
 

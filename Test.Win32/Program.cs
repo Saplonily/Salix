@@ -46,6 +46,15 @@ public class MyMainWindow : Window
         mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
     }
 
+    public override void Update()
+    {
+        base.Update();
+        if (KeyboardState.IsPressing(Key.D))
+        {
+            mat *= Matrix4x4.CreateTranslation(1.0f / Width, 0.0f, 0.0f);
+        }
+    }
+
     public unsafe override void Render()
     {
         base.Render();
