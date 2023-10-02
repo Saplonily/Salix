@@ -8,7 +8,6 @@
 static GLuint cur_vao = 0;
 static GLuint cur_vbo = 0;
 static GLuint default_vbo = 0;
-static GLuint default_shd = 0;
 static void ensure_vao(GLuint vao);
 static void ensure_vbo(GLuint vbo);
 
@@ -186,7 +185,6 @@ extern "C"
     EXPORT void CALLCONV MsdgSetShader(whandle*, void* shader_handle)
     {
         GLuint prog = (GLuint)(size_t)shader_handle;
-        prog = prog == 0 ? default_shd : prog;
         if (cur_shd != prog)
         {
             glUseProgram(prog); GL_CHECK_ERROR;
@@ -228,42 +226,6 @@ void window_gl_init()
 {
     glGenBuffers(1, &default_vbo);
     GL_CHECK_ERROR;
-
-#pragma region default shader
-
-    // create our default pos-color-tex shader
-    const char* vsh_source = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTex;
-out vec4 vColor;
-out vec2 vTex;
-void main()
-{
-    vColor = aColor;
-    vTex = aTex;
-    gl_Position = vec4(aPos, 1.0);
-}
-)";
-    const char* fsh_source = R"(
-#version 330 core
-out vec4 FragColor;
-in vec4 vColor;
-in vec2 vTex;
-
-uniform sampler2D tex0;
-
-void main()
-{
-    FragColor = texture(tex0, vTex) * vColor;
-} 
-)";
-    void* s = MsdgCreateShaderFromGlsl(nullptr, vsh_source, fsh_source);
-    MsdgSetShader(nullptr, s);
-    default_shd = (GLuint)(size_t)s;
-
-#pragma endregion
 }
 
 static void ensure_vao(GLuint vao)

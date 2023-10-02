@@ -87,6 +87,7 @@ public sealed class Win32RenderContext : RenderContext
 
     public override void SetShader(Shader? shader)
     {
+        if (shader == currentShader) return;
         if (shader is not null)
         {
             Win32ShaderImpl si = (Win32ShaderImpl)shader.GetImpl();
