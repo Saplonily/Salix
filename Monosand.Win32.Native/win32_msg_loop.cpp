@@ -10,15 +10,14 @@ enum class event : int32_t
     resize
 };
 
-#pragma pack (1)
 struct win_event
 {
     event type;
     int32_t arg1;
     int32_t arg2;
+    int32_t arg3;
     void* gc_handle;
 };
-#pragma pack ()
 
 std::vector<win_event>* event_list;
 

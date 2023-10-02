@@ -56,12 +56,12 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         if (ncount > int.MaxValue)
             throw new OperationFailedException("Too many win events.(> int.MaxValue)");
         count = (int)ncount;
-        int sizeInInt = 3 + sizeof(IntPtr) / 4;
+        int sizeInInt = 4 + sizeof(IntPtr) / 4;
 
         // magic number at ../Monosand.Win32.Native/win32_msg_loop.cpp :: event
         for (int i = 0; i < count * sizeInInt; i += sizeInInt)
         {
-            IntPtr v = ((IntPtr*)(e + i + 3))[0];
+            IntPtr v = ((IntPtr*)(e + i + 4))[0];
             Window win = HandleToWin(v);
             switch (e[i])
             {
