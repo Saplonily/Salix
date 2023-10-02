@@ -30,4 +30,6 @@ internal unsafe abstract class WinImpl
 
     /// <summary>Get the RenderContext of this window.</summary>
     internal abstract RenderContext GetRenderContext();
+
+    internal abstract void MainThreadDispose();
 }

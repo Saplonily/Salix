@@ -14,6 +14,7 @@ public unsafe partial class Win32Platform : Platform
     public override MonosandPlatform Identifier => identifier;
 
     public Win32Platform() { }
+
     internal override void Init()
     {
         // TODO error handle

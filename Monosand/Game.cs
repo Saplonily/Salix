@@ -9,7 +9,7 @@ public class Game
     private Window window;
     private Platform platform;
 
-    internal WinImpl WinImpl => Instance.Window.WinImpl;
+    internal WinImpl WinImpl => window.WinImpl;
     internal RenderContext RenderContext => WinImpl.GetRenderContext();
 
     public static Game Instance

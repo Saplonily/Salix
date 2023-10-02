@@ -28,11 +28,11 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     internal override void Destroy()
     {
         EnsureState();
-        ProcessQueuedActions();
         Interop.MsdDestroyWindow(handle);
         handle = IntPtr.Zero;
         renderContext = null;
     }
+
     internal override Point GetPosition()
     {
         EnsureState();
@@ -144,5 +144,10 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     {
         ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);
         ThrowHelper.ThrowIfDisposed(renderContext is null, this);
+    }
+
+    internal override void MainThreadDispose()
+    {
+        ProcessQueuedActions();
     }
 }

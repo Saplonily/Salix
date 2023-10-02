@@ -77,10 +77,12 @@ public class Window : IDisposable
 
     public void Show() => WinImpl.Show();
     public void Hide() => WinImpl.Hide();
+    public void Close() => WinImpl.Destroy();
     internal void PollEvents() => WinImpl.PollEvents();
 
     internal void OnCallbackDestroy()
     {
+        impl!.MainThreadDispose();
         // prevent our Window from destroying twice when closing
         impl = null;
         Dispose(true);
@@ -117,7 +119,8 @@ public class Window : IDisposable
         }
     }
 
-    ~Window() => Dispose(disposing: false);
+    ~Window()
+        => Dispose(disposing: false);
 
     void IDisposable.Dispose()
     {
