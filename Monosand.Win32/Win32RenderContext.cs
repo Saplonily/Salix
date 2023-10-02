@@ -62,6 +62,7 @@ public sealed class Win32RenderContext : RenderContext
     public override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
     {
         EnsureState();
+        ThrowHelper.ThrowIfNull(buffer);
 
         var impl = (Win32VertexBufferImpl)buffer.impl;
         Interop.MsdgDrawBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetVerticesCount());

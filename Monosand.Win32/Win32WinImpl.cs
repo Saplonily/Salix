@@ -93,7 +93,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             => (Window)GCHandle.FromIntPtr(handle).Target!;
     }
 
-    private void ProcessQueuedActions()
+    private static void ProcessQueuedActions()
     {
         var pf = (Win32Platform)Game.Instance.Platform;
         lock (pf.queuedActions)

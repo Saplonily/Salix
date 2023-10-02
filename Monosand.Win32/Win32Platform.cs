@@ -27,7 +27,7 @@ public unsafe partial class Win32Platform : Platform
     {
         var impl = new Win32WinImpl(width, height, title, window);
         Debug.Assert(MainThreadId == -1);
-        MainThreadId = Thread.CurrentThread.ManagedThreadId;
+        MainThreadId = Environment.CurrentManagedThreadId;
         return impl;
     }
 

@@ -9,9 +9,9 @@
 
     <!-- wait a minute, not now
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisMode>all</AnalysisMode>
-    -->
-    
+    <AnalysisMode>all</AnalysisMode>-->
+
+
     <!-- hm, just magic -->
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>

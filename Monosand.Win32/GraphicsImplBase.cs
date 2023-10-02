@@ -17,7 +17,7 @@ internal class GraphicsImplBase : IDisposable
         // gc is usually running on another thread
         // so make sure that the disposing method is running on main thread
         var pf = ((Win32Platform)Game.Instance.Platform);
-        if (Thread.CurrentThread.ManagedThreadId == pf.MainThreadId)
+        if (Environment.CurrentManagedThreadId == pf.MainThreadId)
         {
             Dispose(false);
         }

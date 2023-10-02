@@ -5,4 +5,3 @@ using System.Runtime.CompilerServices;
 [assembly: CLSCompliant(true)]
 
 [assembly: SuppressMessage("Usage", "CA2225")]
-[assembly: SuppressMessage("Usage", "CA5392")]
