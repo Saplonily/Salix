@@ -49,9 +49,9 @@ public class MyMainWindow : Window
     public override void Update()
     {
         base.Update();
-        if (KeyboardState.IsPressing(Key.D))
+        if (KeyboardState.IsJustPressed(Key.D))
         {
-            mat *= Matrix4x4.CreateTranslation(1.0f / Width, 0.0f, 0.0f);
+            Console.WriteLine("D just pressed.");
         }
     }
 

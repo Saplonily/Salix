@@ -5,7 +5,8 @@ namespace Monosand;
 public sealed class KeyboardState
 {
     private static Window? window;
-    private readonly BitArray bitArray;
+    private BitArray bitArrayCurrent;
+    private BitArray bitArrayPrevious;
 
     public static KeyboardState Current
     {
@@ -19,11 +20,21 @@ public sealed class KeyboardState
     internal KeyboardState(Window window)
     {
         KeyboardState.window = window;
-        bitArray = new(128);
+        bitArrayCurrent = new(128);
+        bitArrayPrevious = new(128);
     }
 
-    internal void SetTrue(Key key) => bitArray[(int)key] = true;
-    internal void SetFalse(Key key) => bitArray[(int)key] = false;
+    internal void SetTrue(Key key) => bitArrayCurrent[(int)key] = true;
+    internal void SetFalse(Key key) => bitArrayCurrent[(int)key] = false;
+    internal void Swap()
+    {
+        BitArray temp = bitArrayCurrent;
+        bitArrayCurrent = bitArrayPrevious;
+        bitArrayPrevious = temp;
+        bitArrayCurrent.SetAll(false);
+    }
 
-    public bool IsPressing(Key key) => bitArray[(int)key];
+    public bool IsPressing(Key key) => bitArrayCurrent[(int)key];
+    public bool IsJustPressed(Key key) => bitArrayCurrent[(int)key] && !bitArrayPrevious[(int)key];
+    public bool IsJustReleased(Key key) => !bitArrayCurrent[(int)key] && bitArrayPrevious[(int)key];
 }

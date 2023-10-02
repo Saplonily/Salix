@@ -7,7 +7,7 @@ public class Window : IDisposable
     private WinImpl? impl;
     private Game? game;
     private RenderContext? rc;
-    private KeyboardState keyboardState;
+    private readonly KeyboardState keyboardState;
 
     public bool IsInvalid => impl == null || game == null;
     public Game Game
@@ -105,6 +105,12 @@ public class Window : IDisposable
         RenderContext.Clear(Color.CornflowerBlue);
         Render();
         RenderContext.SwapBuffers();
+    }
+
+    internal void UpdateInternal()
+    {
+        Update();
+        keyboardState.Swap();
     }
 
     public virtual void Update()
