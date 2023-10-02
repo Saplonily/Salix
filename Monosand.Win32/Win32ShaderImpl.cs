@@ -92,8 +92,8 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
         base.Dispose(disposing);
         if (shaderHandle != IntPtr.Zero)
         {
-            shaderHandle = IntPtr.Zero;
             Interop.MsdgDeleteShader(winHandle, shaderHandle);
+            shaderHandle = IntPtr.Zero;
         }
     }
 }
