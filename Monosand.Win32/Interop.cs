@@ -13,10 +13,8 @@ internal unsafe class Interop
 
     [DllImport(DllPath)] public static extern IntPtr MsdCreateWindow(int width, int height, char* title, IntPtr gcHandle);
     [DllImport(DllPath)] public static extern int MsdInit();
-
-    // TODO, for some tfms(.net5-) don't support UnmanagedCallbackOnlyAttribute, use a sdl2-like event polling
-    [DllImport(DllPath)] public static extern void MsdSetMsgCallback(int index, void* func);
-    [DllImport(DllPath)] public static extern void MsdPollEvents(IntPtr handle);
+    [DllImport(DllPath)] public static extern void* MsdBeginPollEvents(IntPtr handle, out nint count, out int* events);
+    [DllImport(DllPath)] public static extern void MsdEndPollEvents(IntPtr handle, void* ehandle);
     [DllImport(DllPath)] public static extern void MsdShowWindow(IntPtr handle);
     [DllImport(DllPath)] public static extern void MsdHideWindow(IntPtr handle);
     [DllImport(DllPath)] public static extern void MsdDestroyWindow(IntPtr handle);

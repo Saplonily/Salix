@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable CA1513
+
 namespace Monosand;
 
 public static class ThrowHelper
@@ -20,8 +22,7 @@ public static class ThrowHelper
     /// <summary>Throws <see cref="ArgumentOutOfRangeException"/> when <paramref name="argument"/> is negative.</summary>
     public static void ThrowIfNegative(int argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
-        if (argument < 0)
-            throw new ArgumentOutOfRangeException(paramName, "Can't be negative.");
+        if (argument < 0) throw new ArgumentOutOfRangeException(paramName, "Can't be negative.");
     }
 
     /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="condition"/> is true.</summary>

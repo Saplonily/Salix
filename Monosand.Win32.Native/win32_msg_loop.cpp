@@ -1,16 +1,32 @@
 #include "pch.h"
+#include <vector>
 #include "exports.h"
 
-constexpr int cb_Close = 0;
-constexpr int cb_Resize = 1;
-constexpr int cb_Move = 2;
-constexpr int cb_Destroy = 3;
+enum class event : int32_t
+{
+    close = 1,
+    destroy,
+    move,
+    resize
+};
 
-void* MsgCallbacks[4];
+#pragma pack (1)
+struct win_event
+{
+    event type;
+    int32_t arg1;
+    int32_t arg2;
+    void* gc_handle;
+};
+#pragma pack ()
+
+std::vector<win_event>* event_list;
 
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-    void* gcHandle = (void*)GetWindowLongPtrW(hwnd, 0);
+    void* gc_handle = (void*)GetWindowLongPtrW(hwnd, 0);
+    win_event we{};
+    we.gc_handle = gc_handle;
     switch (uMsg)
     {
     case WM_ERASEBKGND:
@@ -18,29 +34,77 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
     case WM_CLOSE:
     {
-        byte rt = static_cast<byte(*)(void*)>(MsgCallbacks[cb_Close])(gcHandle);
-        if (rt) DestroyWindow(hwnd);
+        we.type = event::close;
+        event_list->push_back(we);
         return 0;
     }
     case WM_DESTROY:
     {
-        static_cast<void(*)(void*)>(MsgCallbacks[cb_Destroy])(gcHandle);
+        we.type = event::destroy;
+        event_list->push_back(we);
         return 0;
     }
     case WM_MOVE:
     {
-        // TODO check if it's maximized or minimized
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
-        static_cast<void(*)(int, int, void*)>(MsgCallbacks[cb_Move])(x, y, gcHandle);
+
+        we.type = event::move;
+        we.arg1 = x;
+        we.arg2 = y;
+        event_list->push_back(we);
         return 0;
     }
     case WM_SIZE:
-        // TODO check if it's maximized or minimized
+    {
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
-        static_cast<void(*)(int, int, void*)>(MsgCallbacks[cb_Resize])(width, height, gcHandle);
+
+        we.type = event::resize;
+        we.arg1 = width;
+        we.arg2 = height;
+        event_list->push_back(we);
         return 0;
     }
+    }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+void window_msg_loop_init()
+{
+    event_list = new std::vector<win_event>;
+    event_list->reserve(5);
+}
+
+static bool began_polled = false;
+extern "C"
+{
+    EXPORT void* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count, win_event** events)
+    {
+        assert(began_polled == false);
+
+        // TODO message merging
+        MSG msg{};
+        while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+
+        std::vector<win_event>* pre_vector = event_list;
+        event_list = new std::vector<win_event>;
+
+        *count = pre_vector->size();
+        *events = pre_vector->data();
+        began_polled = true;
+        return pre_vector;
+    }
+
+    EXPORT void CALLCONV MsdEndPollEvents(whandle* whandle, void* handle)
+    {
+        assert(began_polled == true);
+        std::vector<win_event>* pre_vector = static_cast<std::vector<win_event>*>(handle);
+        delete pre_vector;
+        began_polled = false;
+    }
 }

@@ -79,8 +79,6 @@ public class Window : IDisposable
     public void Hide() => WinImpl.Hide();
     internal void PollEvents() => WinImpl.PollEvents();
 
-    public virtual bool OnRequestedClose() => true;
-
     internal void OnCallbackDestroy()
     {
         // prevent our Window from destroying twice when closing
@@ -92,7 +90,7 @@ public class Window : IDisposable
     public virtual void OnClosed() => Closed?.Invoke(this);
     public virtual bool OnClosing() => true;
     public virtual void OnMoved(int x, int y) => Moved?.Invoke(this, x, y);
-    public virtual void OnResize(int width, int height) => RenderContext.SetViewport(0, 0, width, height);
+    public virtual void OnResized(int width, int height) => RenderContext.SetViewport(0, 0, width, height);
     public virtual void OnCreated() { }
 
     internal void RenderInternal()

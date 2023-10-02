@@ -3,16 +3,16 @@
 #include "whandle.h"
 
 const wchar_t* Monosand = L"Monosand";
-extern void* MsgCallbacks[];
 
 #if _DEBUG
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
 #endif
 void window_gl_init();
+void window_msg_loop_init();
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 // WndExtra:
-// GCHandle of the managed Monosand.Win32.Win32WinImpl
+// GCHandle of the managed Monosand.Window
 
 static PIXELFORMATDESCRIPTOR pfd;
 extern "C"
@@ -94,31 +94,25 @@ extern "C"
     #endif
 
         window_gl_init();
+        window_msg_loop_init();
         SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
         return handle;
-    }
-
-    EXPORT void CALLCONV MsdPollEvents(whandle* handle)
-    {
-        MSG msg{};
-        while (PeekMessageW(&msg, handle->hwnd, NULL, NULL, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
     }
 
     EXPORT void CALLCONV MsdShowWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
 
     EXPORT void CALLCONV MsdHideWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
 
-    EXPORT void CALLCONV MsdSetMsgCallback(int index, void* callback) { MsgCallbacks[index] = callback; }
-
     EXPORT void CALLCONV MsdDestroyWindow(whandle* handle)
     {
         DestroyWindow(handle->hwnd);
         // make sure our window has received and handled WM_DESTORY
-        MsdPollEvents(handle);
+        MSG msg{};
+        while (PeekMessageW(&msg, handle->hwnd, WM_DESTROY, WM_DESTROY, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
         delete handle;
     }
 

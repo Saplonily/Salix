@@ -1,10 +1,9 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Monosand.Win32;
-
-#pragma warning disable CS3016
 
 internal sealed unsafe class Win32WinImpl : WinImpl
 {
@@ -20,48 +19,11 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         }
 
         if (handle == IntPtr.Zero)
-        {
-            // TODO error handling
-            throw new NotImplementedException("TODO: error handling");
-        }
+            throw new OperationFailedException("Can't create window.");
 
         this.handle = handle;
         renderContext = new(this.handle);
     }
-
-    internal static void InitMsgCallbacks()
-    {
-        // set our callbacks
-        // table at ../Monosand.Win32.Native/win32_msg_loop.cpp
-        Interop.MsdSetMsgCallback(0, (delegate* unmanaged[Stdcall]<IntPtr, byte>)&OnMsgClose);
-        Interop.MsdSetMsgCallback(1, (delegate* unmanaged[Stdcall]<int, int, IntPtr, void>)&OnMsgResize);
-        Interop.MsdSetMsgCallback(2, (delegate* unmanaged[Stdcall]<int, int, IntPtr, void>)&OnMsgMove);
-        Interop.MsdSetMsgCallback(3, (delegate* unmanaged[Stdcall]<IntPtr, void>)&OnMsgDestroy);
-    }
-
-    #region native callbacks
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static Window HandleToWin(IntPtr gcHandle)
-        => (Window)(GCHandle.FromIntPtr(gcHandle).Target!);
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-    internal static byte OnMsgClose(IntPtr gcHandle)
-        => HandleToWin(gcHandle).OnClosing() ? (byte)1 : (byte)0;
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-    internal static void OnMsgDestroy(IntPtr gcHandle)
-        => HandleToWin(gcHandle).OnCallbackDestroy();
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-    internal static void OnMsgMove(int x, int y, IntPtr gcHandle)
-        => HandleToWin(gcHandle).OnMoved(x, y);
-
-    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
-    internal static void OnMsgResize(int width, int height, IntPtr gcHandle)
-        => HandleToWin(gcHandle).OnResize(width, height);
-
-    #endregion
 
     internal override void Destroy()
     {
@@ -84,10 +46,49 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         return new(r.right - r.left, r.bottom - r.top);
     }
 
-    internal override void PollEvents()
+    internal unsafe override void PollEvents()
     {
         EnsureState();
-        Interop.MsdPollEvents(handle);
+        IntPtr winHandle = GetWinHandle();
+        int count;
+        int* e;
+        void* handle = Interop.MsdBeginPollEvents(winHandle, out var ncount, out e);
+        if (ncount > int.MaxValue)
+            throw new OperationFailedException("Too many win events.(> int.MaxValue)");
+        count = (int)ncount;
+        int sizeInInt = 3 + sizeof(IntPtr) / 4;
+
+        // magic number at ../Monosand.Win32.Native/win32_msg_loop.cpp :: event
+        for (int i = 0; i < count * sizeInInt; i += sizeInInt)
+        {
+            IntPtr v = ((IntPtr*)(e + i + 3))[0];
+            Window win = HandleToWin(v);
+            switch (e[i])
+            {
+            case 1:
+                bool close = win.OnClosing();
+                if (close)
+                    Interop.MsdDestroyWindow(GetWinHandle());
+                break;
+            case 2:
+                win.OnCallbackDestroy();
+                break;
+            case 3:
+                win.OnMoved(e[i + 1], e[i + 2]);
+                break;
+            case 4:
+                win.OnResized(e[i + 1], e[i + 2]);
+                break;
+            default:
+                Debug.Fail("Unknown event type.");
+                break;
+            }
+        }
+
+        Interop.MsdEndPollEvents(winHandle, handle);
+
+        static Window HandleToWin(IntPtr handle)
+            => (Window)GCHandle.FromIntPtr(handle).Target!;
     }
 
     internal override void Show()
@@ -114,13 +115,13 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         Interop.MsdSetWindowSize(handle, width, height);
     }
 
-    internal override Win32RenderContext GetRenderContext()
+    internal override RenderContext GetRenderContext()
     {
         EnsureState();
         return renderContext!;
     }
 
-    internal IntPtr GetHandle()
+    internal IntPtr GetWinHandle()
     {
         EnsureState();
         return handle;

@@ -12,7 +12,6 @@ public unsafe partial class Win32Platform : Platform
     internal override void Init()
     {
         // TODO error handle
-        Win32WinImpl.InitMsgCallbacks();
         if (Interop.MsdInit() != 0)
             throw new OperationFailedException("Interop.MsdInit() return non-zero value.");
         graphicsBackend = Interop.MsdgGetGraphicsBackend();

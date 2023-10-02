@@ -25,6 +25,7 @@ public class ResourceLoader
             int length = (int)lengthl;
             void* mem = Marshal.AllocHGlobal(length).ToPointer();
             fs.Read(new Span<byte>(mem, length));
+            
 
             var img = platform.LoadImage(new ReadOnlySpan<byte>(mem, length), out int width, out int height, out int channels);
             // support rgba just for now
