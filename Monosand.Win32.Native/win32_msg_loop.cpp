@@ -86,12 +86,12 @@ void window_msg_loop_init()
     event_list->reserve(5);
 }
 
-static bool began_polled = false;
+static bool began_polling = false;
 extern "C"
 {
     EXPORT void* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count, win_event** events)
     {
-        assert(began_polled == false);
+        assert(began_polling == false);
 
         // TODO message merging
         MSG msg{};
@@ -106,15 +106,15 @@ extern "C"
 
         *count = pre_vector->size();
         *events = pre_vector->data();
-        began_polled = true;
+        began_polling = true;
         return pre_vector;
     }
 
     EXPORT void CALLCONV MsdEndPollEvents(whandle* whandle, void* handle)
     {
-        assert(began_polled == true);
+        assert(began_polling == true);
         std::vector<win_event>* pre_vector = static_cast<std::vector<win_event>*>(handle);
         delete pre_vector;
-        began_polled = false;
+        began_polling = false;
     }
 }
