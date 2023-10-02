@@ -50,8 +50,8 @@ public class MyMainWindow : Window
     {
         base.Render();
         a += 0.1f;
-        if (a >= MathF.PI)
-            a = -MathF.PI;
+        if (a >= Math.PI)
+            a = -(float)Math.PI;
         ourShader.Use();
         ourShader.GetParameter("tex0"u8).Set(0);
         ourShader.GetParameter("projectionMat"u8).Set(ref mat);

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace Monosand;
 
@@ -14,25 +13,25 @@ public class ResourceLoader
     public Stream OpenReadStream(string fileName)
         => platform.OpenReadStream(fileName);
 
+    // TODO, use NativeMemory.Alloc to make GC more happy
     public Texture2D LoadTexture2D(Stream stream)
     {
         unsafe
         {
             var fs = stream;
-            long lengthl = fs.Length;
-            if (lengthl > int.MaxValue)
-                throw new NotSupportedException("The stream is too long.");
-            int length = (int)lengthl;
-            void* mem = Marshal.AllocHGlobal(length).ToPointer();
-            fs.Read(new Span<byte>(mem, length));
-            
+            int length = fs.Length > int.MaxValue ?
+                throw new NotSupportedException("Stream is too long.")
+                : (int)fs.Length;
 
-            var img = platform.LoadImage(new ReadOnlySpan<byte>(mem, length), out int width, out int height, out int channels);
-            // support rgba just for now
+            byte[] bytes = new byte[length];
+            fs.Read(bytes, 0, length);
+
+            var img = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out int channels);
+
+            // support rgba only, just for now
             Debug.Assert(channels == 4);
             Texture2D tex = new(width, height, img);
             platform.FreeImage(img);
-            Marshal.FreeHGlobal((nint)mem);
             return tex;
         }
     }

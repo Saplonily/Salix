@@ -28,6 +28,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     internal override void Destroy()
     {
         EnsureState();
+        ProcessQueuedActions();
         Interop.MsdDestroyWindow(handle);
         handle = IntPtr.Zero;
         renderContext = null;
@@ -49,6 +50,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     internal unsafe override void PollEvents()
     {
         EnsureState();
+        ProcessQueuedActions();
         IntPtr winHandle = GetWinHandle();
         int count;
         int* e;
@@ -89,6 +91,17 @@ internal sealed unsafe class Win32WinImpl : WinImpl
 
         static Window HandleToWin(IntPtr handle)
             => (Window)GCHandle.FromIntPtr(handle).Target!;
+    }
+
+    private void ProcessQueuedActions()
+    {
+        var pf = (Win32Platform)Game.Instance.Platform;
+        lock (pf.queuedActions)
+        {
+            foreach (var item in pf.queuedActions)
+                item();
+            pf.queuedActions.Clear();
+        }
     }
 
     internal override void Show()

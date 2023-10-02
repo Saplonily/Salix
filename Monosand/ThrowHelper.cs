@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+#if NET6_0_OR_GREATER
 #pragma warning disable CA1513
+#endif
 
 namespace Monosand;
 

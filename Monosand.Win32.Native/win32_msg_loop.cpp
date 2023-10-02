@@ -15,7 +15,14 @@ struct win_event
     event type;
     int32_t arg1;
     int32_t arg2;
-    int32_t arg3;
+    union arg3_union
+    {
+        arg3_union() { int32 = 0; };
+        arg3_union(int32_t int32) { this->int32 = int32; }
+        int32_t int32;
+        int16_t int16_left;
+        int16_t int16_right;
+    } arg3;
     void* gc_handle;
 };
 
@@ -35,12 +42,14 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     {
         we.type = event::close;
         event_list->push_back(we);
+
         return 0;
     }
     case WM_DESTROY:
     {
         we.type = event::destroy;
         event_list->push_back(we);
+
         return 0;
     }
     case WM_MOVE:
@@ -52,6 +61,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.arg1 = x;
         we.arg2 = y;
         event_list->push_back(we);
+
         return 0;
     }
     case WM_SIZE:
@@ -63,6 +73,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.arg1 = width;
         we.arg2 = height;
         event_list->push_back(we);
+
         return 0;
     }
     }

@@ -1,7 +1,12 @@
-﻿namespace Monosand.Win32;
+﻿using System.Diagnostics;
+
+namespace Monosand.Win32;
 
 public unsafe partial class Win32Platform : Platform
 {
+    internal int MainThreadId = -1;
+    internal List<Action> queuedActions = new();
+
     private GraphicsBackend graphicsBackend;
     private MonosandPlatform identifier;
 
@@ -19,7 +24,12 @@ public unsafe partial class Win32Platform : Platform
     }
 
     internal override WinImpl CreateWindowImpl(int width, int height, string title, Window window)
-        => new Win32WinImpl(width, height, title, window);
+    {
+        var impl = new Win32WinImpl(width, height, title, window);
+        Debug.Assert(MainThreadId == -1);
+        MainThreadId = Thread.CurrentThread.ManagedThreadId;
+        return impl;
+    }
 
     internal override IVertexBufferImpl CreateVertexBufferImpl(
         RenderContext context,

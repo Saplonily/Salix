@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Monosand.Win32;
 
@@ -25,7 +26,18 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
     {
         EnsureState();
         EnsureCurrentState();
+#if NETSTANDARD2_1_OR_GREATER
         return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, name);
+#else
+        byte[] utf8NameBytes = Encoding.UTF8.GetBytes(name);
+        unsafe
+        {
+            fixed (byte* ptr = utf8NameBytes)
+            {
+                return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, ptr);
+            }
+        }
+#endif
     }
 
     int IShaderImpl.GetParameterLocation(ReadOnlySpan<byte> nameUtf8)
