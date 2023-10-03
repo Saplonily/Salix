@@ -80,7 +80,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         return 0;
     }
     case WM_SYSKEYUP:
-    case WM_SYSKEYDOWN: DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    case WM_SYSKEYDOWN:
     case WM_KEYUP:
     case WM_KEYDOWN:
     {
@@ -88,27 +88,40 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         WORD keyFlags = HIWORD(lParam);
         WORD scanCode = LOBYTE(keyFlags);
         BOOL isExtendedKey = (keyFlags & KF_EXTENDED) == KF_EXTENDED;
+
         BOOL wasKeyDown = (keyFlags & KF_REPEAT) == KF_REPEAT;
         BOOL isKeyReleased = (keyFlags & KF_UP) == KF_UP;
         if (wasKeyDown && !isKeyReleased)
-            return 0;
+            break;
 
-        switch (vkCode)
+        // we can only received that PrintScreen is released
+        if (vkCode == VK_SNAPSHOT)
         {
-        case VK_SHIFT:vkCode = !isExtendedKey ? VK_LSHIFT : VK_RSHIFT; break;
-        case VK_CONTROL:vkCode = !isExtendedKey ? VK_LCONTROL : VK_RCONTROL; break;
-        case VK_MENU:vkCode = !isExtendedKey ? VK_LMENU : VK_RMENU; break;
+            Key key = vkCode_to_Key(vkCode);
+            we.type = event::key_down;
+            we.arg1 = (int32_t)key;
+            event_list->push_back(we);
+            we.type = event::key_up;
+            event_list->push_back(we);
+            break;
         }
 
-        // For now, pressing the key NumPad7 will actually result in the key Home, 
-        // when NumLock is turned off. But it's not very urgent at now.
+        vkCode = MapVirtualKeyW(scanCode, MAPVK_VSC_TO_VK_EX);
+        if (vkCode == VK_LCONTROL && isExtendedKey)
+            vkCode = VK_RCONTROL;
+
+        // TODO
+        // For now, pressing the key NumPad7 will actually result in the key Home when the key NumLock is turned off.
+        // But it's not very urgent at now.
+        // Also, if you press both the LShift and RShift, LCtrl and RCtrl etc,
+        // then the behaviour will be strange, also, it's not urgent at now.
 
         Key key = vkCode_to_Key(vkCode);
         we.type = !isKeyReleased ? event::key_down : event::key_up;
         we.arg1 = (int32_t)key;
         event_list->push_back(we);
 
-        return 0;
+        break;
     }
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -131,6 +144,8 @@ extern "C"
         MSG msg{};
         while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))
         {
+            if (msg.message == WM_KEYDOWN && msg.wParam == VK_PROCESSKEY)
+                msg.wParam = ImmGetVirtualKey(msg.hwnd);
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }

@@ -81,7 +81,7 @@ public enum Key : int
     /**<summary>*</summary>*/
     NumPadAsterisk = NumPadMultiply,
     /**<summary>*</summary>*/
-    NumPadStar = NumPadAsterisk,
+    NumPadStar = NumPadMultiply,
     /**<summary>+</summary>*/
     NumPadPlus, NumPadEnter,
     /**<summary>.</summary>*/
@@ -90,7 +90,7 @@ public enum Key : int
     NumPadDot = NumPadPeriod,
     NumPad1, NumPad2, NumPad3, NumPad4, NumPad5, NumPad6, NumPad7, NumPad8, NumPad9, NumPad0,
     Insert, Home, PageUp, Delete, End, PageDown,
-    ScrollLock, PauseBreak,
+    ScrollLock, PauseBreak, PrintScreen,
 
     // mac
     LeftCommand, RightCommand, Control, LeftOption, RightOption

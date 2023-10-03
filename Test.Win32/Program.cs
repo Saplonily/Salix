@@ -38,6 +38,18 @@ public class MyMainWindow : Window
         ourShader = Game.ResourceLoader.LoadGlslShader("test.vert", "test.frag");
     }
 
+    public override void OnKeyPressed(Key key)
+    {
+        base.OnKeyPressed(key);
+        Console.WriteLine($"key {key} pressed");
+    }
+
+    public override void OnKeyReleased(Key key)
+    {
+        base.OnKeyReleased(key);
+        Console.WriteLine($"key {key} released");
+    }
+
     public override void OnResized(int width, int height)
     {
         base.OnResized(width, height);

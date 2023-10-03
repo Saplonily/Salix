@@ -50,13 +50,13 @@ enum class Key : int32_t
     NumPadSlash,
     NumPadMultiply,
     NumPadAsterisk = NumPadMultiply,
-    NumPadStar = NumPadAsterisk,
+    NumPadStar = NumPadMultiply,
     NumPadPlus, NumPadEnter,
     NumPadPeriod,
     NumPadDot = NumPadPeriod,
     NumPad1, NumPad2, NumPad3, NumPad4, NumPad5, NumPad6, NumPad7, NumPad8, NumPad9, NumPad0,
     Insert, Home, PageUp, Delete, End, PageDown,
-    ScrollLock, PauseBreak,
+    ScrollLock, PauseBreak, PrintScreen,
 
     // mac
     LeftCommand, RightCommand, Control, LeftOption, RightOption
@@ -183,6 +183,7 @@ inline Key vkCode_to_Key(WORD vkCode)
         make_case(VK_OEM_6, Key::RightCurlyBracket);
         make_case(VK_OEM_7, Key::Quotation);
         make_case(VK_CLEAR, Key::NumPad5);
+        make_case(VK_SNAPSHOT, Key::PrintScreen);
     default: return Key::Unknown;
     }
 #undef make_case
