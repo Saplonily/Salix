@@ -22,6 +22,8 @@ public class Window : IDisposable
     }
     internal WinImpl WinImpl => impl ?? throw SR.PropNotSet(nameof(WinImpl));
     public RenderContext RenderContext => rc ?? throw SR.PropNotSet(nameof(RenderContext));
+    
+    // TODO cache the X,Y,Width,Height of the Window.
     public int X
     {
         get => WinImpl.GetPosition().X;

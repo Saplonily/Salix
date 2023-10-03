@@ -25,6 +25,9 @@ public abstract class RenderContext
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
     public abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 
+    /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
+    public abstract void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
+
     internal abstract void SetTexture(int index, ITexture2DImpl texImpl);
 
     public abstract void SetShader(Shader? shader);

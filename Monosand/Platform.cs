@@ -18,7 +18,8 @@ public abstract class Platform
     internal abstract IVertexBufferImpl CreateVertexBufferImpl(
         RenderContext context,
         VertexDeclaration vertexDeclaration,
-        VertexBufferDataUsage dataUsage
+        VertexBufferDataUsage dataUsage,
+        bool indexed
         );
 
     /// <summary>Create a <see cref="ITexture2DImpl"/>.</summary>

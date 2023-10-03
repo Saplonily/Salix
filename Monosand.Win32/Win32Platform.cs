@@ -35,9 +35,10 @@ public unsafe partial class Win32Platform : Platform
     internal override IVertexBufferImpl CreateVertexBufferImpl(
         RenderContext context,
         VertexDeclaration vertexDeclaration,
-        VertexBufferDataUsage dataUsage
+        VertexBufferDataUsage dataUsage,
+        bool indexed
         )
-        => new Win32VertexBufferImpl((Win32RenderContext)context, vertexDeclaration, dataUsage);
+        => new Win32VertexBufferImpl((Win32RenderContext)context, vertexDeclaration, dataUsage, indexed);
 
     internal override ITexture2DImpl CreateTexture2DImpl(RenderContext context, int width, int height)
         => new Win32Texture2DImpl((Win32RenderContext)context, width, height);

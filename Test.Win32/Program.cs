@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.Versioning;
 
 using Monosand;
@@ -14,28 +15,45 @@ public class MyMainWindow : Window
 
     public VertexPositionColorTexture[] Vertices = new VertexPositionColorTexture[]
     {
-        new(new(000f, 000f, 0f), Vector4.One, new(0f, 0f)),
-        new(new(300f, 300f, 0f), Vector4.One, new(1f, 1f)),
-        new(new(300f, 000f, 0f), Vector4.One, new(1f, 0f)),
+        new(new(000f, 000f, 0f), Vector4.One, new(0f, 0f)), // top-left
+        new(new(300f, 000f, 0f), Vector4.One, new(1f, 0f)), // top-right
+        new(new(300f, 300f, 0f), Vector4.One, new(1f, 1f)), // bottom-right
+        new(new(000f, 300f, 0f), Vector4.One, new(0f, 1f)), // bottom-left
 
-        new(new(000f, 000f, 0f), Vector4.One, new(0f, 0f)),
-        new(new(000f, 300f, 0f), Vector4.One, new(0f, 1f)),
-        new(new(300f, 300f, 0f), Vector4.One, new(1f, 1f)),
+        new(new(300f, 300f, 0f), Vector4.One, new(0f, 0f)), // top-left
+        new(new(600f, 300f, 0f), Vector4.One, new(1f, 0f)), // top-right
+        new(new(600f, 600f, 0f), Vector4.One, new(1f, 1f)), // bottom-right
+        new(new(300f, 600f, 0f), Vector4.One, new(0f, 1f)), // bottom-left
     };
 
-    float a = 0.0f;
+    float a;
     Texture2D tex = null!;
     Texture2D tex2 = null!;
-    Shader ourShader = null!;
+    Shader shader = null!;
     Matrix4x4 mat;
     public unsafe override void OnCreated()
     {
-        vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration);
+        vertexBuffer = new(VertexPositionColorTexture.VertexDeclaration, indexed: true);
         vertexBuffer.SetData(Vertices);
+        vertexBuffer.SetIndexData(new ushort[]
+        {
+            0, 1, 2,
+            0, 2, 3,
+            4, 5, 6,
+            4, 6, 7
+        });
 
         tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
         tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
-        ourShader = Game.ResourceLoader.LoadGlslShader("test.vert", "test.frag");
+        shader = Game.ResourceLoader.LoadGlslShader("test.vert", "test.frag");
+    }
+
+    public override void OnResized(int width, int height)
+    {
+        base.OnResized(width, height);
+        mat = Matrix4x4.Identity;
+        mat *= Matrix4x4.CreateTranslation(-width / 2f, -height / 2f, 0f);
+        mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
     }
 
     public override void OnKeyPressed(Key key)
@@ -48,14 +66,6 @@ public class MyMainWindow : Window
     {
         base.OnKeyReleased(key);
         Console.WriteLine($"key {key} released");
-    }
-
-    public override void OnResized(int width, int height)
-    {
-        base.OnResized(width, height);
-        mat = Matrix4x4.Identity;
-        mat *= Matrix4x4.CreateTranslation(-width / 2f, -height / 2f, 0f);
-        mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
     }
 
     public override void Update()
@@ -73,13 +83,11 @@ public class MyMainWindow : Window
         a += 0.1f;
         if (a >= Math.PI)
             a = -(float)Math.PI;
-        ourShader.Use();
-        ourShader.GetParameter("tex0"u8).Set(0);
-        ourShader.GetParameter("projectionMat"u8).Set(ref mat);
-        RenderContext.SetTexture(1, tex);
-
+        shader.Use();
+        shader.GetParameter("tex0"u8).Set(0);
+        shader.GetParameter("projectionMat"u8).Set(ref mat);
         RenderContext.SetTexture(0, a > 0 ? tex : tex2);
-        RenderContext.DrawPrimitives(vertexBuffer, PrimitiveType.TriangleList);
+        RenderContext.DrawIndexedPrimitives(vertexBuffer, PrimitiveType.TriangleList);
     }
 }
 

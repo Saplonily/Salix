@@ -67,7 +67,7 @@ extern "C"
         GL_CHECK_ERROR;
     }
 
-    EXPORT buffer_handle* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type)
+    EXPORT buffer_handle* CALLCONV MsdgCreateVertexBuffer(whandle*, vertex_type_handle* vertex_type, byte use_ibo)
     {
         GLuint id;
         glGenBuffers(1, &id);
@@ -76,6 +76,12 @@ extern "C"
         buffer_handle* h = new buffer_handle;
         h->vbo_id = id;
         h->vao_id = make_vao(vertex_type->type_ptr, vertex_type->length);
+        h->ibo_id = 0;
+        if (use_ibo)
+        {
+            glGenBuffers(1, &h->ibo_id); GL_CHECK_ERROR;
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, h->ibo_id); GL_CHECK_ERROR;
+        }
         return h;
     }
 
@@ -85,12 +91,13 @@ extern "C"
         GL_CHECK_ERROR;
         glDeleteBuffers(1, &buffer->vbo_id);
         GL_CHECK_ERROR;
+        if (buffer->ibo_id)
+            glDeleteBuffers(1, &buffer->ibo_id);
     }
 
-    EXPORT void CALLCONV MsdgSetVertexBufferData(whandle*,
-        buffer_handle* buffer_handle,
-        void* data, int dataSize,
-        VertexBufferDataUsage data_usage)
+    EXPORT void CALLCONV MsdgSetVertexBufferData(whandle*, buffer_handle* buffer_handle,
+        void* data, int dataSize, VertexBufferDataUsage data_usage
+    )
     {
         ensure_vbo(buffer_handle->vbo_id);
         ensure_vao(buffer_handle->vao_id);
@@ -105,6 +112,27 @@ extern "C"
         ensure_vbo(buffer_handle->vbo_id);
         ensure_vao(buffer_handle->vao_id);
         glDrawArrays(PrimitiveType_get_glinfo(primitiveType), 0, verticesCount);
+        GL_CHECK_ERROR;
+    }
+
+    EXPORT void CALLCONV MsdgSetIndexBufferData(whandle*, buffer_handle* buffer_handle,
+        void* data, int dataSize, VertexBufferDataUsage data_usage
+    )
+    {
+        assert(buffer_handle->ibo_id != 0);
+        ensure_vao(buffer_handle->vao_id);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_get_glinfo(data_usage));
+        GL_CHECK_ERROR;
+    }
+
+    EXPORT void CALLCONV MsdgDrawIndexedBufferPrimitives(whandle*,
+        buffer_handle* buffer_handle, PrimitiveType primitiveType,
+        int verticesCount
+    )
+    {
+        ensure_vbo(buffer_handle->vbo_id);
+        ensure_vao(buffer_handle->vao_id);
+        glDrawElements(PrimitiveType_get_glinfo(primitiveType), verticesCount, GL_UNSIGNED_SHORT, 0);
         GL_CHECK_ERROR;
     }
 

@@ -37,7 +37,7 @@ internal unsafe class Interop
         void* data, int dataSize, int verticesCount
         );
 
-    [DllImport(DllPath)] public static extern IntPtr MsdgCreateVertexBuffer(IntPtr handle, IntPtr vertexType);
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateVertexBuffer(IntPtr handle, IntPtr vertexType, byte indexed);
     [DllImport(DllPath)] public static extern void MsdgDeleteVertexBuffer(IntPtr handle, IntPtr bufferHandle);
 
     [DllImport(DllPath)]
@@ -47,10 +47,22 @@ internal unsafe class Interop
         );
 
     [DllImport(DllPath)]
+    public static extern void MsdgSetIndexBufferData(
+        IntPtr handle, IntPtr vertexBuffer,
+        void* data, int dataSize, VertexBufferDataUsage dataUsage
+    );
+
+    [DllImport(DllPath)]
     public static extern void MsdgDrawBufferPrimitives(
         IntPtr handle, IntPtr bufferHandle, PrimitiveType primitiveType,
         int verticesCount
         );
+
+    [DllImport(DllPath)]
+    public static extern void MsdgDrawIndexedBufferPrimitives(
+        IntPtr handle, IntPtr bufferHandle, PrimitiveType primitiveType,
+        int verticesCount
+    );
 
     [DllImport(DllPath)]
     public static extern void* MsdLoadImage(void* memory, int length, out int width, out int height, out int channels);

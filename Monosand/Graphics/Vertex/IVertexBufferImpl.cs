@@ -2,5 +2,7 @@
 
 internal interface IVertexBufferImpl : IDisposable
 {
-    unsafe void SetData<T>(T* data, int length) where T : unmanaged;
+    bool Indexed { get; }
+    unsafe void SetIndexData(ushort* data, int count);
+    unsafe void SetData<T>(T* data, int count) where T : unmanaged;
 }

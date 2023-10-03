@@ -63,9 +63,20 @@ public sealed class Win32RenderContext : RenderContext
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
 
         var impl = (Win32VertexBufferImpl)buffer.impl;
         Interop.MsdgDrawBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetVerticesCount());
+    }
+
+    public override void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
+
+        var impl = (Win32VertexBufferImpl)buffer.impl;
+        Interop.MsdgDrawIndexedBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetVerticesCount());
     }
 
     internal override void SetTexture(int index, ITexture2DImpl texImpl)

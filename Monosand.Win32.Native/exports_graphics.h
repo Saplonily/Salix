@@ -20,6 +20,7 @@ class buffer_handle
 public:
     GLuint vbo_id;
     GLuint vao_id;
+    GLuint ibo_id;
 };
 
 #endif
