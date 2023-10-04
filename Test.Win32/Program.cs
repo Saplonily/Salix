@@ -10,14 +10,14 @@ namespace Test.Win32;
 
 public class MyMainWindow : Window
 {
-    private Texture2D tex = null!;
-    private Texture2D tex2 = null!;
+    private Texture2D texture665x680 = null!;
+    private Texture2D texture500x500 = null!;
     private SpriteBatch spriteBatch = null!;
 
     public override void OnCreated()
     {
-        tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
-        tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
+        texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
+        texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
         spriteBatch = new SpriteBatch(RenderContext);
     }
 
@@ -27,7 +27,7 @@ public class MyMainWindow : Window
         base.Render();
         a += 0.1f;
         float r = MathF.Sin(a / 5f) * 5f;
-        spriteBatch.DrawTexture(tex, new(tex.Width / 2, tex.Height / 2), Vector2.One * 0.5f, Vector2.One * 0.5f, r);
+        spriteBatch.DrawTexture(texture665x680, texture665x680.Size / 2, Vector2.One * 0.5f, Vector2.One * 0.5f, r);
         spriteBatch.Flush();
     }
 }
