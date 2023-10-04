@@ -22,7 +22,7 @@ public class Window : IDisposable
     }
     internal WinImpl WinImpl => impl ?? throw SR.PropNotSet(nameof(WinImpl));
     public RenderContext RenderContext => rc ?? throw SR.PropNotSet(nameof(RenderContext));
-    
+
     // TODO cache the X,Y,Width,Height of the Window.
     public int X
     {
@@ -101,6 +101,8 @@ public class Window : IDisposable
     public virtual void OnCreated() { }
     public virtual void OnKeyPressed(Key key) { KeyboardState.SetTrue(key); }
     public virtual void OnKeyReleased(Key key) { KeyboardState.SetFalse(key); }
+    public virtual void OnLostFocus() { KeyboardState.Clear(); }
+    public virtual void OnGainedFocus() { }
 
     internal void RenderInternal()
     {

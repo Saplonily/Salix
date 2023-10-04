@@ -11,6 +11,8 @@ enum class event : int32_t
     resize,
     key_down,
     key_up,
+    gain_focus,
+    lose_focus,
 };
 
 struct win_event
@@ -122,6 +124,18 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         event_list->push_back(we);
 
         break;
+    }
+    case WM_SETFOCUS:
+    {
+        we.type = event::gain_focus;
+        event_list->push_back(we);
+        return 0;
+    }
+    case WM_KILLFOCUS:
+    {
+        we.type = event::lose_focus;
+        event_list->push_back(we);
+        return 0;
     }
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);

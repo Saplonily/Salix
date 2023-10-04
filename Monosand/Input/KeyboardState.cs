@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
@@ -24,6 +25,7 @@ public sealed class KeyboardState
         bitArrayPrevious = new(128);
     }
 
+    // TODO optimize with Vector128?
     internal void SetTrue(Key key) => bitArrayCurrent[(int)key] = true;
     internal void SetFalse(Key key) => bitArrayCurrent[(int)key] = false;
     internal void Swap()
@@ -31,8 +33,9 @@ public sealed class KeyboardState
         BitArray temp = bitArrayCurrent;
         bitArrayCurrent = bitArrayPrevious;
         bitArrayPrevious = temp;
-        bitArrayCurrent.SetAll(false);
+        bitArrayCurrent = (BitArray)bitArrayPrevious.Clone();
     }
+    internal void Clear() => bitArrayCurrent.SetAll(false);
 
     public bool IsPressing(Key key) => bitArrayCurrent[(int)key];
     public bool IsJustPressed(Key key) => bitArrayCurrent[(int)key] && !bitArrayPrevious[(int)key];

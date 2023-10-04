@@ -21,13 +21,30 @@ public class MyMainWindow : Window
         spriteBatch = new SpriteBatch(RenderContext);
     }
 
-    float a = 0;
+    Vector2 position;
+
+    public override void Update()
+    {
+        base.Update();
+        Vector2 dir = new();
+        if (KeyboardState.IsPressing(Key.A))
+            dir -= Vector2.UnitX;
+        if (KeyboardState.IsPressing(Key.W))
+            dir -= Vector2.UnitY;
+        if (KeyboardState.IsPressing(Key.D))
+            dir += Vector2.UnitX;
+        if (KeyboardState.IsPressing(Key.S))
+            dir += Vector2.UnitY;
+        if (dir != Vector2.Zero)
+            dir = Vector2.Normalize(dir);
+        position += dir * 400f / 60f;
+    }
+
     public override void Render()
     {
         base.Render();
-        a += 0.1f;
-        float r = MathF.Sin(a / 5f) * 5f;
-        spriteBatch.DrawTexture(texture665x680, texture665x680.Size / 2, Vector2.One * 0.5f, Vector2.One * 0.5f, r);
+
+        spriteBatch.DrawTexture(texture665x680, position, Vector2.One * 0.5f);//, Vector2.One * 0.5f);
         spriteBatch.Flush();
     }
 }

@@ -73,6 +73,8 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             case 4: win.OnResized(e[i + 1], e[i + 2]); break;
             case 5: win.OnKeyPressed((Key)e[i + 1]); break;
             case 6: win.OnKeyReleased((Key)e[i + 1]); break;
+            case 7: win.OnGainedFocus();break;
+            case 8: win.OnLostFocus();break;
             default: Debug.Fail("Unknown event type."); break;
             }
         }
