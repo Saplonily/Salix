@@ -1,8 +1,10 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace Monosand;
 
+[DebuggerDisplay("position: {Position}, color: {Color}, texCoord: {TextureCoord}")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct VertexPositionColorTexture : IEquatable<VertexPositionColorTexture>
 {
@@ -27,7 +29,6 @@ public struct VertexPositionColorTexture : IEquatable<VertexPositionColorTexture
     public readonly override bool Equals(object? obj)
         => obj is VertexPositionColorTexture texture && Equals(texture);
 
-
     public readonly bool Equals(VertexPositionColorTexture other)
         => Position.Equals(other.Position) &&
            Color.Equals(other.Color) &&
@@ -38,7 +39,6 @@ public struct VertexPositionColorTexture : IEquatable<VertexPositionColorTexture
 
     public static bool operator ==(VertexPositionColorTexture left, VertexPositionColorTexture right)
         => left.Equals(right);
-
 
     public static bool operator !=(VertexPositionColorTexture left, VertexPositionColorTexture right)
         => !(left == right);

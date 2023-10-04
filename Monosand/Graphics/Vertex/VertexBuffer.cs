@@ -77,14 +77,13 @@ public sealed class VertexBuffer<T> : IDisposable where T : unmanaged
 
     /// <summary>Copy and set the data from a pointer <paramref name="ptr"/></summary>
     [CLSCompliant(false)]
-    public unsafe void SetData(T* ptr, int length)
-        => impl.SetData(ptr, length);
+    public unsafe void SetData(T* ptr, int count)
+        => impl.SetData(ptr, count);
 
     /// <summary>Copy and set the data from a pointer <paramref name="ptr"/></summary>
     [CLSCompliant(false)]
-    public unsafe void SetIndexData(ushort* ptr, int length)
-        => impl.SetIndexData(ptr, length);
-
+    public unsafe void SetIndexData(ushort* ptr, int count)
+        => impl.SetIndexData(ptr, count);
 
     public void Dispose()
         => impl.Dispose();

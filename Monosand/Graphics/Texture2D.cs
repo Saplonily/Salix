@@ -1,8 +1,13 @@
-﻿namespace Monosand;
+﻿using System.Diagnostics;
 
+namespace Monosand;
+
+[DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public sealed class Texture2D : GraphicsResource
 {
     private readonly ITexture2DImpl impl;
+    public int Width => impl.Width;
+    public int Height => impl.Height;
 
     public Texture2D(int width, int height)
         => impl = Game.Instance.Platform.CreateTexture2DImpl(Game.Instance.RenderContext, width, height);

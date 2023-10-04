@@ -3,8 +3,11 @@
 // TODO dispose impl
 public sealed class Win32RenderContext : RenderContext
 {
+    private Shader? currentShader;
     private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private IntPtr winHandle;
+
+    public override event ViewportChangedEventHandler? ViewportChanged;
 
     internal Win32RenderContext(IntPtr winHandle)
     {
@@ -22,6 +25,7 @@ public sealed class Win32RenderContext : RenderContext
     {
         EnsureState();
         Interop.MsdgViewport(winHandle, x, y, width, height);
+        ViewportChanged?.Invoke(this, x, y, width, height);
     }
 
     public override void Clear(Color color)
@@ -76,7 +80,7 @@ public sealed class Win32RenderContext : RenderContext
         ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
 
         var impl = (Win32VertexBufferImpl)buffer.impl;
-        Interop.MsdgDrawIndexedBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetVerticesCount());
+        Interop.MsdgDrawIndexedBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetIndicesCount());
     }
 
     internal override void SetTexture(int index, ITexture2DImpl texImpl)
@@ -95,6 +99,12 @@ public sealed class Win32RenderContext : RenderContext
 
     private void EnsureState()
         => ThrowHelper.ThrowIfDisposed(winHandle == IntPtr.Zero, this);
+
+    public override Shader? GetCurrentShader()
+    {
+        EnsureState();
+        return currentShader;
+    }
 
     public override void SetShader(Shader? shader)
     {

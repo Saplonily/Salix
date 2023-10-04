@@ -5,6 +5,9 @@ internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
     internal IntPtr texHandle;
     internal int width, height;
 
+    int ITexture2DImpl.Width => width;
+    int ITexture2DImpl.Height => height;
+
     internal Win32Texture2DImpl(Win32RenderContext context, int width, int height)
         : base(context.GetWinHandle())
     {

@@ -6,6 +6,7 @@ internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBu
     private VertexBufferDataUsage dataUsage;
     private IntPtr bufferHandle;
     private int verticesCount;
+    private int indicesCount;
     bool IVertexBufferImpl.Indexed => indexed;
 
     internal Win32VertexBufferImpl(
@@ -30,7 +31,7 @@ internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBu
 
     void IVertexBufferImpl.SetIndexData(ushort* data, int count)
     {
-        verticesCount = count;
+        indicesCount = count;
         Interop.MsdgSetIndexBufferData(winHandle, bufferHandle, data, sizeof(ushort) * count, dataUsage);
     }
 
@@ -54,5 +55,11 @@ internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBu
     {
         EnsureState();
         return verticesCount;
+    }
+
+    internal int GetIndicesCount()
+    {
+        EnsureState();
+        return indicesCount;
     }
 }

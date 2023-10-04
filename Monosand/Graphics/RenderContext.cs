@@ -4,7 +4,8 @@
 // TODO dispose impl
 public abstract class RenderContext
 {
-    protected Shader? currentShader;
+    public delegate void ViewportChangedEventHandler(RenderContext renderContext, int x, int y, int width, int height);
+    public abstract event ViewportChangedEventHandler? ViewportChanged;
 
     /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
     internal abstract void SwapBuffers();
@@ -32,8 +33,7 @@ public abstract class RenderContext
 
     public abstract void SetShader(Shader? shader);
 
-    public Shader? GetCurrentShader()
-        => currentShader;
+    public abstract Shader? GetCurrentShader();
 
     public void SetTexture(int index, Texture2D texture2D)
         => SetTexture(index, texture2D.GetImpl());

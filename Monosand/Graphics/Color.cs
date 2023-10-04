@@ -1,8 +1,11 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
 /// <summary>Represents a RGBA (Red, Green, Blue, Alpha) color. 4bytes per component.</summary>
+[DebuggerDisplay("RGBA: <{R}, {G}, {B}, {A}>")]
 [StructLayout(LayoutKind.Sequential)]
 public partial struct Color : IEquatable<Color>
 {
@@ -67,4 +70,7 @@ public partial struct Color : IEquatable<Color>
 
     public readonly override int GetHashCode()
         => HashCode.Combine(R, G, B, A);
+
+    public readonly Vector4 ToVector4()
+        => new(R / 255.0f, G / 255.0f, B / 255.0f, A / 255.0f);
 }
