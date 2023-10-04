@@ -1,4 +1,6 @@
-﻿namespace Monosand;
+﻿using System.Drawing;
+
+namespace Monosand;
 #pragma warning disable CS3011
 
 // TODO dispose impl
@@ -35,9 +37,10 @@ public abstract class RenderContext
 
     public abstract Shader? GetCurrentShader();
 
+    public abstract Rectangle GetViewport();
+
     public void SetTexture(int index, Texture2D texture2D)
         => SetTexture(index, texture2D.GetImpl());
-
 
     public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
     {

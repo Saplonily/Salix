@@ -15,10 +15,10 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
         this.context = context;
     }
 
-    internal unsafe static Win32ShaderImpl FromGlsl(Win32RenderContext context, byte* vshSource, byte* fshSource)
+    internal unsafe static Win32ShaderImpl FromGlsl(Win32RenderContext context, byte* vertSource, byte* fragSource)
     {
         Win32ShaderImpl impl = new(context);
-        impl.shaderHandle = Interop.MsdgCreateShaderFromGlsl(impl.winHandle, vshSource, fshSource);
+        impl.shaderHandle = Interop.MsdgCreateShaderFromGlsl(impl.winHandle, vertSource, fragSource);
         return impl;
     }
 

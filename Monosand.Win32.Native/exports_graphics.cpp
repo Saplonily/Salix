@@ -184,12 +184,12 @@ extern "C"
         glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
     }
 
-    EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(whandle*, const char* vsh_source, const char* fsh_source)
+    EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(whandle*, const char* vert_source, const char* frag_source)
     {
         GLuint vsh = glCreateShader(GL_VERTEX_SHADER); GL_CHECK_ERROR;
         GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER); GL_CHECK_ERROR;
-        glShaderSource(vsh, 1, &vsh_source, nullptr); GL_CHECK_ERROR;
-        glShaderSource(fsh, 1, &fsh_source, nullptr); GL_CHECK_ERROR;
+        glShaderSource(vsh, 1, &vert_source, nullptr); GL_CHECK_ERROR;
+        glShaderSource(fsh, 1, &frag_source, nullptr); GL_CHECK_ERROR;
         glCompileShader(vsh); GL_CHECK_ERROR;
         glCompileShader(fsh); GL_CHECK_ERROR;
         GLuint prog = glCreateProgram(); GL_CHECK_ERROR;

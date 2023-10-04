@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace Monosand;
 
+// TODO caching
 public class ResourceLoader
 {
     private readonly Game game;
@@ -12,6 +14,9 @@ public class ResourceLoader
 
     public Stream OpenReadStream(string fileName)
         => platform.OpenReadStream(fileName);
+
+    public Stream OpenEmbeddedStream(string fileName, Assembly? assembly = null)
+        => (assembly ?? Assembly.GetAssembly(typeof(ResourceLoader))).GetManifestResourceStream(fileName);
 
     // TODO, use NativeMemory.Alloc to make GC more happy
     public Texture2D LoadTexture2D(Stream stream)
@@ -36,10 +41,10 @@ public class ResourceLoader
         }
     }
 
-    public Shader LoadGlslShader(Stream vshStream, Stream fshStream)
+    public Shader LoadGlslShader(Stream vertStream, Stream fragStream)
     {
-        byte[] vsh = ReadAllBytes(vshStream);
-        byte[] fsh = ReadAllBytes(fshStream);
+        byte[] vsh = ReadAllBytes(vertStream);
+        byte[] fsh = ReadAllBytes(fragStream);
         unsafe
         {
             fixed (byte* vshPtr = vsh)

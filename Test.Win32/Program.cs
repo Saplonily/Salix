@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.Versioning;
 
 using Monosand;
@@ -11,51 +10,25 @@ namespace Test.Win32;
 
 public class MyMainWindow : Window
 {
-    float a;
-    Texture2D tex = null!;
-    Texture2D tex2 = null!;
-    Shader shader = null!;
-    SpriteBatch batch = null!;
-    Matrix4x4 mat;
+    private Texture2D tex = null!;
+    private Texture2D tex2 = null!;
+    private SpriteBatch spriteBatch = null!;
 
-    public unsafe override void OnCreated()
+    public override void OnCreated()
     {
         tex = Game.ResourceLoader.LoadTexture2D("665x680.png");
         tex2 = Game.ResourceLoader.LoadTexture2D("500x500.png");
-        shader = Game.ResourceLoader.LoadGlslShader("test.vert", "test.frag");
-        batch = new(RenderContext);
+        spriteBatch = new SpriteBatch(RenderContext);
     }
 
-    public override void OnResized(int width, int height)
-    {
-        base.OnResized(width, height);
-        mat = Matrix4x4.Identity;
-        mat *= Matrix4x4.CreateTranslation(-width / 2f, -height / 2f, 0f);
-        mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        if (KeyboardState.IsJustPressed(Key.D))
-        {
-            Console.WriteLine("D just pressed.");
-        }
-    }
-
-    public unsafe override void Render()
+    float a = 0;
+    public override void Render()
     {
         base.Render();
         a += 0.1f;
-        if (a >= Math.PI)
-            a = -(float)Math.PI;
-        shader.Use();
-        shader.GetParameter("tex0"u8).Set(0);
-        shader.GetParameter("projectionMat"u8).Set(ref mat);
-
-        for (int i = 0; i < 20000; i++)
-            batch.DrawTexture((i % 2) == 0 ? tex : tex, new Vector2((i * 4) % 1200, (i * 20) % 600), Vector2.One * 0.1f, Color.White);
-        batch.Flush();
+        float r = MathF.Sin(a / 5f) * 5f;
+        spriteBatch.DrawTexture(tex, new(tex.Width / 2, tex.Height / 2), Vector2.One * 0.5f, Vector2.One * 0.5f, r);
+        spriteBatch.Flush();
     }
 }
 
@@ -65,5 +38,21 @@ public class Program
     {
         Game game = new(new Win32Platform(), new MyMainWindow());
         game.Run();
+    }
+}
+
+public class SomeClass : ISomeInterface
+{
+    static void ISomeInterface.TestMethod()
+    {
+        Console.WriteLine("Hi in SomeClass!");
+    }
+}
+
+public interface ISomeInterface
+{
+    public virtual static void TestMethod()
+    {
+        Console.WriteLine("Hi!");
     }
 }

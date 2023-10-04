@@ -1,4 +1,6 @@
-﻿namespace Monosand.Win32;
+﻿using System.Drawing;
+
+namespace Monosand.Win32;
 
 // TODO dispose impl
 public sealed class Win32RenderContext : RenderContext
@@ -6,6 +8,7 @@ public sealed class Win32RenderContext : RenderContext
     private Shader? currentShader;
     private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private IntPtr winHandle;
+    private Rectangle viewport;
 
     public override event ViewportChangedEventHandler? ViewportChanged;
 
@@ -26,6 +29,13 @@ public sealed class Win32RenderContext : RenderContext
         EnsureState();
         Interop.MsdgViewport(winHandle, x, y, width, height);
         ViewportChanged?.Invoke(this, x, y, width, height);
+        viewport = new(x, y, width, height);
+    }
+
+    public override Rectangle GetViewport()
+    {
+        EnsureState();
+        return viewport;
     }
 
     public override void Clear(Color color)

@@ -71,6 +71,6 @@ public unsafe partial class Win32Platform : Platform
         }
     }
 
-    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vshSource, byte* fshSource)
-        => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vshSource, fshSource);
+    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vertSource, byte* fragSource)
+        => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vertSource, fragSource);
 }

@@ -72,7 +72,7 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MSdgDeleteTexture(IntPtr handle, IntPtr texHandle);
     [DllImport(DllPath)] public static extern void MsdgSetTexture(IntPtr handle, int index, IntPtr texHandle);
     [DllImport(DllPath)] public static extern GraphicsBackend MsdgGetGraphicsBackend();
-    [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(IntPtr handle, byte* vshSource, byte* fshSource);
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(IntPtr handle, byte* vertSource, byte* fragSource);
     [DllImport(DllPath)] public static extern void MsdgSetShader(IntPtr handle, IntPtr shaderHandle);
     [DllImport(DllPath)] public static extern void MsdgDeleteShader(IntPtr handle, IntPtr shaderHandle);
 
