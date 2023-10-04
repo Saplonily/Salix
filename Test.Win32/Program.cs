@@ -35,6 +35,7 @@ public class MyMainWindow : Window
             dir += Vector2.UnitX;
         if (KeyboardState.IsPressing(Key.S))
             dir += Vector2.UnitY;
+
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
         position += dir * 400f / 60f;

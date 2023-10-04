@@ -114,7 +114,7 @@ public class Window : IDisposable
     internal void UpdateInternal()
     {
         Update();
-        keyboardState.Swap();
+        keyboardState.Update();
     }
 
     public virtual void Update()
