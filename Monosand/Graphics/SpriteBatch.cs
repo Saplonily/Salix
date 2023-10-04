@@ -111,7 +111,7 @@ public sealed partial class SpriteBatch
     private void FlushBuffer(ref int verticesCount)
     {
         if (verticesCount == 0) return;
-        Console.WriteLine($"try to flush: {verticesCount}");
+        //Console.WriteLine($"try to flush: {verticesCount}");
         buffer.SetIndexData(indices.AsSpan(0, verticesCount * 6));
         buffer.SetData(vertices.AsSpan(0, verticesCount * 4));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
