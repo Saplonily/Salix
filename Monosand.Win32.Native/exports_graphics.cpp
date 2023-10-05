@@ -13,7 +13,7 @@ static void ensure_vbo(GLuint vbo);
 
 // make a vao
 static GLuint make_vao(VertexElementType* type, int len);
-static void* load_image(void* mem, int length, int* x, int* y, int* channels);
+static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format);
 static void free_image(void* data);
 
 extern "C"
@@ -101,7 +101,7 @@ extern "C"
     {
         ensure_vbo(buffer_handle->vbo_id);
         ensure_vao(buffer_handle->vao_id);
-        glBufferData(GL_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_get_glinfo(data_usage));
+        glBufferData(GL_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_to_gl(data_usage));
         GL_CHECK_ERROR;
     }
 
@@ -121,7 +121,7 @@ extern "C"
     {
         assert(buffer_handle->ibo_id != 0);
         ensure_vao(buffer_handle->vao_id);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_get_glinfo(data_usage));
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, data, VertexBufferDataUsage_to_gl(data_usage));
         GL_CHECK_ERROR;
     }
 
@@ -145,20 +145,21 @@ extern "C"
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); GL_CHECK_ERROR;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); GL_CHECK_ERROR;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); GL_CHECK_ERROR;
-        const float borderColor[] = { 0.0f };
+        const float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); GL_CHECK_ERROR;
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); GL_CHECK_ERROR;
         return (void*)(size_t)tex;
     }
 
     // TODO support not only RGBA but also other formats
-    EXPORT void CALLCONV MsdgSetTextureData(whandle*, void* tex_handle, int width, int height, void* data, int channels)
+    EXPORT void CALLCONV MsdgSetTextureData(whandle*, void* tex_handle, int width, int height, void* data, ImageFormat imageFormat)
     {
         GLuint tex = (GLuint)(size_t)tex_handle;
         glBindTexture(GL_TEXTURE_2D, tex);
-        int align = (width % 2 == 0) ? 8 : 4;
+        int lineWidth = (width * ImageFormat_get_size(imageFormat));
+        int align = lineWidth % 8 == 0 ? 8 : lineWidth % 4 == 0 ? 4 : lineWidth % 2 == 0 ? 2 : 1;
         glPixelStorei(GL_UNPACK_ALIGNMENT, align); GL_CHECK_ERROR;
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
+        GLenum format = ImageFormat_to_gl(imageFormat);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
     }
 
     EXPORT void CALLCONV MSdgDeleteTexture(whandle*, void* tex_handle)
@@ -168,9 +169,9 @@ extern "C"
         glDeleteTextures(1, &tex); GL_CHECK_ERROR;
     }
 
-    EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* channels)
+    EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
     {
-        return load_image(mem, length, x, y, channels);
+        return load_image(mem, length, x, y, data_length, format);
     }
 
     EXPORT void CALLCONV MsdFreeImage(void* texData)
@@ -240,9 +241,19 @@ extern "C"
 
 // hm, just temporarily use stb_image cuz it's head-only
 // you can always switch to other libraries you like easily here
-static void* load_image(void* mem, int length, int* x, int* y, int* channels)
+static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
 {
-    return stbi_load_from_memory((stbi_uc*)mem, length, x, y, channels, 0);
+    int channels;
+    void* data = stbi_load_from_memory((stbi_uc*)mem, length, x, y, &channels, 0);
+    switch (channels)
+    {
+    case 1: *format = ImageFormat::R8; break;
+    case 3: *format = ImageFormat::Rgb24; break;
+    case 4: *format = ImageFormat::Rgba32; break;
+    default: *format = (ImageFormat)-1; break;
+    }
+    *data_length = *x * *y * channels;
+    return data;
 }
 
 static void free_image(void* data)

@@ -15,10 +15,10 @@ internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
         texHandle = Interop.MsdgCreateTexture(winHandle, width, height);
     }
 
-    unsafe void ITexture2DImpl.SetData(int width, int height, void* data)
+    unsafe void ITexture2DImpl.SetData(int width, int height, void* data, ImageFormat format)
     {
         (this.width, this.height) = (width, height);
-        Interop.MsdgSetTextureData(winHandle, texHandle, width, height, data);
+        Interop.MsdgSetTextureData(winHandle, texHandle, width, height, data, format);
     }
 
     protected override void Dispose(bool disposing)
@@ -26,7 +26,7 @@ internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
         base.Dispose(disposing);
         if (texHandle != IntPtr.Zero)
         {
-            Interop.MSdgDeleteTexture(winHandle, texHandle);
+            Interop.MsdgDeleteTexture(winHandle, texHandle);
             texHandle = IntPtr.Zero;
         }
     }

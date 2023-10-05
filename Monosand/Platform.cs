@@ -36,13 +36,7 @@ public abstract class Platform
     internal abstract Stream OpenReadStream(string fileName);
 
     /// <summary>Load an image from an image file memory.</summary>
-    /// <param name="channels">
-    /// <para>1 for gray.</para>
-    /// <para>2 for gray, alpha.</para>
-    /// <para>3 for red, green, blue.</para>
-    /// <para>4 for red, green, blue, alpha.</para>
-    /// </param>
-    internal abstract Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out int channels);
+    internal abstract Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format);
 
     /// <summary>Free the image read from the image file memory.</summary>
     internal abstract void FreeImage(Span<byte> image);

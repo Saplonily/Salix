@@ -16,7 +16,8 @@ public class ResourceLoader
         => platform.OpenReadStream(fileName);
 
     public Stream OpenEmbeddedStream(string fileName, Assembly? assembly = null)
-        => (assembly ?? Assembly.GetAssembly(typeof(ResourceLoader))).GetManifestResourceStream(fileName);
+        => (assembly ?? Assembly.GetExecutingAssembly()).GetManifestResourceStream(fileName)
+            ?? throw new FileNotFoundException(null, fileName);
 
     // TODO, use NativeMemory.Alloc to make GC more happy
     public Texture2D LoadTexture2D(Stream stream)
@@ -31,11 +32,9 @@ public class ResourceLoader
             byte[] bytes = new byte[length];
             fs.Read(bytes, 0, length);
 
-            var img = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out int channels);
+            var img = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
 
-            // support rgba only, just for now
-            Debug.Assert(channels == 4);
-            Texture2D tex = new(width, height, img);
+            Texture2D tex = new(width, height, img, format);
             platform.FreeImage(img);
             return tex;
         }

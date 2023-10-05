@@ -65,11 +65,21 @@ internal unsafe class Interop
     );
 
     [DllImport(DllPath)]
-    public static extern void* MsdLoadImage(void* memory, int length, out int width, out int height, out int channels);
+    public static extern void* MsdLoadImage(
+        void* memory, int length, out int width,
+        out int height, out int dataLength,
+        out ImageFormat textureFormat
+        );
     [DllImport(DllPath)] public static extern void MsdFreeImage(void* texData);
-    [DllImport(DllPath)] public static extern void MsdgSetTextureData(IntPtr handle, IntPtr texHandle, int width, int height, void* data);
+    [DllImport(DllPath)]
+    public static extern void MsdgSetTextureData(
+        IntPtr handle, IntPtr texHandle,
+        int width, int height, void* data,
+        ImageFormat format
+        );
+
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateTexture(IntPtr handle, int width, int height);
-    [DllImport(DllPath)] public static extern void MSdgDeleteTexture(IntPtr handle, IntPtr texHandle);
+    [DllImport(DllPath)] public static extern void MsdgDeleteTexture(IntPtr handle, IntPtr texHandle);
     [DllImport(DllPath)] public static extern void MsdgSetTexture(IntPtr handle, int index, IntPtr texHandle);
     [DllImport(DllPath)] public static extern GraphicsBackend MsdgGetGraphicsBackend();
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(IntPtr handle, byte* vertSource, byte* fragSource);

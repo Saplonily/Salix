@@ -48,16 +48,16 @@ public unsafe partial class Win32Platform : Platform
     internal override Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-    internal unsafe override Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out int channels)
+    internal unsafe override Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
         void* data;
         fixed (void* ptr = source)
         {
-            data = Interop.MsdLoadImage(ptr, source.Length, out width, out height, out channels);
+            data = Interop.MsdLoadImage(ptr, source.Length, out width, out height, out int size, out format);
+            if (data is null)
+                throw new ResourceLoadFailedException() { Type = ResourceType.Image };
+            return new Span<byte>(data, size);
         }
-        if (data is null)
-            throw new ResourceLoadFailedException() { Type = ResourceType.Image };
-        return new Span<byte>(data, width * height * channels);
     }
 
     internal override void FreeImage(Span<byte> image)

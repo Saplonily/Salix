@@ -31,11 +31,20 @@ enum class VertexBufferDataUsage
     StreamDraw
 };
 
+// ../Monosand/Graphics/GraphicsBackend.cs
 enum class GraphicsBackend
 {
-    Unknown = 0,
-    Opengl33 = 1,
-    DirectX11 = 2,
+    Unknown,
+    Opengl33,
+    DirectX11,
+};
+
+// ../Monosand/Graphics/ImageFormat.cs
+enum class ImageFormat
+{
+    R8,
+    Rgb24,
+    Rgba32
 };
 
 struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };
@@ -80,7 +89,7 @@ inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
     // TODO: error handling
 }
 
-inline GLenum VertexBufferDataUsage_get_glinfo(VertexBufferDataUsage type)
+inline GLenum VertexBufferDataUsage_to_gl(VertexBufferDataUsage type)
 {
     switch (type)
     {
@@ -94,6 +103,36 @@ inline GLenum VertexBufferDataUsage_get_glinfo(VertexBufferDataUsage type)
     assert(false);
     return NULL;
     // TODO: error handling
+}
+
+inline GLenum ImageFormat_to_gl(ImageFormat format)
+{
+    switch (format)
+    {
+    case ImageFormat::R8:
+        return GL_R8;
+    case ImageFormat::Rgb24:
+        return GL_RGB;
+    case ImageFormat::Rgba32:
+        return GL_RGBA;
+    }
+    assert(false);
+    return NULL;
+}
+
+inline int ImageFormat_get_size(ImageFormat format)
+{
+    switch (format)
+    {
+    case ImageFormat::R8:
+        return 1;
+    case ImageFormat::Rgb24:
+        return 3;
+    case ImageFormat::Rgba32:
+        return 4;
+    }
+    assert(false);
+    return -1;
 }
 
 inline const char* gl_get_error_msg(GLenum err)

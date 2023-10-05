@@ -204,9 +204,9 @@ public sealed partial class SpriteBatch
             BatchItem item = batchItems[i];
             if (item.tex != currentTex)
             {
+                FlushBuffer(ref cvid);
                 currentTex = item.tex;
                 context.SetTexture(0, currentTex);
-                FlushBuffer(ref cvid);
             }
             if (cvid * 4 + 4 > ushort.MaxValue)
                 FlushBuffer(ref cvid);

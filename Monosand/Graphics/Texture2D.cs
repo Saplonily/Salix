@@ -15,27 +15,27 @@ public sealed class Texture2D : GraphicsResource
         => impl = Game.Instance.Platform.CreateTexture2DImpl(Game.Instance.RenderContext, width, height);
 
     [CLSCompliant(false)]
-    public unsafe Texture2D(int width, int height, void* data)
+    public unsafe Texture2D(int width, int height, void* data, ImageFormat format)
         : this(width, height)
     {
         if (data != null)
-            impl.SetData(width, height, data);
+            impl.SetData(width, height, data, format);
     }
 
-    public Texture2D(int width, int height, ReadOnlySpan<byte> data) : this(width, height)
-        => SetData(width, height, data);
+    public Texture2D(int width, int height, ReadOnlySpan<byte> data, ImageFormat format) : this(width, height)
+        => SetData(width, height, data, format);
 
     [CLSCompliant(false)]
-    public unsafe void SetData(int width, int height, void* data)
-        => impl.SetData(width, height, data);
+    public unsafe void SetData(int width, int height, void* data, ImageFormat format)
+        => impl.SetData(width, height, data, format);
 
-    public void SetData(int width, int height, ReadOnlySpan<byte> data)
+    public void SetData(int width, int height, ReadOnlySpan<byte> data, ImageFormat format)
     {
         unsafe
         {
             fixed (byte* ptr = data)
             {
-                SetData(width, height, ptr);
+                SetData(width, height, ptr, format);
             }
         }
     }
