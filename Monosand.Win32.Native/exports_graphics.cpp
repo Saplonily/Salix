@@ -266,6 +266,8 @@ void window_gl_init()
 {
     glGenBuffers(1, &default_vbo);
     GL_CHECK_ERROR;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 static void ensure_vao(GLuint vao)

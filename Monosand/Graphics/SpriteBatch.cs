@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 
 #pragma warning disable CS8981
 
@@ -33,40 +34,55 @@ public sealed partial class SpriteBatch
     private readonly List<BatchItem> batchItems;
     private readonly RenderContext context;
 
-    private Shader shader = null!;
+    private bool isInDrawText = false;
+    private Shader? shader;
     private ShaderParameter projectionParam;
-    private ShaderParameter extraMatParam;
+    private ShaderParameter transformParam;
     private Matrix4x4 transform;
+    private Matrix4x4 projection;
     private vpct[] vertices;
     private ushort[] indices;
 
     public RenderContext RenderContext => context;
-    public Shader Shader
-    {
-        get => shader;
-        set
-        {
-            shader = value;
-            shader.Use();
-            projectionParam = value.GetParameter("projection"u8);
-            extraMatParam = value.GetParameter("extra"u8);
-            value.GetParameter("tex"u8).Set(0);
-        }
-    }
+
+    public Shader SpriteShader { get; set; }
+    public Shader TextShader { get; set; }
 
     public Matrix4x4 Transform
     {
         get => transform;
-        set { transform = value; extraMatParam.Set(ref value); }
+        set { transform = value; transformParam.Set(ref value); }
     }
 
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
     /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
-    /// <param name="spriteShader">The default <see cref="Shader"/> will be used.
+    public SpriteBatch(RenderContext context)
+        : this(context, null, null)
+    {
+    }
+
+    /// <summary>
+    /// Construct a <see cref="SpriteBatch"/>.
+    /// </summary>
+    /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
+    /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
     /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    public SpriteBatch(RenderContext context, Shader? spriteShader = null)
+    public SpriteBatch(RenderContext context, Shader? spriteShader)
+        : this(context, spriteShader, null)
+    {
+    }
+
+    /// <summary>
+    /// Construct a <see cref="SpriteBatch"/>.
+    /// </summary>
+    /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
+    /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
+    /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
+    /// <param name="textShader">The default <see cref="TextShader"/> will be used.
+    /// If set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
+    public SpriteBatch(RenderContext context, Shader? spriteShader, Shader? textShader)
     {
         this.context = context;
         batchItems = new();
@@ -78,23 +94,36 @@ public sealed partial class SpriteBatch
             var rl = Game.Instance.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            Shader = rl.LoadGlslShader(vert, frag);
+            SpriteShader = rl.LoadGlslShader(vert, frag);
         }
         else
         {
-            Shader = spriteShader;
+            SpriteShader = spriteShader;
         }
-        Transform = Matrix4x4.Identity;
-        context.ViewportChanged += Context_ViewportChanged;
+        if (textShader is null)
+        {
+            var rl = Game.Instance.ResourceLoader;
+            using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
+            using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
+            TextShader = rl.LoadGlslShader(vert, frag);
+        }
+        else
+        {
+            TextShader = textShader;
+        }
+        transform = Matrix4x4.Identity;
+        EnsureShader(SpriteShader);
+        context.ViewportChanged += OnContextViewportChanged;
         Rectangle rect = context.GetViewport();
-        Context_ViewportChanged(context, rect.X, rect.Y, rect.Width, rect.Height);
+        OnContextViewportChanged(context, rect.X, rect.Y, rect.Width, rect.Height);
     }
 
-    private void Context_ViewportChanged(RenderContext renderContext, int x, int y, int width, int height)
+    private void OnContextViewportChanged(RenderContext renderContext, int x, int y, int width, int height)
     {
         Matrix4x4 mat = Matrix4x4.Identity;
         mat *= Matrix4x4.CreateTranslation(-width / 2f, -height / 2f, 0f);
         mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
+        projection = mat;
         projectionParam.Set(ref mat);
     }
 
@@ -120,7 +149,18 @@ public sealed partial class SpriteBatch
         => DrawTexture(texture, position, origin, scale, radian, Color.White);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, Color color)
+        => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
+
+    public void DrawTexture(
+        Texture2D texture,
+        Vector2 position, Vector2 origin,
+        Vector2 scale, float radian,
+        Color color,
+        Vector2 partRectTL, Vector2 partRectBR
+        )
     {
+        ThrowHelper.ThrowIfNull(texture);
+        if (!isInDrawText) EnsureShader(SpriteShader);
         float w = texture.Width;
         float h = texture.Height;
         Vector2 texSize = new(w, h);
@@ -143,7 +183,7 @@ public sealed partial class SpriteBatch
 #endif
 
         // [ cos  -sin ]     [ x ]     [ x * cos - y * sin ]
-        // [           ]  *  [   ]  =  [   ]
+        // [           ]  *  [   ]  =  [                   ]
         // [ sin   cos ]     [ y ]     [ x * sin + y * cos ]
 
         tl = new(tl.X * cos - tl.Y * sin, tl.X * sin + tl.Y * cos);
@@ -161,18 +201,27 @@ public sealed partial class SpriteBatch
         batchItems.Add(new BatchItem
         (
             tex: texture,
-            topLeft: new(new(tl, 0f), c, new(0f, 0f)),
-            topRight: new(new(tr, 0f), c, new(1f, 0f)),
-            bottomLeft: new(new(bl, 0f), c, new(0f, 1f)),
-            bottomRight: new(new(br, 0f), c, new(1f, 1f))
+            topLeft: new(new(tl, 0f), c, partRectTL),
+            topRight: new(new(tr, 0f), c, new(partRectBR.X, partRectTL.Y)),
+            bottomLeft: new(new(bl, 0f), c, new(partRectTL.X, partRectBR.Y)),
+            bottomRight: new(new(br, 0f), c, partRectBR)
         ));
     }
 
     public void DrawTextureMatrix(Texture2D texture, ref Matrix3x2 matrix, Color color)
-         => DrawTextureMatrix(texture, ref matrix, color, color, color, color);
+         => DrawTextureMatrix(texture, ref matrix, color, color, color, color, new(0f, 0f), new(1f, 1f));
 
-    public void DrawTextureMatrix(Texture2D texture, ref Matrix3x2 matrix, Color ctl, Color ctr, Color cbl, Color cbr)
+    public void DrawTextureMatrix(Texture2D texture, ref Matrix3x2 matrix, Color color, Vector2 partRectTL, Vector2 partRectBR)
+        => DrawTextureMatrix(texture, ref matrix, color, color, color, color, partRectTL, partRectBR);
+
+    public void DrawTextureMatrix(
+        Texture2D texture, ref Matrix3x2 matrix,
+        Color ctl, Color ctr, Color cbl, Color cbr,
+        Vector2 partRectTL, Vector2 partRectBR
+        )
     {
+        ThrowHelper.ThrowIfNull(texture);
+        if (!isInDrawText) EnsureShader(SpriteShader);
         float w = texture.Width;
         float h = texture.Height;
 
@@ -184,11 +233,101 @@ public sealed partial class SpriteBatch
         batchItems.Add(new BatchItem
         (
             tex: texture,
-            topLeft: new(new(tl, 0f), ctl.ToVector4(), new(0f, 0f)),
-            topRight: new(new(tr, 0f), ctr.ToVector4(), new(1f, 0f)),
-            bottomLeft: new(new(bl, 0f), cbl.ToVector4(), new(0f, 1f)),
-            bottomRight: new(new(br, 0f), cbr.ToVector4(), new(1f, 1f))
+            topLeft: new(new(tl, 0f), ctl.ToVector4(), partRectTL),
+            topRight: new(new(tr, 0f), ctr.ToVector4(), new(partRectBR.X, partRectTL.Y)),
+            bottomLeft: new(new(bl, 0f), cbl.ToVector4(), new(partRectTL.X, partRectBR.Y)),
+            bottomRight: new(new(br, 0f), cbr.ToVector4(), partRectBR)
         ));
+    }
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, float radian)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, float radian, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 scale)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 scale, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, T text,
+        Vector2 position, Vector2 origin,
+        Vector2 scale, float radian,
+        Color color
+    ) where T : IEnumerable<char>
+    {
+        ThrowHelper.ThrowIfNull(spriteFont);
+        EnsureShader(TextShader);
+        isInDrawText = true;
+        float texWidth = spriteFont.Texture.Width;
+        float texHeight = spriteFont.Texture.Height;
+#if NETSTANDARD2_0
+        float sin = (float)Math.Sin(radian);
+        float cos = (float)Math.Cos(radian);
+#else
+        float sin = MathF.Sin(radian);
+        float cos = MathF.Cos(radian);
+#endif
+
+        // measure the string
+        float totalWidth = 0;
+        float totalHeight = 0;
+
+        float curWidth = 0;
+        foreach (var chr in text)
+        {
+            if (chr == '\n')
+            {
+                curWidth = 0f;
+                totalHeight += spriteFont.Size;
+                continue;
+            }
+            if (!spriteFont.Entries.TryGetValue(chr, out var entry))
+                continue;
+            curWidth += entry.Advance / 64f;
+            if (curWidth > totalWidth)
+                totalWidth = curWidth;
+        }
+
+        float x = 0f;
+        float y = 0f;
+        foreach (var chr in text)
+        {
+            if (chr == '\n')
+            {
+                x = 0f;
+                y += spriteFont.Size;
+            }
+            if (!spriteFont.Entries.TryGetValue(chr, out var entry))
+                continue;
+            Vector2 tl = new(entry.X / texWidth, entry.Y / texHeight);
+            Vector2 br = new(tl.X + entry.Width / texWidth, tl.Y + entry.Height / texHeight);
+            Vector2 realOrigin =
+                (origin * new Vector2(totalWidth, totalHeight) - new Vector2(x + entry.BearingX, y + spriteFont.Size - entry.BearingY))
+                / new Vector2(entry.Width, entry.Height);
+
+            DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radian, color, tl, br);
+            x += entry.Advance / 64f;
+        }
+        isInDrawText = false;
     }
 
     public void Flush()
@@ -244,5 +383,23 @@ public sealed partial class SpriteBatch
         buffer.SetData(vertices.AsSpan(0, verticesCount * 4));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
         verticesCount = 0;
+    }
+
+    // TODO cache parameter?
+    private void EnsureShader(Shader shader)
+    {
+        ThrowHelper.ThrowIfNull(shader);
+        if (this.shader != shader)
+        {
+            Flush();
+            this.shader = shader;
+            this.shader.Use();
+            projectionParam = shader.GetParameter("projection"u8);
+            transformParam = shader.GetParameter("extra"u8);
+            shader.GetParameter("tex"u8).Set(0);
+
+            projectionParam.Set(projection);
+            transformParam.Set(transform);
+        }
     }
 }

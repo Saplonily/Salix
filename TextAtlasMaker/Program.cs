@@ -12,24 +12,30 @@ internal class Program
     // TODO: This tool currently needs to be manually modified source code instead of being a command line tool
     public static void Main()
     {
-        var (atlasImage, dic) = TextAtlasMaker.Make(@"C:\Windows\Fonts\PERTILI.TTF", 24, GetChars());
+        int fontSize = 24;
+
+        //string fontFile = @"C:\Windows\Fonts\PERTILI.TTF";
+        string fontFile = @"C:\Windows\Fonts\msyhl.ttc";
+        var (atlasImage, dic) = TextAtlasMaker.Make(fontFile, fontSize, GetChars());
         atlasImage.SaveAsPng(@"atlas.png");
         atlasImage.Dispose();
 
-        using FileStream fs = new(@"atlas_info.bin", FileMode.OpenOrCreate, FileAccess.Write);
-        BinaryWriter bw = new(fs);
+        using FileStream fs = new(@"atlas_info.bin", FileMode.Create, FileAccess.Write);
+        using BinaryWriter bw = new(fs);
+        bw.Write((short)fontSize);
         foreach (var pair in dic)
         {
-            bw.Write(pair.Key);
+            bw.Write((short)pair.Key);
             var info = pair.Value;
-            bw.Write((short)info.X);
-            bw.Write((short)info.Y);
-            bw.Write((short)info.Width);
-            bw.Write((short)info.Height);
-            bw.Write((short)info.BearingX);
-            bw.Write((short)info.BearingY);
-            bw.Write((short)info.Advance);
+            bw.Write(info.X);
+            bw.Write(info.Y);
+            bw.Write(info.Width);
+            bw.Write(info.Height);
+            bw.Write(info.BearingX);
+            bw.Write(info.BearingY);
+            bw.Write(info.Advance);
         }
+
 
         //JsonSerializerOptions options = new()
         //{
@@ -48,7 +54,7 @@ internal class Program
 
 public static class TextAtlasMaker
 {
-    private struct CharInfoPrivate
+    private struct CharEntryPrivate
     {
         public byte[] BitmapData;
         public char Char;
@@ -59,18 +65,18 @@ public static class TextAtlasMaker
         public int Advance;
     }
 
-    public struct CharInfo
+    public struct CharEntry
     {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public int BearingX { get; set; }
-        public int BearingY { get; set; }
-        public int Advance { get; set; }
+        public short X;
+        public short Y;
+        public short Width;
+        public short Height;
+        public short BearingX;
+        public short BearingY;
+        public short Advance;
     }
 
-    public static (Image<A8> atlasImage, Dictionary<char, CharInfo> infoDictionary) Make(
+    public static (Image<A8> atlasImage, Dictionary<char, CharEntry> entriesDictionary) Make(
         string fontPath, int pixelHeight, IEnumerable<char> chars
         )
     {
@@ -80,21 +86,22 @@ public static class TextAtlasMaker
         int availableCharCount = 0;
         int charWidth = 0;
         int charHeight = 0;
-        List<CharInfoPrivate> privateInfos = new();
+        List<CharEntryPrivate> privateEntries = new();
 
         foreach (var item in chars)
         {
-            var charInfoNullable = LoadChar(aface, item, pixelHeight);
-            if (!charInfoNullable.HasValue) continue;
-            var charInfo = charInfoNullable.Value;
-            privateInfos.Add(charInfo);
-            if (charInfo.BitmapWidth > charWidth)
-                charWidth = charInfo.BitmapWidth;
+            var charEntryNullable = LoadChar(aface, item, pixelHeight);
+            if (!charEntryNullable.HasValue) continue;
+            var entry = charEntryNullable.Value;
 
-            if (charInfo.BitmapHeight > charHeight)
-                charHeight = charInfo.BitmapHeight;
+            privateEntries.Add(entry);
+            if (entry.BitmapWidth > charWidth)
+                charWidth = entry.BitmapWidth;
 
-            if (charInfo.BitmapWidth != 0 && charInfo.BitmapHeight != 0)
+            if (entry.BitmapHeight > charHeight)
+                charHeight = entry.BitmapHeight;
+
+            if (entry.BitmapWidth != 0 && entry.BitmapHeight != 0)
                 availableCharCount++;
         }
 
@@ -104,25 +111,25 @@ public static class TextAtlasMaker
         int width = countW * charWidth;//+ countW - 1;
         int height = countH * charHeight;//+ countH - 1;
 
-        Dictionary<char, CharInfo> dic = new();
+        Dictionary<char, CharEntry> dic = new();
         Image<A8> ourImage = new(width, height);
         ourImage.Mutate(p =>
         {
             int curW = 0;
             int curH = 0;
-            foreach (var item in privateInfos)
+            foreach (var item in privateEntries)
             {
                 int x = curW * charWidth;// + curW;
                 int y = curH * charHeight;// + curH;
-                dic.Add(item.Char, new CharInfo
+                dic.Add(item.Char, new CharEntry
                 {
-                    Advance = item.Advance,
-                    BearingX = item.BearingX,
-                    BearingY = item.BearingY,
-                    Height = item.BitmapHeight,
-                    Width = item.BitmapWidth,
-                    X = x,
-                    Y = y
+                    Advance = (short)item.Advance,
+                    BearingX = (short)item.BearingX,
+                    BearingY = (short)item.BearingY,
+                    Height = (short)item.BitmapHeight,
+                    Width = (short)item.BitmapWidth,
+                    X = (short)x,
+                    Y = (short)y
                 });
                 if (item.BitmapHeight == 0 || item.BitmapWidth == 0) continue;
                 using var singleTextImg = Image.LoadPixelData<A8>(item.BitmapData, item.BitmapWidth, item.BitmapHeight);
@@ -140,7 +147,7 @@ public static class TextAtlasMaker
         FT.FT_Done_FreeType(library);
         return (ourImage, dic);
 
-        unsafe static CharInfoPrivate? LoadChar(nint face, char chr, int pixelHeight = 48)
+        unsafe static CharEntryPrivate? LoadChar(nint face, char chr, int pixelHeight = 48)
         {
             FT.FT_Set_Pixel_Sizes(face, 0, (uint)pixelHeight);
             var glyphIndex = FT.FT_Get_Char_Index(face, chr);
@@ -161,7 +168,7 @@ public static class TextAtlasMaker
             }
             checked
             {
-                return new CharInfoPrivate()
+                return new CharEntryPrivate()
                 {
                     BitmapData = data,
                     BearingX = bearingX,
