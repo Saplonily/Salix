@@ -12,12 +12,21 @@ public class MyMainWindow : Window
 {
     private Texture2D texture665x680 = null!;
     private Texture2D texture500x500 = null!;
+    private Texture2D textAtlas = null!;
     private SpriteBatch spriteBatch = null!;
 
     public override void OnCreated()
     {
-        texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
-        texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
+        //texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
+        //texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
+        try
+        {
+            textAtlas = Game.ResourceLoader.LoadTexture2D("atlas.png");
+        }
+        catch (FileNotFoundException)
+        {
+            throw new Exception("Run TextAtlasMaker and copy the atlas.png to the exe folder of the Test.Win32!.");
+        }
         spriteBatch = new SpriteBatch(RenderContext);
     }
 
@@ -45,7 +54,8 @@ public class MyMainWindow : Window
     {
         base.Render();
 
-        spriteBatch.DrawTexture(texture665x680, position, Vector2.One * 0.5f);//, Vector2.One * 0.5f);
+        //spriteBatch.DrawTexture(texture665x680, position, Vector2.One * 0.5f);//, Vector2.One * 0.5f);
+        spriteBatch.DrawTexture(textAtlas, position);
         spriteBatch.Flush();
     }
 }

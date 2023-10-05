@@ -43,6 +43,7 @@ enum class GraphicsBackend
 enum class ImageFormat
 {
     R8,
+    Rg16,
     Rgb24,
     Rgba32
 };
@@ -110,7 +111,9 @@ inline GLenum ImageFormat_to_gl(ImageFormat format)
     switch (format)
     {
     case ImageFormat::R8:
-        return GL_R8;
+        return GL_RED;
+    case ImageFormat::Rg16:
+        return GL_RG;
     case ImageFormat::Rgb24:
         return GL_RGB;
     case ImageFormat::Rgba32:
@@ -126,6 +129,8 @@ inline int ImageFormat_get_size(ImageFormat format)
     {
     case ImageFormat::R8:
         return 1;
+    case ImageFormat::Rg16:
+        return 2;
     case ImageFormat::Rgb24:
         return 3;
     case ImageFormat::Rgba32:
