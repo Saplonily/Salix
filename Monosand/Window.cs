@@ -64,12 +64,6 @@ public class Window : IDisposable
         keyboardState = new(this);
     }
 
-    public Window(Game game) : this()
-    {
-        this.game = game;
-        InitCreateWindow();
-    }
-
     private void InitCreateWindow()
     {
         impl = Game.Platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);

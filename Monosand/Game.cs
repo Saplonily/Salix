@@ -35,13 +35,12 @@ public class Game
 
     public Game(Platform platform, Window? window = null)
     {
-        if (platform is null)
-            throw new ArgumentNullException(nameof(platform));
+        ThrowHelper.ThrowIfNull(platform);
         Instance = this;
         this.platform = platform;
         platform.Init();
         this.window = null!;
-        Window = window ?? new Window(this);
+        Window = window ?? new Window();
 
         ResourceLoader = new ResourceLoader(this);
 
