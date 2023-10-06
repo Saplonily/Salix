@@ -398,8 +398,8 @@ public sealed partial class SpriteBatch
             transformParam = shader.GetParameter("extra"u8);
             shader.GetParameter("tex"u8).Set(0);
 
-            projectionParam.Set(projection);
-            transformParam.Set(transform);
+            projectionParam.Set(ref projection);
+            transformParam.Set(ref transform);
         }
     }
 }
