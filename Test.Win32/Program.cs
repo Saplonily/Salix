@@ -73,19 +73,3 @@ public class Program
         game.Run();
     }
 }
-
-public class SomeClass : ISomeInterface
-{
-    static void ISomeInterface.TestMethod()
-    {
-        Console.WriteLine("Hi in SomeClass!");
-    }
-}
-
-public interface ISomeInterface
-{
-    public virtual static void TestMethod()
-    {
-        Console.WriteLine("Hi!");
-    }
-}
