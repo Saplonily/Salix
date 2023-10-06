@@ -162,7 +162,7 @@ extern "C"
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data); GL_CHECK_ERROR;
     }
 
-    EXPORT void CALLCONV MSdgDeleteTexture(whandle*, void* tex_handle)
+    EXPORT void CALLCONV MsdgDeleteTexture(whandle*, void* tex_handle)
     {
         GLuint tex = (GLuint)(size_t)tex_handle;
         assert(tex != 0);
