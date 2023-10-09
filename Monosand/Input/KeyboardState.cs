@@ -41,8 +41,8 @@ public sealed class KeyboardState
     }
 
     private static Window? window;
-    private Bits128 bitArrayCurrent;
-    private Bits128 bitArrayPrevious;
+    private Bits128 bitsCurrent;
+    private Bits128 bitsPrevious;
 
     public static KeyboardState Current
     {
@@ -56,20 +56,28 @@ public sealed class KeyboardState
     internal KeyboardState(Window window)
     {
         KeyboardState.window = window;
-        bitArrayCurrent = new();
-        bitArrayPrevious = new();
+        bitsCurrent = new();
+        bitsPrevious = new();
     }
 
-    internal void SetTrue(Key key) => bitArrayCurrent[(int)key] = true;
-    internal void SetFalse(Key key) => bitArrayCurrent[(int)key] = false;
+    internal void SetTrue(Key key) 
+        => bitsCurrent[(int)key] = true;
+
+    internal void SetFalse(Key key)
+        => bitsCurrent[(int)key] = false;
+
     internal void Update()
-    {
-        bitArrayPrevious = bitArrayCurrent;
-    }
+        => bitsPrevious = bitsCurrent;
 
-    internal void Clear() => bitArrayCurrent.SetAll(false);
+    internal void Clear()
+        => bitsCurrent.SetAll(false);
 
-    public bool IsPressing(Key key) => bitArrayCurrent[(int)key];
-    public bool IsJustPressed(Key key) => bitArrayCurrent[(int)key] && !bitArrayPrevious[(int)key];
-    public bool IsJustReleased(Key key) => !bitArrayCurrent[(int)key] && bitArrayPrevious[(int)key];
+    public bool IsPressing(Key key)
+        => bitsCurrent[(int)key];
+
+    public bool IsJustPressed(Key key)
+        => bitsCurrent[(int)key] && !bitsPrevious[(int)key];
+
+    public bool IsJustReleased(Key key)
+        => !bitsCurrent[(int)key] && bitsPrevious[(int)key];
 }

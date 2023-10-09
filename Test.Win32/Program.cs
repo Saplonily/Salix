@@ -48,19 +48,16 @@ public class MyMainWindow : Window
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
         position += dir * 400f / 60f;
-        a += 0.01f;
     }
-    float a;
+
     public override void Render()
     {
         base.Render();
 
-        //spriteBatch.DrawTexture(texture665x680, position, Vector2.One * 0.5f);//, Vector2.One * 0.5f);
-        //spriteBatch.DrawTexture(textAtlas, position);
-        //spriteBatch.DrawTexture(texture500x500, Vector2.Zero);
-        string str = "这是一串...测试文本..换行！→\n然后...#[]{}'\",继续换行!\n我能吞下玻璃而不伤身体.\nThe quick brown fox jumps over the lazy dog.";
-        spriteBatch.DrawText(sprFont, str, Vector2.One * 400f, Vector2.One / 2f, Vector2.One * 1.5f, a);
-        //spriteBatch.DrawTexture(texture500x500, Vector2.Zero);
+        string str = $"Left: {PointerState.IsLeftButtonPressing}\n" +
+            $"Right: {PointerState.IsRightButtonPressing}\n" +
+            $"Middle: {PointerState.IsMiddleButtonPressing}";
+        spriteBatch.DrawText(sprFont, str, Vector2.One * 400f, Vector2.One);
         spriteBatch.Flush();
     }
 }

@@ -11,6 +11,7 @@ public class Window : IDisposable
     private Game? game;
     private RenderContext? rc;
     private readonly KeyboardState keyboardState;
+    private readonly PointerState pointerState;
 
     /// <summary>Is this window invalid, usually be <see langword="true"/> when the window closed or disposed.</summary>
     public bool IsInvalid => impl == null || game == null;
@@ -35,6 +36,7 @@ public class Window : IDisposable
     /// </summary>
     public RenderContext RenderContext => rc ?? throw SR.PropNotSet(nameof(RenderContext));
 
+    #region Position & Size
     /// <summary>The X coord of this window.</summary>
     public int X
     {
@@ -76,9 +78,12 @@ public class Window : IDisposable
         get => size;
         set { size = value; WinImpl.SetSize(value.Width, value.Height); }
     }
+    #endregion
 
     /// <summary>The <see cref="Monosand.KeyboardState"/> of this window.</summary>
     public KeyboardState KeyboardState => keyboardState;
+
+    public PointerState PointerState => pointerState;
 
     /// <summary>Occurs after the window closed. After the <see cref="OnClosing"/> be called.</summary>
     public event Action<Window>? Closed;
@@ -95,6 +100,7 @@ public class Window : IDisposable
     public Window()
     {
         keyboardState = new(this);
+        pointerState = new(this);
     }
 
     private void InitCreateWindow()
@@ -169,6 +175,7 @@ public class Window : IDisposable
     public virtual void OnLostFocus()
     {
         KeyboardState.Clear();
+        PointerState.Clear();
         LostFocus?.Invoke(this);
     }
 
@@ -176,6 +183,16 @@ public class Window : IDisposable
     public virtual void OnGotFocus()
     {
         GotFocus?.Invoke(this);
+    }
+
+    public virtual void OnPointerPressed(PointerButton button)
+    {
+        PointerState.SetTrue(1 << (int)button);
+    }
+
+    public virtual void OnPointerReleased(PointerButton button)
+    {
+        PointerState.SetFalse(1 << (int)button);
     }
 
     internal void RenderInternal()

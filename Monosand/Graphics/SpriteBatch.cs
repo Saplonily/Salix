@@ -314,7 +314,8 @@ public sealed partial class SpriteBatch
             if (chr == '\n')
             {
                 x = 0f;
-                y += spriteFont.Size;
+                // TODO custom line-height
+                y += spriteFont.Size * 1.2f;
             }
             if (!spriteFont.Entries.TryGetValue(chr, out var entry))
                 continue;

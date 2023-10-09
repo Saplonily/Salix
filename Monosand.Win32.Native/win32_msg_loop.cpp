@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vector>
+#include <windowsx.h>
 #include "exports.h"
 #include "key_map.h"
 
@@ -11,8 +12,14 @@ enum class event : int32_t
     resize,
     key_down,
     key_up,
-    gain_focus,
-    lose_focus,
+    got_focus,
+    lost_focus,
+    // arg1: x
+    // arg2: y
+    // arg3:
+    //   left:  type, 1:left, 2:right, 3:middle
+    //   right: 0:down, 1:up
+    mouse,
 };
 
 struct win_event
@@ -25,8 +32,11 @@ struct win_event
         arg3_union() { int32 = 0; };
         arg3_union(int32_t int32) { this->int32 = int32; }
         int32_t int32;
-        int16_t int16_left;
-        int16_t int16_right;
+        struct
+        {
+            int16_t int16_left;
+            int16_t int16_right;
+        };
     } arg3;
     void* gc_handle;
 };
@@ -35,6 +45,14 @@ std::vector<win_event>* event_list;
 
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
+#define push_e(e) \
+    {\
+    if(gc_handle != nullptr) \
+        event_list->push_back(e); \
+    else \
+        assert(false); \
+    }\
+
     void* gc_handle = (void*)GetWindowLongPtrW(hwnd, 0);
     win_event we{};
     we.gc_handle = gc_handle;
@@ -46,43 +64,38 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     case WM_CLOSE:
     {
         we.type = event::close;
-        event_list->push_back(we);
-
+        push_e(we);
         return 0;
     }
     case WM_DESTROY:
     {
         we.type = event::destroy;
-        event_list->push_back(we);
-
+        push_e(we);
         return 0;
     }
     case WM_MOVE:
     {
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
-
         we.type = event::move;
         we.arg1 = x;
         we.arg2 = y;
-        event_list->push_back(we);
-
+        push_e(we);
         return 0;
     }
     case WM_SIZE:
     {
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
-
         we.type = event::resize;
         we.arg1 = width;
         we.arg2 = height;
-        event_list->push_back(we);
-
+        push_e(we);
         return 0;
     }
     case WM_SYSKEYUP:
     case WM_SYSKEYDOWN:
+        DefWindowProcW(hwnd, uMsg, wParam, lParam);
     case WM_KEYUP:
     case WM_KEYDOWN:
     {
@@ -102,9 +115,9 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
             Key key = vkCode_to_Key(vkCode);
             we.type = event::key_down;
             we.arg1 = (int32_t)key;
-            event_list->push_back(we);
+            push_e(we);
             we.type = event::key_up;
-            event_list->push_back(we);
+            push_e(we);
             break;
         }
 
@@ -121,24 +134,91 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         Key key = vkCode_to_Key(vkCode);
         we.type = !isKeyReleased ? event::key_down : event::key_up;
         we.arg1 = (int32_t)key;
-        event_list->push_back(we);
+        push_e(we);
 
         break;
     }
     case WM_SETFOCUS:
     {
-        we.type = event::gain_focus;
-        event_list->push_back(we);
+        we.type = event::got_focus;
+        push_e(we);
         return 0;
     }
     case WM_KILLFOCUS:
     {
-        we.type = event::lose_focus;
-        event_list->push_back(we);
+        we.type = event::lost_focus;
+        push_e(we);
+        return 0;
+    }
+    case WM_LBUTTONDOWN:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 1;
+        we.arg3.int16_right = 0;
+        push_e(we);
+        SetCapture(hwnd);
+        return 0;
+    }
+    case WM_LBUTTONUP:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 1;
+        we.arg3.int16_right = 1;
+        push_e(we);
+        ReleaseCapture();
+        return 0;
+    }
+    case WM_RBUTTONDOWN:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 2;
+        we.arg3.int16_right = 0;
+        push_e(we);
+        SetCapture(hwnd);
+        return 0;
+    }
+    case WM_RBUTTONUP:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 2;
+        we.arg3.int16_right = 1;
+        push_e(we);
+        ReleaseCapture();
+        return 0;
+    }
+    case WM_MBUTTONDOWN:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 3;
+        we.arg3.int16_right = 0;
+        push_e(we);
+        SetCapture(hwnd);
+        return 0;
+    }
+    case WM_MBUTTONUP:
+    {
+        we.type = event::mouse;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 3;
+        we.arg3.int16_right = 1;
+        push_e(we);
+        ReleaseCapture();
         return 0;
     }
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+#undef push_e
 }
 
 void window_msg_loop_init()

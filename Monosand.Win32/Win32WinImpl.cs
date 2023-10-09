@@ -73,8 +73,18 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             case 4: win.OnResized(e[i + 1], e[i + 2]); break;
             case 5: win.OnKeyPressed((Key)e[i + 1]); break;
             case 6: win.OnKeyReleased((Key)e[i + 1]); break;
-            case 7: win.OnGotFocus();break;
-            case 8: win.OnLostFocus();break;
+            case 7: win.OnGotFocus(); break;
+            case 8: win.OnLostFocus(); break;
+            case 9:
+                int x = e[i + 1], y = e[i + 2];
+                short btnType = *((short*)(e + i + 3) + 0);
+                PointerButton button = (PointerButton)btnType;
+                short downType = *((short*)(e + i + 3) + 1);
+                if (downType == 0)
+                    win.OnPointerPressed(button);
+                else if (downType == 1)
+                    win.OnPointerReleased(button);
+                break;
             default: Debug.Fail("Unknown event type."); break;
             }
         }
