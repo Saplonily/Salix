@@ -185,27 +185,39 @@ public class Window : IDisposable
         GotFocus?.Invoke(this);
     }
 
-    public virtual void OnPointerPressed(PointerButton button)
+    public virtual void OnPointerPressed(int x, int y, PointerButton button)
     {
         PointerState.SetTrue(1 << (int)button);
+        PointerState.SetPosition(new(x, y));
     }
 
-    public virtual void OnPointerReleased(PointerButton button)
+    public virtual void OnPointerReleased(int x, int y, PointerButton button)
     {
         PointerState.SetFalse(1 << (int)button);
+        PointerState.SetPosition(new(x, y));
     }
 
-    internal void RenderInternal()
+    public virtual void OnPointerMoved(int x, int y)
     {
+        PointerState.SetPosition(new(x, y));
+    }
+
+    public virtual void OnPointerWheelMoved(int x, int y, float delta)
+    {
+        PointerState.SetPosition(new(x, y));
+        PointerState.AddWheelDelta(delta);
+    }
+
+    internal void Tick()
+    {
+        Update();
         RenderContext.Clear(Color.CornflowerBlue);
         Render();
         RenderContext.SwapBuffers();
-    }
-
-    internal void UpdateInternal()
-    {
-        Update();
+        // I think someone might try to handle input in Render()
+        // Prevent confusion here and make them happy
         keyboardState.Update();
+        pointerState.Update();
     }
 
     /// <summary>The update logic.</summary>

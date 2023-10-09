@@ -1,4 +1,6 @@
-﻿namespace Monosand;
+﻿using System.Numerics;
+
+namespace Monosand;
 
 public sealed class PointerState
 {
@@ -7,6 +9,10 @@ public sealed class PointerState
     // 1 << 2: middle bitmask
     private int state;
     private int statePrevious;
+    private Vector2 position;
+    private Vector2 positionPrevious;
+    private float wheelOffset;
+    private float wheelOffsetPrevious;
     private static Window? window;
 
     public static PointerState Current
@@ -18,6 +24,12 @@ public sealed class PointerState
         }
     }
 
+    public Vector2 Position => position;
+    public Vector2 PositionPrevious => positionPrevious;
+    public Vector2 PositionDelta => position - positionPrevious;
+    public float WheelOffset => wheelOffset;
+    public float WheelOffsetPrevious => wheelOffsetPrevious;
+    public float WheelDelta => wheelOffset - wheelOffsetPrevious;
     public bool IsLeftButtonPressing => IsPressing(PointerButton.Left);
     public bool IsRightButtonPressing => IsPressing(PointerButton.Right);
     public bool IsMiddleButtonPressing => IsPressing(PointerButton.Middle);
@@ -25,7 +37,7 @@ public sealed class PointerState
     internal PointerState(Window window)
     {
         PointerState.window = window;
-        state = statePrevious = 0;
+        Clear();
     }
 
     internal void SetTrue(int bit)
@@ -34,11 +46,25 @@ public sealed class PointerState
     internal void SetFalse(int bit)
         => state &= ~bit;
 
+    internal void SetPosition(Vector2 pos)
+        => position = pos;
+
+    internal void AddWheelDelta(float delta)
+        => wheelOffset += delta;
+
     internal void Update()
-        => statePrevious = state;
+    {
+        statePrevious = state;
+        positionPrevious = position;
+        wheelOffsetPrevious = wheelOffset;
+    }
 
     internal void Clear()
-        => state = statePrevious = 0;
+    {
+        state = statePrevious = 0;
+        wheelOffset = wheelOffsetPrevious = 0f;
+        position = positionPrevious = Vector2.Zero;
+    }
 
     public bool IsPressing(PointerButton button)
         => (state & (1 << (int)button)) != 0;

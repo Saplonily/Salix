@@ -54,10 +54,17 @@ public class MyMainWindow : Window
     {
         base.Render();
 
-        string str = $"Left: {PointerState.IsLeftButtonPressing}\n" +
-            $"Right: {PointerState.IsRightButtonPressing}\n" +
-            $"Middle: {PointerState.IsMiddleButtonPressing}";
-        spriteBatch.DrawText(sprFont, str, Vector2.One * 400f, Vector2.One);
+        string str = $"PointerLeftButton: {PointerState.IsLeftButtonPressing}\n" +
+            $"PointerRightButton: {PointerState.IsRightButtonPressing}\n" +
+            $"PointerMiddleButton: {PointerState.IsMiddleButtonPressing}\n" +
+            $"PointerPosition: {PointerState.Position}\n" +
+            $"PointerPositionDelta: {PointerState.PositionDelta}\n" +
+            $"PointerPositionPrevious: {PointerState.PositionPrevious}\n" +
+            $"PointerWheelOffset: {PointerState.WheelOffset}\n" +
+            $"PointerWheelDelta: {PointerState.WheelDelta}\n" +
+            $"LeftJustPressed: {PointerState.IsJustPressed(PointerButton.Left)}\n" +
+            $"Y KeyJustPressed: {KeyboardState.IsJustPressed(Key.Y)}";
+        spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
     }
 }

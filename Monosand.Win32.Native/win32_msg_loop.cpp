@@ -17,9 +17,10 @@ enum class event : int32_t
     // arg1: x
     // arg2: y
     // arg3:
-    //   left:  type, 1:left, 2:right, 3:middle
-    //   right: 0:down, 1:up
-    mouse,
+    //   left int16:  type, 0:none, 1:left, 2:right, 3:middle
+    //   right int16: 0:down, 1:up, 2:moved
+    pointer,
+    pointer_wheel
 };
 
 struct win_event
@@ -152,7 +153,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_LBUTTONDOWN:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 1;
@@ -163,7 +164,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_LBUTTONUP:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 1;
@@ -174,7 +175,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_RBUTTONDOWN:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 2;
@@ -185,7 +186,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_RBUTTONUP:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 2;
@@ -196,7 +197,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_MBUTTONDOWN:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 3;
@@ -207,13 +208,32 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_MBUTTONUP:
     {
-        we.type = event::mouse;
+        we.type = event::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 3;
         we.arg3.int16_right = 1;
         push_e(we);
         ReleaseCapture();
+        return 0;
+    }
+    case WM_MOUSEMOVE:
+    {
+        we.type = event::pointer;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3.int16_left = 0;
+        we.arg3.int16_right = 2;
+        push_e(we);
+        return 0;
+    }
+    case WM_MOUSEWHEEL:
+    {
+        we.type = event::pointer_wheel;
+        we.arg1 = GET_X_LPARAM(lParam);
+        we.arg2 = GET_Y_LPARAM(lParam);
+        we.arg3 = (int)GET_WHEEL_DELTA_WPARAM(wParam);
+        push_e(we);
         return 0;
     }
     }

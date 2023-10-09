@@ -55,8 +55,7 @@ public class Game
             Window.PollEvents();
             if (Window.IsInvalid) break;
 
-            Window.UpdateInternal();
-            Window.RenderInternal();
+            Window.Tick();
             Thread.Sleep(10);
         }
     }
