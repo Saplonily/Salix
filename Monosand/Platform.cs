@@ -40,4 +40,6 @@ public abstract class Platform
 
     /// <summary>Free the image read from the image file memory.</summary>
     internal abstract void FreeImage(Span<byte> image);
+
+    internal abstract long GetUsecTimeline();
 }

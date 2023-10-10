@@ -54,17 +54,12 @@ public class MyMainWindow : Window
     {
         base.Render();
 
-        string str = $"PointerLeftButton: {PointerState.IsLeftButtonPressing}\n" +
-            $"PointerRightButton: {PointerState.IsRightButtonPressing}\n" +
-            $"PointerMiddleButton: {PointerState.IsMiddleButtonPressing}\n" +
-            $"PointerPosition: {PointerState.Position}\n" +
-            $"PointerPositionDelta: {PointerState.PositionDelta}\n" +
-            $"PointerPositionPrevious: {PointerState.PositionPrevious}\n" +
-            $"PointerWheelOffset: {PointerState.WheelOffset}\n" +
-            $"PointerWheelDelta: {PointerState.WheelDelta}\n" +
-            $"LeftJustPressed: {PointerState.IsJustPressed(PointerButton.Left)}\n" +
-            $"Y KeyJustPressed: {KeyboardState.IsJustPressed(Key.Y)}";
-        spriteBatch.DrawText(sprFont, str, position, Vector2.One);
+        string str =
+            $"Game.Ticks: {Game.Ticks}\n" +
+            $"Game.Ticks / 60d: {Game.Ticks / 60d:F2}\n" +
+            $"Game.ExpectedFps: {Game.ExpectedFps}\n" +
+            $"Game.ExpectedDelta: {Game.ExpectedDelta}";
+        spriteBatch.DrawText(sprFont, str, new(MathF.Floor(position.X), MathF.Floor(position.Y)), Vector2.One);
         spriteBatch.Flush();
     }
 }

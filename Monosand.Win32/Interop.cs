@@ -102,4 +102,6 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat4(IntPtr handle, int location, float* value, bool transpose);
 
     #endregion
+
+    [DllImport(DllPath)] public static extern long MsdGetUsecTimeline();
 }

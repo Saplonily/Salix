@@ -43,6 +43,9 @@ public unsafe partial class Win32Platform : Platform
     internal override ITexture2DImpl CreateTexture2DImpl(RenderContext context, int width, int height)
         => new Win32Texture2DImpl((Win32RenderContext)context, width, height);
 
+    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vertSource, byte* fragSource)
+    => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vertSource, fragSource);
+
     // other api
 
     internal override Stream OpenReadStream(string fileName)
@@ -71,6 +74,7 @@ public unsafe partial class Win32Platform : Platform
         }
     }
 
-    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vertSource, byte* fragSource)
-        => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vertSource, fragSource);
+    // time api
+    internal override long GetUsecTimeline()
+        => Interop.MsdGetUsecTimeline();
 }

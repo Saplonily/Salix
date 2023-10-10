@@ -1,4 +1,6 @@
 #include "pch.h"
+#include <timeapi.h>
+#include <cstdint>
 #include "exports.h"
 #include "whandle.h"
 
@@ -14,6 +16,8 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 // WndExtra:
 // GCHandle of the managed Monosand.Window
 
+// ticks per second
+static int64_t performanceFrequency = 0;
 static PIXELFORMATDESCRIPTOR pfd;
 extern "C"
 {
@@ -47,6 +51,8 @@ extern "C"
         wc.lpszClassName = Monosand;
         wc.cbWndExtra = sizeof(void*) * 1;
         RegisterClassW(&wc);
+
+        QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
 
         return 0;
     }
@@ -96,6 +102,9 @@ extern "C"
         window_gl_init();
         window_msg_loop_init();
         SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
+
+        timeBeginPeriod(1);
+
         return handle;
     }
 
@@ -114,6 +123,7 @@ extern "C"
             DispatchMessageW(&msg);
         }
         delete handle;
+        timeEndPeriod(1);
     }
 
     EXPORT RECT CALLCONV MsdGetWindowRect(whandle* handle)
@@ -131,5 +141,12 @@ extern "C"
     EXPORT void CALLCONV MsdSetWindowPos(whandle* handle, int x, int y)
     {
         SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
+    }
+
+    EXPORT int64_t CALLCONV MsdGetUsecTimeline()
+    {
+        int64_t ticks = 0;
+        QueryPerformanceCounter((LARGE_INTEGER*)&ticks);
+        return ticks / (performanceFrequency / 1000 / 1000);
     }
 }

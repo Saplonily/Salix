@@ -214,8 +214,8 @@ public class Window : IDisposable
         RenderContext.Clear(Color.CornflowerBlue);
         Render();
         RenderContext.SwapBuffers();
-        // I think someone might try to handle input in Render()
-        // Prevent confusion here and make them happy
+        // I think someone might try handling input in Render()
+        // make them happy
         keyboardState.Update();
         pointerState.Update();
     }
