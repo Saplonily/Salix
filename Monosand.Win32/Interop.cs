@@ -104,4 +104,5 @@ internal unsafe class Interop
     #endregion
 
     [DllImport(DllPath)] public static extern long MsdGetUsecTimeline();
+    [DllImport(DllPath)] public static extern void MsdgSetVSyncEnabled(IntPtr handle, byte enable);
 }

@@ -45,6 +45,11 @@ extern "C"
         GL_CHECK_ERROR;
     }
 
+    EXPORT void CALLCONV MsdgSetVSyncEnabled(whandle* handle, byte enable)
+    {
+        wglSwapIntervalEXT(enable ? 1 : 0);
+    }
+
     EXPORT void* CALLCONV MsdgRegisterVertexType(whandle*, VertexElementType* type, int len)
     {
         vertex_type_handle* h = small_alloc<vertex_type_handle>();

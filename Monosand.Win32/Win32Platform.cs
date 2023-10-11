@@ -74,6 +74,9 @@ public unsafe partial class Win32Platform : Platform
         }
     }
 
+    internal override void SetVSyncEnabled(RenderContext context, bool enable)
+        => Interop.MsdgSetVSyncEnabled(((Win32RenderContext)context).GetWinHandle(), enable ? (byte)1 : (byte)0);
+
     // time api
     internal override long GetUsecTimeline()
         => Interop.MsdGetUsecTimeline();

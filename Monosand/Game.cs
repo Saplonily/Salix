@@ -10,6 +10,7 @@ public class Game
     private Platform platform;
     private long ticks;
     private double expectedDelta;
+    private bool vSyncEnabled;
 
     internal WinImpl WinImpl => window.WinImpl;
     internal RenderContext RenderContext => WinImpl.GetRenderContext();
@@ -27,6 +28,15 @@ public class Game
     public double ExpectedFps { get => 1.0 / ExpectedDelta; set => ExpectedDelta = 1.0 / value; }
     public double Delta { get; private set; }
     public double Fps { get => 1d / Delta; }
+    public bool VSyncEnabled
+    {
+        get => vSyncEnabled;
+        set
+        {
+            vSyncEnabled = value;
+            platform.SetVSyncEnabled(window.RenderContext, value);
+        }
+    }
 
     public Window Window
     {
@@ -64,25 +74,29 @@ public class Game
         while (true)
         {
             long before = platform.GetUsecTimeline();
+
             // ---- start ticking the game
             Window.PollEvents();
             if (Window.IsInvalid) break;
-
             Window.Tick();
             ticks++;
             // ----
+
             long after = platform.GetUsecTimeline();
 
             long passed = after - before;
             double usecPerFrame = ExpectedDelta * 1000 * 1000;
-            if (passed < usecPerFrame)
+            if (!VSyncEnabled)
+                Delta = Math.Max(passed / 1000d / 1000d, ExpectedDelta);
+            else
+                Delta = passed / 1000d / 1000d;
+            if (!VSyncEnabled && passed < usecPerFrame)
             {
                 double ticksPerUsec = TimeSpan.TicksPerMillisecond / 1000d;
                 double toSleepUsec = usecPerFrame - passed;
                 double toSleep = ticksPerUsec * toSleepUsec;
                 Thread.Sleep(TimeSpan.FromTicks((long)toSleep));
             }
-            Delta = Math.Max(passed / 1000d / 1000d, ExpectedDelta);
         }
     }
 }
