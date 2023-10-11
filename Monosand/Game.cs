@@ -9,6 +9,7 @@ public class Game
     private Window window;
     private Platform platform;
     private long ticks;
+    private double expectedDelta;
 
     internal WinImpl WinImpl => window.WinImpl;
     internal RenderContext RenderContext => WinImpl.GetRenderContext();
@@ -22,8 +23,10 @@ public class Game
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
     public long Ticks => ticks;
-    public double ExpectedDelta { get; set; }
+    public double ExpectedDelta { get => expectedDelta; set => expectedDelta = value; }
     public double ExpectedFps { get => 1.0 / ExpectedDelta; set => ExpectedDelta = 1.0 / value; }
+    public double Delta { get; private set; }
+    public double Fps { get => 1d / Delta; }
 
     public Window Window
     {
@@ -43,7 +46,8 @@ public class Game
         Instance = this;
         this.platform = platform;
         this.window = null!;
-        ExpectedDelta = 1 / 60d;
+        ExpectedFps = 60d;
+        Delta = 1d / ExpectedFps;
         ticks = 0;
         platform.Init();
         Window = window ?? new Window();
@@ -56,17 +60,19 @@ public class Game
     public void Run()
     {
         Window.Show();
+        Delta = ExpectedDelta;
         while (true)
         {
             long before = platform.GetUsecTimeline();
-            //
+            // ---- start ticking the game
             Window.PollEvents();
             if (Window.IsInvalid) break;
 
             Window.Tick();
             ticks++;
-            //
+            // ----
             long after = platform.GetUsecTimeline();
+
             long passed = after - before;
             double usecPerFrame = ExpectedDelta * 1000 * 1000;
             if (passed < usecPerFrame)
@@ -76,6 +82,7 @@ public class Game
                 double toSleep = ticksPerUsec * toSleepUsec;
                 Thread.Sleep(TimeSpan.FromTicks((long)toSleep));
             }
+            Delta = Math.Max(passed / 1000d / 1000d, ExpectedDelta);
         }
     }
 }

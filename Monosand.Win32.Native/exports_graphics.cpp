@@ -25,6 +25,9 @@ extern "C"
 
     EXPORT void CALLCONV MsdgSwapBuffers(whandle* handle)
     {
+        // FIXME some screen recorders may fuck our program here
+        // for example, OCam and Bandicam
+        // but others like XBox Capture and OBS won't
         SwapBuffers(handle->hdc);
     }
 

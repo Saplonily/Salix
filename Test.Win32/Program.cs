@@ -55,11 +55,13 @@ public class MyMainWindow : Window
         base.Render();
 
         string str =
-            $"Game.Ticks: {Game.Ticks}\n" +
-            $"Game.Ticks / 60d: {Game.Ticks / 60d:F2}\n" +
-            $"Game.ExpectedFps: {Game.ExpectedFps}\n" +
-            $"Game.ExpectedDelta: {Game.ExpectedDelta}";
-        spriteBatch.DrawText(sprFont, str, new(MathF.Floor(position.X), MathF.Floor(position.Y)), Vector2.One);
+            $"Ticks: {Game.Ticks}\n" +
+            $"Ticks / {Game.ExpectedFps}: {Game.Ticks / Game.ExpectedFps:F2}\n" +
+            $"ExpectedFps: {Game.ExpectedFps:F2}\n" +
+            $"ExpectedDelta: {Game.ExpectedDelta:F2}\n" +
+            $"Real fps: {Game.Fps:F2}";
+        for (int i = 0; i < 10; i++)
+            spriteBatch.DrawText(sprFont, str, new(i * 60, i * 120), Vector2.One);
         spriteBatch.Flush();
     }
 }
@@ -69,6 +71,7 @@ public class Program
     public static void Main()
     {
         Game game = new(new Win32Platform(), new MyMainWindow());
+        game.ExpectedFps = 60d;
         game.Run();
     }
 }
