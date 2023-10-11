@@ -352,9 +352,9 @@ public sealed partial class SpriteBatch
                 FlushBuffer(ref cvid);
 
             if (cvid * 4 + 4 >= vertices.Length)
-                Array.Resize(ref vertices, cvid * 4 + 8);
+                Array.Resize(ref vertices, Math.Max(cvid * 4 + 8, vertices.Length * 2));
             if (cvid * 6 + 6 >= indices.Length)
-                Array.Resize(ref indices, cvid * 6 + 12);
+                Array.Resize(ref indices, Math.Max(cvid * 6 + 12, vertices.Length * 2));
 
             ref vpct vfirst = ref vertices[cvid * 4];
             ref ushort ifirst = ref indices[cvid * 6];
