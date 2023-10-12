@@ -10,7 +10,6 @@ public class Game
     private Platform platform;
     private long ticks;
     private double expectedFrameTime;
-    private bool vSyncEnabled;
 
     internal WinImpl WinImpl => window.WinImpl;
     internal RenderContext RenderContext => WinImpl.GetRenderContext();
