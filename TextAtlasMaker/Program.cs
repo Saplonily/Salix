@@ -1,9 +1,6 @@
-﻿using FreeTypeSharp.Native;
+﻿using System.Runtime.CompilerServices;
 
-using System.Runtime.CompilerServices;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
+using FreeTypeSharp.Native;
 
 namespace TextAtlasMaker;
 

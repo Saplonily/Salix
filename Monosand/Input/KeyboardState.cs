@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Monosand;
 
@@ -60,7 +58,7 @@ public sealed class KeyboardState
         bitsPrevious = new();
     }
 
-    internal void SetTrue(Key key) 
+    internal void SetTrue(Key key)
         => bitsCurrent[(int)key] = true;
 
     internal void SetFalse(Key key)
