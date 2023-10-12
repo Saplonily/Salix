@@ -9,6 +9,23 @@ public sealed class Win32RenderContext : RenderContext
     private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private IntPtr winHandle;
     private Rectangle viewport;
+    private bool vSyncEnabled = false;
+    private double vSyncFrameTime = 0d;
+
+    public override bool VSyncEnabled
+    {
+        get => vSyncEnabled;
+        set
+        {
+            EnsureState();
+            Interop.MsdgSetVSyncEnabled(winHandle, value ? (byte)1 : (byte)0);
+            vSyncEnabled = value;
+        }
+    }
+
+    public override double VSyncFrameTime
+        => vSyncFrameTime;
+
 
     public override event ViewportChangedEventHandler? ViewportChanged;
 
@@ -16,6 +33,8 @@ public sealed class Win32RenderContext : RenderContext
     {
         vertexDeclarations = new();
         this.winHandle = winHandle;
+
+        vSyncFrameTime = Interop.MsdgGetVSyncFrameTime(winHandle);
     }
 
     internal override void SwapBuffers()

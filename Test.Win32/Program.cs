@@ -48,7 +48,10 @@ public class MyMainWindow : Window
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
         position += dir * 400f / 60f;
+        a += 1f * Game.FrameTimeF;
     }
+
+    float a = 0f;
 
     public override void Render()
     {
@@ -56,13 +59,13 @@ public class MyMainWindow : Window
 
         string str =
             $"Ticks: {Game.Ticks}\n" +
-            $"Ticks / {Game.ExpectedFps}: {Game.Ticks / Game.ExpectedFps:F4}\n" +
+            $"Ticks / {Game.VSyncFps}: {Game.Ticks / Game.VSyncFps:F4}\n" +
             $"ExpectedFps: {Game.ExpectedFps:F4}\n" +
-            $"ExpectedDelta: {Game.ExpectedDelta:F4}\n" +
+            $"ExpectedFrameTime: {Game.ExpectedFrameTime:F4}\n" +
             $"Fps: {Game.Fps:F4}\n" +
-            $"Delta: {Game.Delta:F4}";
-        for (int i = 0; i < 10; i++)
-            spriteBatch.DrawText(sprFont, str, new(0, 0), Vector2.One);
+            $"FrameTime: {Game.FrameTime:F4}\n" +
+            $"VSyncFps: {Game.VSyncFps}";
+        spriteBatch.DrawText(sprFont, str, new((MathF.Sin(a) + 1f) / 2f * 600f, 0), Vector2.One);
         spriteBatch.Flush();
     }
 }
@@ -72,8 +75,8 @@ public class Program
     public static void Main()
     {
         Game game = new(new Win32Platform(), new MyMainWindow());
-        game.ExpectedFps = 2d;
-        game.VSyncEnabled = true;
+        game.ExpectedFps = 2000d;
+        //game.VSyncEnabled = true;
         game.Run();
     }
 }

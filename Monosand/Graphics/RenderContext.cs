@@ -9,6 +9,9 @@ public abstract class RenderContext
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, int x, int y, int width, int height);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
 
+    public abstract bool VSyncEnabled { get; set; }
+    public abstract double VSyncFrameTime { get; }
+
     /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
     internal abstract void SwapBuffers();
 

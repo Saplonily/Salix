@@ -31,6 +31,12 @@ extern "C"
         SwapBuffers(handle->hdc);
     }
 
+    EXPORT double CALLCONV MsdgGetVSyncFrameTime(whandle* handle)
+    {
+        int fps = GetDeviceCaps(handle->hdc, VREFRESH);
+        return 1.0 / fps;
+    }
+
     EXPORT void CALLCONV MsdgViewport(whandle* handle, int x, int y, int width, int height)
     {
         glViewport(x, y, width, height);

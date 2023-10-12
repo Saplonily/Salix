@@ -9,7 +9,7 @@ public class Game
     private Window window;
     private Platform platform;
     private long ticks;
-    private double expectedDelta;
+    private double expectedFrameTime;
     private bool vSyncEnabled;
 
     internal WinImpl WinImpl => window.WinImpl;
@@ -24,19 +24,20 @@ public class Game
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
     public long Ticks => ticks;
-    public double ExpectedDelta { get => expectedDelta; set => expectedDelta = value; }
-    public double ExpectedFps { get => 1.0 / ExpectedDelta; set => ExpectedDelta = 1.0 / value; }
-    public double Delta { get; private set; }
-    public double Fps { get => 1d / Delta; }
-    public bool VSyncEnabled
-    {
-        get => vSyncEnabled;
-        set
-        {
-            vSyncEnabled = value;
-            platform.SetVSyncEnabled(window.RenderContext, value);
-        }
-    }
+    public double ExpectedFrameTime { get => expectedFrameTime; set => expectedFrameTime = value; }
+    public double ExpectedFps { get => 1.0 / ExpectedFrameTime; set => ExpectedFrameTime = 1.0 / value; }
+    public double FrameTime { get; private set; }
+    public double Fps { get => 1d / FrameTime; }
+    public float FrameTimeF => (float)FrameTime;
+
+    /// <summary>Shortcut to access <see cref="RenderContext.VSyncEnabled"/>.</summary>
+    public bool VSyncEnabled { get => RenderContext.VSyncEnabled; set => RenderContext.VSyncEnabled = value; }
+
+    /// <summary>Shortcut to access <see cref="RenderContext.VSyncFrameTime"/>.</summary>
+    public double VSyncFrameTime => RenderContext.VSyncFrameTime;
+
+    /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>.</summary>
+    public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
     public Window Window
     {
@@ -57,7 +58,7 @@ public class Game
         this.platform = platform;
         this.window = null!;
         ExpectedFps = 60d;
-        Delta = 1d / ExpectedFps;
+        FrameTime = 1d / ExpectedFps;
         ticks = 0;
         platform.Init();
         Window = window ?? new Window();
@@ -70,7 +71,7 @@ public class Game
     public void Run()
     {
         Window.Show();
-        Delta = ExpectedDelta;
+        FrameTime = ExpectedFrameTime;
         while (true)
         {
             long before = platform.GetUsecTimeline();
@@ -85,11 +86,13 @@ public class Game
             long after = platform.GetUsecTimeline();
 
             long passed = after - before;
-            double usecPerFrame = ExpectedDelta * 1000 * 1000;
-            if (!VSyncEnabled)
-                Delta = Math.Max(passed / 1000d / 1000d, ExpectedDelta);
+            double usecPerFrame = ExpectedFrameTime * 1000 * 1000;
+
+            // FIXME any way to get a stable, dynamic FrameTime instead of a fixed VSyncFrameTime?
+            if (VSyncEnabled)
+                FrameTime = VSyncFrameTime;
             else
-                Delta = passed / 1000d / 1000d;
+                FrameTime = Math.Max(passed / 1000d / 1000d, ExpectedFrameTime);
             if (!VSyncEnabled && passed < usecPerFrame)
             {
                 double ticksPerUsec = TimeSpan.TicksPerMillisecond / 1000d;

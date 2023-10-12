@@ -42,6 +42,4 @@ public abstract class Platform
     internal abstract void FreeImage(Span<byte> image);
 
     internal abstract long GetUsecTimeline();
-
-    internal abstract void SetVSyncEnabled(RenderContext context, bool enable);
 }
