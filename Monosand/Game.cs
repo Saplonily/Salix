@@ -73,7 +73,7 @@ public class Game
         FrameTime = ExpectedFrameTime;
         while (true)
         {
-            // FIXME desync may happen here with this way of frame rate control implement
+            // FIXME desync may happened here with this way of frame rate control implement
             long before = platform.GetUsecTimeline();
 
             // ---- start ticking the game
