@@ -9,7 +9,10 @@ public abstract class RenderContext
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, int x, int y, int width, int height);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
 
+    /// <summary>Indicates is this <see cref="RenderContext"/> enabled the Vertical Synchronization.</summary>
     public abstract bool VSyncEnabled { get; set; }
+
+    /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
     public abstract double VSyncFrameTime { get; }
 
     /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>

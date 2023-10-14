@@ -77,6 +77,7 @@ public class MyMainWindow : Window
             $"VSyncEnabled: {Game.VSyncEnabled}\n" +
             $"DrawText repeats: {times}\n" +
             $"IsRunningSlowly: {Game.IsRunningSlowly}";
+        
 
         for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);

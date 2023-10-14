@@ -24,12 +24,26 @@ public class Game
 
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
+    /// <summary>Indicates that is the game lagging
+    /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 5 frames.).</summary>
     public bool IsRunningSlowly => laggedFrames > 5;
+
+    /// <summary>Indicates how many frames have passed since the game started.</summary>
     public long Ticks => ticks;
+
+    /// <summary>Expected frame time of the game.</summary>
     public double ExpectedFrameTime { get; set; }
+
+    /// <summary>Expected Fps of the game. This is just a shortcut to access '1.0 / <see cref="ExpectedFrameTime"/>'.</summary>
     public double ExpectedFps { get => 1.0 / ExpectedFrameTime; set => ExpectedFrameTime = 1.0 / value; }
+
+    /// <summary>Actual frame time of the game.</summary>
     public double FrameTime { get; private set; }
+
+    /// <summary>Actual fps of the game.</summary>
     public double Fps { get => 1d / FrameTime; }
+
+    /// <summary>Float-casted <see cref="FrameTime"/>.</summary>
     public float FrameTimeF => (float)FrameTime;
 
     /// <summary>Shortcut to access <see cref="RenderContext.VSyncEnabled"/>.</summary>
@@ -38,7 +52,7 @@ public class Game
     /// <summary>Shortcut to access <see cref="RenderContext.VSyncFrameTime"/>.</summary>
     public double VSyncFrameTime => RenderContext.VSyncFrameTime;
 
-    /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>.</summary>
+    /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>. Usally the refresh rate of your display.</summary>
     public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
     public Window Window
@@ -74,7 +88,7 @@ public class Game
         Window.Show();
         FrameTime = ExpectedFrameTime;
 
-        // FIXME this is a silly method to sync with the monitor
+        // FIXME this is a silly method to sync with the display
         if (!VSyncEnabled)
         {
             VSyncEnabled = true;
