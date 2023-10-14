@@ -24,7 +24,7 @@ public class Game
 
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
-    /// <summary>Indicates that is the game lagging
+    /// <summary>Indicates whether the game is lagging
     /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 5 frames.).</summary>
     public bool IsRunningSlowly => laggedFrames > 5;
 
