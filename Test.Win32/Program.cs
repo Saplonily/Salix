@@ -31,28 +31,29 @@ public class MyMainWindow : Window
         spriteBatch = new SpriteBatch(RenderContext);
     }
 
+    Vector2 posBase;
     Vector2 position;
 
     float a;
-    int count = 2;
+    int times = 3;
 
     public override void Update()
     {
         base.Update();
-        //Vector2 dir = new();
-        //if (KeyboardState.IsPressing(Key.A))
-        //    dir -= Vector2.UnitX;
-        //if (KeyboardState.IsPressing(Key.W))
-        //    dir -= Vector2.UnitY;
-        //if (KeyboardState.IsPressing(Key.D))
-        //    dir += Vector2.UnitX;
-        //if (KeyboardState.IsPressing(Key.S))
-        //    dir += Vector2.UnitY;
-        //if (dir != Vector2.Zero)
-        //    dir = Vector2.Normalize(dir);
-
-        a += Game.FrameTimeF;
-        position = new Vector2((MathF.Sin(a) + 1f) / 2f * 600f, 0f);
+        Vector2 dir = new();
+        if (KeyboardState.IsPressing(Key.A))
+            dir -= Vector2.UnitX;
+        if (KeyboardState.IsPressing(Key.W))
+            dir -= Vector2.UnitY;
+        if (KeyboardState.IsPressing(Key.D))
+            dir += Vector2.UnitX;
+        if (KeyboardState.IsPressing(Key.S))
+            dir += Vector2.UnitY;
+        if (dir != Vector2.Zero)
+            dir = Vector2.Normalize(dir);
+        posBase += dir * 400f * Game.FrameTimeF;
+        a += 2f * Game.FrameTimeF;
+        position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
     }
 
 
@@ -61,7 +62,9 @@ public class MyMainWindow : Window
         base.Render();
 
         if (KeyboardState.IsJustPressed(Key.H))
-            count += count / 2;
+            times += times / 3;
+        if (KeyboardState.IsJustPressed(Key.J))
+            times -= times / 3;
 
         spriteBatch.DrawTexture(texture500x500, position, Vector2.One / 2f);
         string str =
@@ -72,8 +75,10 @@ public class MyMainWindow : Window
             $"FrameTime: {Game.FrameTime:F4}\n" +
             $"VSyncFps: {Game.VSyncFps}\n" +
             $"VSyncEnabled: {Game.VSyncEnabled}\n" +
-            $"font draw count: {count}";
-        for (int i = 0; i < count; i++)
+            $"DrawText repeats: {times}\n" +
+            $"IsRunningSlowly: {Game.IsRunningSlowly}";
+
+        for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
     }

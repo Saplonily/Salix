@@ -11,7 +11,7 @@ public class Game
     private Window window;
     private Platform platform;
     private long ticks;
-    private double expectedFrameTime;
+    private int laggedFrames;
 
     internal WinImpl WinImpl => window.WinImpl;
     internal RenderContext RenderContext => WinImpl.GetRenderContext();
@@ -24,8 +24,9 @@ public class Game
 
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
+    public bool IsRunningSlowly => laggedFrames > 5;
     public long Ticks => ticks;
-    public double ExpectedFrameTime { get => expectedFrameTime; set => expectedFrameTime = value; }
+    public double ExpectedFrameTime { get; set; }
     public double ExpectedFps { get => 1.0 / ExpectedFrameTime; set => ExpectedFrameTime = 1.0 / value; }
     public double FrameTime { get; private set; }
     public double Fps { get => 1d / FrameTime; }
@@ -83,7 +84,7 @@ public class Game
             VSyncEnabled = false;
         }
 
-        long expectedTimeLine = platform.GetUsecTimeline() + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : expectedFrameTime));
+        long expectedTimeLine = platform.GetUsecTimeline() + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
         while (true)
         {
             // ----------------------------------------------------------------------
@@ -102,7 +103,7 @@ public class Game
             ticks++;
             // -----------------
 
-            long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : expectedFrameTime));
+            long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
             long currentTimeLine = platform.GetUsecTimeline();
             int toSleepUsec = (int)(expectedTimeLine - currentTimeLine);
             if (!VSyncEnabled)
@@ -110,7 +111,7 @@ public class Game
                 if (toSleepUsec > 1000)
                     Thread.Sleep(toSleepUsec / 1000);
             }
-            FrameTime = VSyncEnabled ? VSyncFrameTime : expectedFrameTime;
+            FrameTime = VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime;
 
             // if we're facing lagging
             if (currentTimeLine > expectedTimeLine)
@@ -119,9 +120,17 @@ public class Game
                 long distance = currentTimeLine - expectedTimeLine;
                 long times = distance / realFrameTimeUsec + 1;
                 expectedTimeLine += times * realFrameTimeUsec;
+                laggedFrames += 1;
+                if (laggedFrames > 10)
+                    laggedFrames = 10;
             }
-
-            expectedTimeLine += realFrameTimeUsec;
+            else
+            {
+                expectedTimeLine += realFrameTimeUsec;
+                laggedFrames -= 1;
+                if (laggedFrames < 0)
+                    laggedFrames = 0;
+            }
         }
     }
 }
