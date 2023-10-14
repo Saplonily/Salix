@@ -2,19 +2,22 @@
 
 namespace Monosand;
 
-public class Window : IDisposable
+public class Window
 {
     private Size size;
     private Point position;
 
+    private bool isClosed = false;
     private WinImpl? impl;
     private Game? game;
     private RenderContext? rc;
     private readonly KeyboardState keyboardState;
     private readonly PointerState pointerState;
 
+    public string Title { get => WinImpl.Title; set => WinImpl.Title = value; }
+
     /// <summary>Is this window invalid, usually be <see langword="true"/> when the window closed or disposed.</summary>
-    public bool IsInvalid => impl == null || game == null;
+    public bool IsClosed => isClosed;
 
     /// <summary>The <see cref="Monosand.Game"/> instance the window belong to.</summary>
     public Game Game
@@ -27,6 +30,7 @@ public class Window : IDisposable
             InitCreateWindow();
         }
     }
+
     internal WinImpl WinImpl => impl ?? throw SR.PropNotSet(nameof(WinImpl));
 
     /// <summary>
@@ -126,9 +130,7 @@ public class Window : IDisposable
     internal void OnCallbackDestroy()
     {
         impl!.MainThreadDispose();
-        // prevent our Window from destroying twice when closing
-        impl = null;
-        Dispose(true);
+        isClosed = true;
         OnClosed();
     }
 
@@ -228,24 +230,5 @@ public class Window : IDisposable
     /// <summary>The render logic.</summary>
     public virtual void Render()
     {
-    }
-
-    /// <inheritdoc cref="IDisposable.Dispose"/>
-    protected virtual void Dispose(bool disposing)
-    {
-        if (impl != null)
-        {
-            impl.Destroy();
-            impl = null;
-        }
-    }
-
-    ~Window()
-        => Dispose(disposing: false);
-
-    void IDisposable.Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

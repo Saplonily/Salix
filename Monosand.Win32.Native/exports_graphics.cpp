@@ -330,7 +330,7 @@ static GLuint make_vao(VertexElementType* type, int len)
         vertex_element_glinfo t = VertexElementType_get_glinfo(type[i]);
         glVertexAttribPointer(i, t.count, t.type, GL_FALSE, singleVertexSize, (void*)currentOffset); GL_CHECK_ERROR;
         glEnableVertexAttribArray(i); GL_CHECK_ERROR;
-        currentOffset += t.componentSize * t.count;
+        currentOffset += (size_t)(t.componentSize * t.count);
     }
     return vao;
 }

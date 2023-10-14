@@ -113,7 +113,7 @@ public class Game
 
             // ----- tick ------
             Window.PollEvents();
-            if (Window.IsInvalid) break;
+            if (Window.IsClosed) break;
             Window.Tick();
             ticks++;
             // -----------------

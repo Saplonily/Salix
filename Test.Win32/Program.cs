@@ -54,6 +54,7 @@ public class MyMainWindow : Window
         posBase += dir * 400f * Game.FrameTimeF;
         a += 2f * Game.FrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
+        Title = $"Monosand Test.Win32 {DateTime.Now}";
     }
 
     public override void Render()

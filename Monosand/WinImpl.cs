@@ -4,6 +4,8 @@ namespace Monosand;
 
 internal unsafe abstract class WinImpl
 {
+    internal abstract string Title { get; set; }
+
     /// <summary>Destroy this window and release the resource.</summary>
     internal abstract void Destroy();
 

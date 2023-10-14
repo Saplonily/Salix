@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Monosand.Win32;
 
@@ -9,7 +10,24 @@ internal sealed unsafe class Win32WinImpl : WinImpl
     private IntPtr handle;
     private Win32RenderContext? renderContext;
 
-    public Win32WinImpl(int width, int height, string title, Window window)
+    internal override string Title
+    {
+        get
+        {
+            EnsureState();
+            char* str = stackalloc char[256];
+            Interop.MsdGetWindowTitle(handle, str);
+            return new string(str);
+        }
+        set
+        {
+            EnsureState();
+            fixed (char* str = value)
+                Interop.MsdSetWindowTitle(handle, str);
+        }
+    }
+
+    internal Win32WinImpl(int width, int height, string title, Window window)
     {
         IntPtr handle;
         fixed (char* ptitle = title)

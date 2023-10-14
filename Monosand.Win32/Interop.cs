@@ -106,4 +106,6 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern long MsdGetUsecTimeline();
     [DllImport(DllPath)] public static extern void MsdgSetVSyncEnabled(IntPtr handle, byte enable);
     [DllImport(DllPath)] public static extern double MsdgGetVSyncFrameTime(IntPtr handle);
+    [DllImport(DllPath)] public static extern void MsdSetWindowTitle(IntPtr handle, char* title);
+    [DllImport(DllPath)] public static extern void MsdGetWindowTitle(IntPtr handle, char* title);
 }

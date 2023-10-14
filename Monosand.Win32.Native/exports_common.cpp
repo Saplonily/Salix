@@ -160,4 +160,15 @@ extern "C"
         time += seconds * 1000000L;
         return time;
     }
+
+    EXPORT void CALLCONV MsdSetWindowTitle(whandle* handle, wchar_t* title)
+    {
+        SetWindowTextW(handle->hwnd, title);
+    }
+
+    EXPORT void CALLCONV MsdGetWindowTitle(whandle* handle, wchar_t* title)
+    {
+        int len = GetWindowTextLengthW(handle->hwnd);
+        GetWindowTextW(handle->hwnd, title, 256);
+    }
 }
