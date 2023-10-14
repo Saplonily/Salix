@@ -44,7 +44,7 @@ internal class Program
 
     public static IEnumerable<char> GetChars()
     {
-        for (char i = '\0'; i < char.MaxValue; i++)
+        for (char i = '\0'; i < (char)byte.MaxValue; i++)
             yield return i;
     }
 }

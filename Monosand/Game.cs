@@ -1,4 +1,6 @@
-﻿namespace Monosand;
+﻿using System.Diagnostics;
+
+namespace Monosand;
 
 public class Game
 {
@@ -43,8 +45,7 @@ public class Game
         get => window;
         set
         {
-            if (value is null)
-                throw new ArgumentNullException(nameof(value));
+            ThrowHelper.ThrowIfNull(value);
             window = value;
             window.Game = this;
         }
@@ -71,35 +72,56 @@ public class Game
     {
         Window.Show();
         FrameTime = ExpectedFrameTime;
+
+        // FIXME this is a silly method to sync with the monitor
+        if (!VSyncEnabled)
+        {
+            VSyncEnabled = true;
+            Window.RenderContext.SwapBuffers();
+            Window.RenderContext.SwapBuffers();
+            Window.RenderContext.SwapBuffers();
+            VSyncEnabled = false;
+        }
+
+        long expectedTimeLine = platform.GetUsecTimeline() + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : expectedFrameTime));
         while (true)
         {
-            // FIXME desync may happened here with this way of frame rate control implement
-            long before = platform.GetUsecTimeline();
+            // ----------------------------------------------------------------------
+            // |s    e            |s           e      |s                |   e
+            // ----------------------------------------------------------------------
+            //               ↑ running correctly(e is before |)         ↑ running slowly(e is behind |)
+            // s - e : processing & rendering
+            // e - | : sleeping
+            // | - | : one frame
 
-            // ---- start ticking the game
+
+            // ----- tick ------
             Window.PollEvents();
             if (Window.IsInvalid) break;
             Window.Tick();
             ticks++;
-            // ----
+            // -----------------
 
-            long after = platform.GetUsecTimeline();
-
-            long passed = after - before;
-            double usecPerFrame = ExpectedFrameTime * 1000 * 1000;
-
-            // FIXME any way to get a stable, dynamic FrameTime instead of a fixed VSyncFrameTime?
-            if (VSyncEnabled)
-                FrameTime = VSyncFrameTime;
-            else
-                FrameTime = Math.Max(passed / 1000d / 1000d, ExpectedFrameTime);
-            if (!VSyncEnabled && passed < usecPerFrame)
+            long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : expectedFrameTime));
+            long currentTimeLine = platform.GetUsecTimeline();
+            int toSleepUsec = (int)(expectedTimeLine - currentTimeLine);
+            if (!VSyncEnabled)
             {
-                double ticksPerUsec = TimeSpan.TicksPerMillisecond / 1000d;
-                double toSleepUsec = usecPerFrame - passed;
-                double toSleep = ticksPerUsec * toSleepUsec;
-                Thread.Sleep(TimeSpan.FromTicks((long)toSleep));
+                if (toSleepUsec > 1000)
+                    Thread.Sleep(toSleepUsec / 1000);
             }
+            FrameTime = VSyncEnabled ? VSyncFrameTime : expectedFrameTime;
+
+            // if we're facing lagging
+            if (currentTimeLine > expectedTimeLine)
+            {
+                FrameTime += (currentTimeLine - expectedTimeLine) / 1_000_000d;
+                long distance = currentTimeLine - expectedTimeLine;
+                long times = distance / realFrameTimeUsec + 1;
+                expectedTimeLine += times * realFrameTimeUsec;
+            }
+
+            expectedTimeLine += realFrameTimeUsec;
         }
     }
 }

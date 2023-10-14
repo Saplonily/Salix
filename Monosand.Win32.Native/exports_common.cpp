@@ -88,7 +88,9 @@ extern "C"
             0
         };
         hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
+        // TODO error handling
         assert(hglrc != nullptr);
+        assert(GLAD_WGL_EXT_swap_control);
         wglMakeCurrent(hdc, hglrc);
         // we'll delete it at MsdDestroyWindow
         whandle* handle = new whandle;
@@ -147,6 +149,11 @@ extern "C"
     {
         int64_t ticks = 0;
         QueryPerformanceCounter((LARGE_INTEGER*)&ticks);
-        return ticks / (performanceFrequency / 1000 / 1000);
+
+        uint64_t seconds = ticks / performanceFrequency;
+        uint64_t leftover = ticks % performanceFrequency;
+        uint64_t time = (leftover * 1000000L) / performanceFrequency;
+        time += seconds * 1000000L;
+        return time;
     }
 }
