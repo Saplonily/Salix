@@ -56,7 +56,6 @@ public class MyMainWindow : Window
         position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
     }
 
-
     public override void Render()
     {
         base.Render();
@@ -77,7 +76,8 @@ public class MyMainWindow : Window
             $"VSyncEnabled: {Game.VSyncEnabled}\n" +
             $"DrawText repeats: {times}\n" +
             $"IsRunningSlowly: {Game.IsRunningSlowly}";
-        
+
+        Console.WriteLine($"fps: {Game.Fps}");
 
         for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);

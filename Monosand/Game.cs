@@ -41,7 +41,7 @@ public class Game
     public double FrameTime { get; private set; }
 
     /// <summary>Actual fps of the game.</summary>
-    public double Fps { get => 1d / FrameTime; }
+    public double Fps { get; private set; }
 
     /// <summary>Float-casted <see cref="FrameTime"/>.</summary>
     public float FrameTimeF => (float)FrameTime;
@@ -98,12 +98,13 @@ public class Game
             VSyncEnabled = false;
         }
 
-        long expectedTimeLine = platform.GetUsecTimeline() + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
+        long currentTimeLine = platform.GetUsecTimeline();
+        long expectedTimeLine = currentTimeLine + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
         while (true)
         {
-            // ----------------------------------------------------------------------
-            // |s    e            |s           e      |s                |   e
-            // ----------------------------------------------------------------------
+            // -------------------------------------------------------------------------------------------
+            // |s    e            |s           e      |s                |   e s      e     |s           e|
+            // -------------------------------------------------------------------------------------------
             //               ↑ running correctly(e is before |)         ↑ running slowly(e is behind |)
             // s - e : processing & rendering
             // e - | : sleeping
@@ -118,21 +119,26 @@ public class Game
             // -----------------
 
             long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
-            long currentTimeLine = platform.GetUsecTimeline();
+            long pCurrentTimeLine = currentTimeLine;
+            currentTimeLine = platform.GetUsecTimeline();
             int toSleepUsec = (int)(expectedTimeLine - currentTimeLine);
             if (!VSyncEnabled)
             {
                 if (toSleepUsec > 1000)
                     Thread.Sleep(toSleepUsec / 1000);
             }
-            FrameTime = VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime;
+            FrameTime = (currentTimeLine - pCurrentTimeLine) / 1_000_000d;
+
+            // TODO This fps implementation is a bit weird
+            var fpsFT = VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime;
+            if (currentTimeLine > expectedTimeLine)
+                fpsFT += (currentTimeLine - expectedTimeLine) / 1_000_000d;
+            Fps = 1 / fpsFT;
 
             // if we're facing lagging
             if (currentTimeLine > expectedTimeLine)
             {
-                FrameTime += (currentTimeLine - expectedTimeLine) / 1_000_000d;
-                long distance = currentTimeLine - expectedTimeLine;
-                long times = distance / realFrameTimeUsec + 1;
+                long times = (currentTimeLine - expectedTimeLine) / realFrameTimeUsec + 1;
                 expectedTimeLine += times * realFrameTimeUsec;
                 laggedFrames += 1;
                 if (laggedFrames > 10)
