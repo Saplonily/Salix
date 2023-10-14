@@ -3,9 +3,7 @@
 > Chinese version at [Readme.md](./Readme.md)
 
 ## Introduction
-Monosand is a lightweight framework based on `.NET standard 2.0/2.1` and `.NET 6, 7, 8` focused on **2D** game development.  
-
-Although there are plenty of great game engines out there that have taken each aspect to the extreme, I have not found one I loved the most, so... why not make one *myself*?  
+Monosand is a lightweight framework based on `.NET standard 2.0/2.1` and `.NET 6, 7, 8` focused on **2D**.  
 And here it's.  
 
 Currently Monosand only implements the OpenGL rendering backend on Win32 platform, but this will expand as the project progresses.  
