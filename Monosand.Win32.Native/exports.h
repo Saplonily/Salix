@@ -8,6 +8,9 @@
 #define EXPORT __declspec(dllexport)
 #define CALLCONV __stdcall
 
+// see more at exports_graphics.cpp->MsdgSwapBuffers
+//#define MSDG_COMPATIBILITY_GL
+
 extern const wchar_t* Monosand;
 
 // alloc a small block of memory (will NOT be zeroed)

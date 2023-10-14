@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "exports.h"
 #if _DEBUG
 
 static const char* message_source_to_string(GLenum source)
@@ -24,6 +25,10 @@ static const char* message_source_to_string(GLenum source)
 
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam)
 {
+#ifdef MSDG_COMPATIBILITY_GL
+    if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
+        return;
+#endif
     const char* sourceStr = message_source_to_string(source);
     if (!length)
         length = (GLsizei)strlen(msg);

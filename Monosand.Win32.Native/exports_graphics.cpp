@@ -28,6 +28,11 @@ extern "C"
         // FIXME some screen recorders may fuck our program here
         // for example, OCam and Bandicam
         // but others like XBox Capture and OBS won't
+
+        // Currently I've only found that this problem can be resolved by setting
+        // WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB to the WGL_CONTEXT_PROFILE_MASK_ARB,
+        // for now it can be enabled by uncommenting the MSDG_COMPATIBILITY_GL macro definition in the exports.h.
+        // If you have a better solution, welcome your contributions!
         SwapBuffers(handle->hdc);
     }
 

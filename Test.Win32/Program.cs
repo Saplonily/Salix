@@ -77,8 +77,6 @@ public class MyMainWindow : Window
             $"DrawText repeats: {times}\n" +
             $"IsRunningSlowly: {Game.IsRunningSlowly}";
 
-        Console.WriteLine($"fps: {Game.Fps}");
-
         for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
