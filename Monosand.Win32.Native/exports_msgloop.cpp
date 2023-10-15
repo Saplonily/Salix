@@ -42,7 +42,11 @@ struct win_event
     void* gc_handle;
 };
 
-std::vector<win_event>* event_list;
+using event_list_t = std::vector<win_event>;
+
+static bool began_polling = false;
+static event_list_t* event_list;
+static event_list_t* event_list_2;
 
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
@@ -241,43 +245,41 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 #undef push_e
 }
 
-void window_msg_loop_init()
+void window_msg_loop_init(whandle*)
 {
-    event_list = new std::vector<win_event>;
-    event_list->reserve(5);
+    event_list = new event_list_t;
+    event_list->reserve(16);
+    event_list_2 = new event_list_t;
+    event_list_2->reserve(16);
 }
 
-static bool began_polling = false;
-extern "C"
+EXPORT event_list_t* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count, win_event** events)
 {
-    EXPORT void* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count, win_event** events)
+    assert(began_polling == false);
+
+    // TODO message merging
+    MSG msg{};
+    while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))
     {
-        assert(began_polling == false);
-
-        // TODO message merging
-        MSG msg{};
-        while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))
-        {
-            if (msg.message == WM_KEYDOWN && msg.wParam == VK_PROCESSKEY)
-                msg.wParam = ImmGetVirtualKey(msg.hwnd);
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-
-        std::vector<win_event>* pre_vector = event_list;
-        event_list = new std::vector<win_event>;
-
-        *count = pre_vector->size();
-        *events = pre_vector->data();
-        began_polling = true;
-        return pre_vector;
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_PROCESSKEY)
+            msg.wParam = ImmGetVirtualKey(msg.hwnd);
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
     }
 
-    EXPORT void CALLCONV MsdEndPollEvents(whandle* whandle, void* handle)
-    {
-        assert(began_polling == true);
-        std::vector<win_event>* pre_vector = static_cast<std::vector<win_event>*>(handle);
-        delete pre_vector;
-        began_polling = false;
-    }
+    event_list_t* temp = event_list;
+    event_list = event_list_2;
+    event_list_2 = temp;
+    
+    *count = event_list_2->size();
+    *events = event_list_2->data();
+    began_polling = true;
+    return event_list_2;
+}
+
+EXPORT void CALLCONV MsdEndPollEvents(whandle* whandle, event_list_t* handle)
+{
+    assert(began_polling == true);
+    handle->clear();
+    began_polling = false;
 }

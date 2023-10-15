@@ -3,9 +3,8 @@
 #define H_EXPORTS
 
 #include <WinUser.h>
-#include "whandle.h"
 #include "enums.h"
-#define EXPORT __declspec(dllexport)
+#define EXPORT extern "C" __declspec(dllexport)
 #define CALLCONV __stdcall
 
 // see more at exports_graphics.cpp->MsdgSwapBuffers
@@ -28,10 +27,13 @@ inline void small_free(T* ptr)
     delete ptr;
 }
 
-#define GL_CHECK_ERROR {\
-GLenum err = glGetError();\
-if (err != 0)\
-printf("[glGetError] [%s:%d] %s\n", __FUNCTION__, __LINE__, gl_get_error_msg(err));\
-}\
+struct whandle
+{
+    HWND hwnd;
+    HDC hdc;
+    HGLRC hglrc;
+};
+
+using byte = unsigned char;
 
 #endif

@@ -8,7 +8,4 @@
 #include "thirdparty/glad/glad.h"
 #include "thirdparty/glad/glad_wgl.h"
 #include "thirdparty/stb_image.h"
-
-using byte = unsigned char;
-
 #endif

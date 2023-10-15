@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="win32_msg_loop.cpp" />
     <ClCompile Include="thirdparty\glad\glad.c">
       <Filter>thirdparty\glad</Filter>
     </ClCompile>
@@ -14,12 +13,17 @@
     <ClCompile Include="pch.cpp">
       <Filter>common</Filter>
     </ClCompile>
-    <ClCompile Include="gl_debug_callback.cpp" />
     <ClCompile Include="thirdparty\glad\glad_wgl.c">
       <Filter>thirdparty\glad</Filter>
     </ClCompile>
     <ClCompile Include="thirdparty\headonly_impl.cpp">
       <Filter>thirdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="exports_msgloop.cpp">
+      <Filter>exports</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_debug_callback.cpp">
+      <Filter>exports</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -38,9 +42,6 @@
     <ClInclude Include="pch.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="whandle.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="exports_graphics.h">
       <Filter>exports</Filter>
     </ClInclude>
@@ -50,7 +51,9 @@
     <ClInclude Include="thirdparty\stb_image.h">
       <Filter>thirdparty</Filter>
     </ClInclude>
-    <ClInclude Include="key_map.h" />
+    <ClInclude Include="key_map.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="exports">

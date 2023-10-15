@@ -9,8 +9,8 @@ const wchar_t* Monosand = L"Monosand";
 #if _DEBUG
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
 #endif
-void window_gl_init();
-void window_msg_loop_init();
+void window_graphics_init(whandle*);
+void window_msg_loop_init(whandle*);
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 // WndExtra:
@@ -18,157 +18,154 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
 // ticks per second
 static int64_t performanceFrequency = 0;
-static PIXELFORMATDESCRIPTOR pfd;
-extern "C"
+
+EXPORT int CALLCONV MsdInit()
 {
-    EXPORT int CALLCONV MsdInit()
-    {
-        pfd = {
-            sizeof(PIXELFORMATDESCRIPTOR),
-            1,                     // version number  
-            PFD_DRAW_TO_WINDOW |   // support window  
-            PFD_SUPPORT_OPENGL |   // support OpenGL  
-            PFD_DOUBLEBUFFER,      // double buffered  
-            PFD_TYPE_RGBA,         // RGBA type  
-            24,                    // 24-bit color depth  
-            0, 0, 0, 0, 0, 0,      // color bits ignored  
-            0,                     // no alpha buffer  
-            0,                     // shift bit ignored  
-            0,                     // no accumulation buffer  
-            0, 0, 0, 0,            // accum bits ignored  
-            24,                    // 24-bit z-buffer      
-            0,                     // no stencil buffer  
-            0,                     // no auxiliary buffer  
-            PFD_MAIN_PLANE,        // main layer  
-            0,                     // reserved  
-            0, 0, 0                // layer masks ignored  
-        };
+    WNDCLASSW wc{};
+    wc.lpfnWndProc = WindowProc;
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    wc.lpszClassName = Monosand;
+    wc.cbWndExtra = sizeof(void*) * 1;
+    RegisterClassW(&wc);
 
-        WNDCLASSW wc{};
-        wc.lpfnWndProc = WindowProc;
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
-        wc.lpszClassName = Monosand;
-        wc.cbWndExtra = sizeof(void*) * 1;
-        RegisterClassW(&wc);
+    QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
 
-        QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
+    return 0;
+}
 
-        return 0;
-    }
+EXPORT whandle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
+{
+    PIXELFORMATDESCRIPTOR pfd = {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,                     // version number  
+        PFD_DRAW_TO_WINDOW |   // support window  
+        PFD_SUPPORT_OPENGL |   // support OpenGL  
+        PFD_DOUBLEBUFFER,      // double buffered  
+        PFD_TYPE_RGBA,         // RGBA type  
+        24,                    // 24-bit color depth  
+        0, 0, 0, 0, 0, 0,      // color bits ignored  
+        0,                     // no alpha buffer  
+        0,                     // shift bit ignored  
+        0,                     // no accumulation buffer  
+        0, 0, 0, 0,            // accum bits ignored  
+        24,                    // 24-bit z-buffer      
+        0,                     // no stencil buffer  
+        0,                     // no auxiliary buffer  
+        PFD_MAIN_PLANE,        // main layer  
+        0,                     // reserved  
+        0, 0, 0                // layer masks ignored  
+    };
 
-    EXPORT whandle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
-    {
-        HWND hwnd = CreateWindowExW(NULL, Monosand, title, WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            width, height,
-            NULL, NULL, NULL, NULL
-        );
-        ShowWindow(hwnd, SW_HIDE);
-        UpdateWindow(hwnd);
+    HWND hwnd = CreateWindowExW(NULL, Monosand, title, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        width, height,
+        NULL, NULL, NULL, NULL
+    );
+    ShowWindow(hwnd, SW_HIDE);
+    UpdateWindow(hwnd);
 
-        // TODO impl error handler
-        HDC hdc = GetDC(hwnd);
-        int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-        SetPixelFormat(hdc, pixelFormat, &pfd);
-        int i = 0;
-        HGLRC hglrc = wglCreateContext(hdc);
-        wglMakeCurrent(hdc, hglrc);
-        gladLoadGL();
-        gladLoadWGL(hdc);
-        wglMakeCurrent(nullptr, nullptr);
-        wglDeleteContext(hglrc);
-        GLint attribs[] = {
-            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-            WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-        #ifndef MSDG_COMPATIBILITY_GL
-            WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        #else
-            WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-        #endif
-        #if _DEBUG
-            WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
-        #endif
-            0
-        };
-        hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
-        // TODO error handling
-        assert(hglrc != nullptr);
-        assert(GLAD_WGL_EXT_swap_control);
-        wglMakeCurrent(hdc, hglrc);
-        // we'll delete it at MsdDestroyWindow
-        whandle* handle = new whandle;
-        handle->hwnd = hwnd;
-        handle->hdc = hdc;
-        handle->hglrc = hglrc;
-    #if _DEBUG
-        glDebugMessageCallbackARB(gl_debug_callback, handle);
+    // TODO impl error handler
+    HDC hdc = GetDC(hwnd);
+    int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+    SetPixelFormat(hdc, pixelFormat, &pfd);
+    int i = 0;
+    HGLRC hglrc = wglCreateContext(hdc);
+    wglMakeCurrent(hdc, hglrc);
+    gladLoadGL();
+    gladLoadWGL(hdc);
+    wglMakeCurrent(nullptr, nullptr);
+    wglDeleteContext(hglrc);
+    GLint attribs[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+    #ifndef MSDG_COMPATIBILITY_GL
+        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    #else
+        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
     #endif
+    #if _DEBUG
+        WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+    #endif
+        0
+    };
+    hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
+    // TODO error handling
+    assert(hglrc != nullptr);
+    assert(GLAD_WGL_EXT_swap_control);
+    wglMakeCurrent(hdc, hglrc);
+    // we'll delete it at MsdDestroyWindow
+    whandle* handle = new whandle;
+    handle->hwnd = hwnd;
+    handle->hdc = hdc;
+    handle->hglrc = hglrc;
+#if _DEBUG
+    glDebugMessageCallbackARB(gl_debug_callback, handle);
+#endif
 
-        window_gl_init();
-        window_msg_loop_init();
-        SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
+    window_graphics_init(handle);
+    window_msg_loop_init(handle);
+    SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
 
-        timeBeginPeriod(1);
+    timeBeginPeriod(1);
 
-        return handle;
-    }
+    return handle;
+}
 
-    EXPORT void CALLCONV MsdShowWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
+EXPORT void CALLCONV MsdShowWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
 
-    EXPORT void CALLCONV MsdHideWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
+EXPORT void CALLCONV MsdHideWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
 
-    EXPORT void CALLCONV MsdDestroyWindow(whandle* handle)
+EXPORT void CALLCONV MsdDestroyWindow(whandle* handle)
+{
+    DestroyWindow(handle->hwnd);
+    // make sure our window has received and handled WM_DESTORY
+    MSG msg{};
+    while (PeekMessageW(&msg, handle->hwnd, WM_DESTROY, WM_DESTROY, PM_REMOVE))
     {
-        DestroyWindow(handle->hwnd);
-        // make sure our window has received and handled WM_DESTORY
-        MSG msg{};
-        while (PeekMessageW(&msg, handle->hwnd, WM_DESTROY, WM_DESTROY, PM_REMOVE))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-        delete handle;
-        timeEndPeriod(1);
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
     }
+    delete handle;
+    timeEndPeriod(1);
+}
 
-    EXPORT RECT CALLCONV MsdGetWindowRect(whandle* handle)
-    {
-        RECT rect{};
-        GetClientRect(handle->hwnd, &rect);
-        return rect;
-    }
+EXPORT RECT CALLCONV MsdGetWindowRect(whandle* handle)
+{
+    RECT rect{};
+    GetClientRect(handle->hwnd, &rect);
+    return rect;
+}
 
-    EXPORT void CALLCONV MsdSetWindowSize(whandle* handle, int width, int height)
-    {
-        SetWindowPos(handle->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE);
-    }
+EXPORT void CALLCONV MsdSetWindowSize(whandle* handle, int width, int height)
+{
+    SetWindowPos(handle->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE);
+}
 
-    EXPORT void CALLCONV MsdSetWindowPos(whandle* handle, int x, int y)
-    {
-        SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
-    }
+EXPORT void CALLCONV MsdSetWindowPos(whandle* handle, int x, int y)
+{
+    SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
+}
 
-    EXPORT int64_t CALLCONV MsdGetUsecTimeline()
-    {
-        int64_t ticks = 0;
-        QueryPerformanceCounter((LARGE_INTEGER*)&ticks);
+EXPORT int64_t CALLCONV MsdGetUsecTimeline()
+{
+    int64_t ticks = 0;
+    QueryPerformanceCounter((LARGE_INTEGER*)&ticks);
 
-        uint64_t seconds = ticks / performanceFrequency;
-        uint64_t leftover = ticks % performanceFrequency;
-        uint64_t time = (leftover * 1000000L) / performanceFrequency;
-        time += seconds * 1000000L;
-        return time;
-    }
+    uint64_t seconds = ticks / performanceFrequency;
+    uint64_t leftover = ticks % performanceFrequency;
+    uint64_t time = (leftover * 1000000L) / performanceFrequency;
+    time += seconds * 1000000L;
+    return time;
+}
 
-    EXPORT void CALLCONV MsdSetWindowTitle(whandle* handle, wchar_t* title)
-    {
-        SetWindowTextW(handle->hwnd, title);
-    }
+EXPORT void CALLCONV MsdSetWindowTitle(whandle* handle, wchar_t* title)
+{
+    SetWindowTextW(handle->hwnd, title);
+}
 
-    EXPORT void CALLCONV MsdGetWindowTitle(whandle* handle, wchar_t* title)
-    {
-        int len = GetWindowTextLengthW(handle->hwnd);
-        GetWindowTextW(handle->hwnd, title, 256);
-    }
+EXPORT void CALLCONV MsdGetWindowTitle(whandle* handle, wchar_t* title)
+{
+    int len = GetWindowTextLengthW(handle->hwnd);
+    GetWindowTextW(handle->hwnd, title, 256);
 }
