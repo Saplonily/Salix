@@ -125,8 +125,7 @@ public class Window
     /// <summary>Called when the window resized.</summary>
     public virtual void OnResized(int width, int height)
     {
-        if (Game.RenderContext is not null)
-            Game.RenderContext.Viewport = new(0, 0, width, height);
+        Game.RenderContext.OnWindowResized(width, height);
         size = new(width, height);
         Resized?.Invoke(this, width, height);
     }

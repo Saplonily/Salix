@@ -90,9 +90,15 @@ public sealed class Win32RenderContext : RenderContext
         set
         {
             if (value is null)
+            {
                 Interop.MsdgSetRenderTarget(IntPtr.Zero);
+                Viewport = new(0, 0, windowSize.Width, windowSize.Height);
+            }
             else
+            {
                 Interop.MsdgSetRenderTarget(((Win32RenderTargetImpl)value.Impl).Handle);
+                Viewport = new(0, 0, value.Width, value.Height);
+            }
         }
     }
 

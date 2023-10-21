@@ -73,8 +73,8 @@ public class MyMainWindow : Window
             times -= times / 3;
 
         Game.RenderContext.RenderTarget = tempTarget;
-        Game.RenderContext.Clear(Color.Red);
 
+        Game.RenderContext.Clear(Color.Transparent with { A = 20 });
         spriteBatch.DrawTexture(texture500x500, position, Vector2.One / 2f);
         string str =
             $"Ticks: {Game.Ticks}\n" +
@@ -86,10 +86,10 @@ public class MyMainWindow : Window
             $"VSyncEnabled: {Game.VSyncEnabled}\n" +
             $"DrawText repeats: {times}\n" +
             $"IsRunningSlowly: {Game.IsRunningSlowly}";
-
         for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
+
         Game.RenderContext.RenderTarget = null;
         spriteBatch.DrawRenderTarget(tempTarget, Vector2.One * 100f);
         spriteBatch.Flush();

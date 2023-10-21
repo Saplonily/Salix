@@ -2,6 +2,8 @@
 
 public sealed class RenderTarget : GraphicsResource
 {
+    public int Width => Texture.Width;
+    public int Height => Texture.Height;
     public Texture2D Texture { get; private set; }
     internal IRenderTargetImpl Impl { get; private set; }
 

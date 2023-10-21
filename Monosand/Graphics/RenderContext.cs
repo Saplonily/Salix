@@ -9,6 +9,7 @@ public abstract class RenderContext
     private int creationThreadId;
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
+    protected Size windowSize;
 
     public abstract Shader? Shader { get; set; }
     public abstract RenderTarget? RenderTarget { get; set; }
@@ -65,6 +66,14 @@ public abstract class RenderContext
             queuedActions.Clear();
         }
     }
+
+    internal void OnWindowResized(int width, int height)
+    {
+        windowSize = new(width, height);
+        if (RenderTarget is null)
+            Viewport = new(0, 0, width, height);
+    }
+
 
     /// <summary>Invoke an action on the RenderContext creation thread.</summary>
     public void Invoke(Action action)
