@@ -1,33 +1,34 @@
 ﻿namespace Monosand.Win32;
 
-internal sealed class Win32Texture2DImpl : GraphicsImplBase, ITexture2DImpl
+internal sealed class Win32Texture2DImpl : Win32GraphicsImplBase, ITexture2DImpl
 {
-    internal IntPtr texHandle;
-    internal int width, height;
+    private IntPtr handle;
+    private int width, height;
+    internal IntPtr Handle { get { EnsureState(); return handle; } }
 
-    int ITexture2DImpl.Width => width;
-    int ITexture2DImpl.Height => height;
+    public int Width { get { EnsureState(); return width; } }
+    public int Height { get { EnsureState(); return height; } }
 
     internal Win32Texture2DImpl(Win32RenderContext context, int width, int height)
-        : base(context.GetWinHandle())
+        : base(context)
     {
         (this.width, this.height) = (width, height);
-        texHandle = Interop.MsdgCreateTexture(winHandle, width, height);
+        handle = Interop.MsdgCreateTexture(width, height);
     }
 
     unsafe void ITexture2DImpl.SetData(int width, int height, void* data, ImageFormat format)
     {
         (this.width, this.height) = (width, height);
-        Interop.MsdgSetTextureData(winHandle, texHandle, width, height, data, format);
+        Interop.MsdgSetTextureData(handle, width, height, data, format);
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (texHandle != IntPtr.Zero)
+        if (handle != IntPtr.Zero)
         {
-            Interop.MsdgDeleteTexture(winHandle, texHandle);
-            texHandle = IntPtr.Zero;
+            Interop.MsdgDeleteTexture(handle);
+            handle = IntPtr.Zero;
         }
     }
 }

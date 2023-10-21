@@ -5,10 +5,11 @@ using System.Text;
 
 namespace Monosand.Win32;
 
-internal sealed unsafe class Win32WinImpl : WinImpl
+internal sealed unsafe class Win32WinImpl : WindowImpl
 {
-    private IntPtr handle;
-    private Win32RenderContext? renderContext;
+    private Game game;
+    private IntPtr winHandle;
+    internal IntPtr WinHandle { get { EnsureState(); return winHandle; } }
 
     internal override string Title
     {
@@ -16,59 +17,72 @@ internal sealed unsafe class Win32WinImpl : WinImpl
         {
             EnsureState();
             char* str = stackalloc char[256];
-            Interop.MsdGetWindowTitle(handle, str);
+            Interop.MsdGetWindowTitle(winHandle, str);
             return new string(str);
         }
         set
         {
             EnsureState();
             fixed (char* str = value)
-                Interop.MsdSetWindowTitle(handle, str);
+                Interop.MsdSetWindowTitle(winHandle, str);
+        }
+    }
+
+    internal override Point Position
+    {
+        get
+        {
+            EnsureState();
+            Interop.RECT r = Interop.MsdGetWindowRect(winHandle);
+            return new(r.left, r.top);
+        }
+        set
+        {
+            EnsureState();
+            Interop.MsdSetWindowPos(winHandle, value.X, value.Y);
+        }
+    }
+
+    internal override Size Size
+    {
+        get
+        {
+            EnsureState();
+            Interop.RECT r = Interop.MsdGetWindowRect(winHandle);
+            return new(r.right - r.left, r.bottom - r.top);
+        }
+        set
+        {
+            EnsureState();
+            Interop.MsdSetWindowSize(winHandle, value.Width, value.Height);
         }
     }
 
     internal Win32WinImpl(int width, int height, string title, Window window)
     {
-        IntPtr handle;
+        IntPtr winHandle;
         fixed (char* ptitle = title)
-        {
-            handle = Interop.MsdCreateWindow(width, height, ptitle, (nint)GCHandle.Alloc(window, GCHandleType.Weak));
-        }
+            winHandle = Interop.MsdCreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(window, GCHandleType.Weak));
 
-        if (handle == IntPtr.Zero)
+
+        if (winHandle == IntPtr.Zero)
             throw new OperationFailedException("Can't create window.");
 
-        this.handle = handle;
-        renderContext = new(this.handle);
+        this.winHandle = winHandle;
+        game = window.Game;
     }
 
     internal override void Destroy()
     {
         EnsureState();
-        Interop.MsdDestroyWindow(handle);
-        handle = IntPtr.Zero;
-        renderContext = null;
-    }
-
-    internal override Point GetPosition()
-    {
-        EnsureState();
-        Interop.RECT r = Interop.MsdGetWindowRect(handle);
-        return new(r.left, r.top);
-    }
-
-    internal override Size GetSize()
-    {
-        EnsureState();
-        Interop.RECT r = Interop.MsdGetWindowRect(handle);
-        return new(r.right - r.left, r.bottom - r.top);
+        Interop.MsdDestroyWindow(winHandle);
+        winHandle = IntPtr.Zero;
     }
 
     internal unsafe override void PollEvents()
     {
         EnsureState();
-        ProcessQueuedActions();
-        IntPtr winHandle = GetWinHandle();
+        game.RenderContext.ProcessQueuedActions();
         int count;
         int* e;
         void* handle = Interop.MsdBeginPollEvents(winHandle, out var ncount, out e);
@@ -84,7 +98,7 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             Window win = HandleToWin(v);
             switch (e[i])
             {
-            case 1: if (win.OnClosing()) Interop.MsdDestroyWindow(GetWinHandle()); break;
+            case 1: if (win.OnClosing()) Interop.MsdDestroyWindow(winHandle); break;
             case 2: win.OnCallbackDestroy(); break;
             case 3: win.OnMoved(e[i + 1], e[i + 2]); break;
             case 4: win.OnResized(e[i + 1], e[i + 2]); break;
@@ -123,61 +137,26 @@ internal sealed unsafe class Win32WinImpl : WinImpl
             => (Window)GCHandle.FromIntPtr(handle).Target!;
     }
 
-    private static void ProcessQueuedActions()
-    {
-        var pf = (Win32Platform)Game.Instance.Platform;
-        lock (pf.queuedActions)
-        {
-            foreach (var item in pf.queuedActions)
-                item();
-            pf.queuedActions.Clear();
-        }
-    }
-
     internal override void Show()
     {
         EnsureState();
-        Interop.MsdShowWindow(handle);
+        Interop.MsdShowWindow(winHandle);
     }
 
     internal override void Hide()
     {
         EnsureState();
-        Interop.MsdHideWindow(handle);
+        Interop.MsdHideWindow(winHandle);
     }
 
-    internal override void SetPosition(int x, int y)
+    internal override void SwapBuffers()
     {
         EnsureState();
-        Interop.MsdSetWindowPos(handle, x, y);
-    }
-
-    internal override void SetSize(int width, int height)
-    {
-        EnsureState();
-        Interop.MsdSetWindowSize(handle, width, height);
-    }
-
-    internal override RenderContext GetRenderContext()
-    {
-        EnsureState();
-        return renderContext!;
-    }
-
-    internal IntPtr GetWinHandle()
-    {
-        EnsureState();
-        return handle;
+        Interop.MsdgSwapBuffers(winHandle);
     }
 
     private void EnsureState()
     {
-        ThrowHelper.ThrowIfDisposed(handle == IntPtr.Zero, this);
-        ThrowHelper.ThrowIfDisposed(renderContext is null, this);
-    }
-
-    internal override void MainThreadDispose()
-    {
-        ProcessQueuedActions();
+        ThrowHelper.ThrowIfDisposed(winHandle == IntPtr.Zero, this);
     }
 }

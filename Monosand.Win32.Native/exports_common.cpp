@@ -2,15 +2,14 @@
 #include <timeapi.h>
 #include <cstdint>
 #include "exports.h"
-#include "whandle.h"
 
 const wchar_t* Monosand = L"Monosand";
 
 #if _DEBUG
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
 #endif
-void window_graphics_init(whandle*);
-void window_msg_loop_init(whandle*);
+void render_context_graphics_init(HGLRC);
+void window_msg_loop_init(HWND);
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 // WndExtra:
@@ -18,8 +17,11 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
 // ticks per second
 static int64_t performanceFrequency = 0;
+static HWND main_window;
 
-EXPORT int CALLCONV MsdInit()
+static PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+
+EXPORT int CALLCONV MsdInitialize()
 {
     WNDCLASSW wc{};
     wc.lpfnWndProc = WindowProc;
@@ -30,13 +32,7 @@ EXPORT int CALLCONV MsdInit()
     RegisterClassW(&wc);
 
     QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
-
-    return 0;
-}
-
-EXPORT whandle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
-{
-    PIXELFORMATDESCRIPTOR pfd = {
+    pixelFormatDescriptor = {
         sizeof(PIXELFORMATDESCRIPTOR),
         1,                     // version number  
         PFD_DRAW_TO_WINDOW |   // support window  
@@ -57,66 +53,95 @@ EXPORT whandle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, 
         0, 0, 0                // layer masks ignored  
     };
 
-    HWND hwnd = CreateWindowExW(NULL, Monosand, title, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        width, height,
-        NULL, NULL, NULL, NULL
-    );
-    ShowWindow(hwnd, SW_HIDE);
-    UpdateWindow(hwnd);
+    timeBeginPeriod(1);
 
-    // TODO impl error handler
-    HDC hdc = GetDC(hwnd);
-    int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-    SetPixelFormat(hdc, pixelFormat, &pfd);
-    int i = 0;
+    return 0;
+}
+
+EXPORT HGLRC MsdCreateRenderContext()
+{
+    // this function can only be called once
+    assert(glViewport == 0);
+
+    HWND dummyHwnd = CreateWindowExW(0, L"", L"", 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    HDC hdc = GetDC(dummyHwnd);
+    int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
+    SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
+
     HGLRC hglrc = wglCreateContext(hdc);
+    int lastError = GetLastError();
     wglMakeCurrent(hdc, hglrc);
     gladLoadGL();
     gladLoadWGL(hdc);
     wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(hglrc);
-    GLint attribs[] = {
+
+    GLint attribs[] =
+    {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
         WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+
     #ifndef MSDG_COMPATIBILITY_GL
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
     #else
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
     #endif
+
     #if _DEBUG
         WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
     #endif
         0
     };
     hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
+
     // TODO error handling
     assert(hglrc != nullptr);
     assert(GLAD_WGL_EXT_swap_control);
-    wglMakeCurrent(hdc, hglrc);
-    // we'll delete it at MsdDestroyWindow
-    whandle* handle = new whandle;
-    handle->hwnd = hwnd;
-    handle->hdc = hdc;
-    handle->hglrc = hglrc;
 #if _DEBUG
-    glDebugMessageCallbackARB(gl_debug_callback, handle);
+    glDebugMessageCallbackARB(gl_debug_callback, hglrc);
 #endif
-
-    window_graphics_init(handle);
-    window_msg_loop_init(handle);
-    SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
-
-    timeBeginPeriod(1);
-
-    return handle;
+    wglMakeCurrent(hdc, hglrc);
+    render_context_graphics_init(hglrc);
+    ReleaseDC(dummyHwnd, hdc);
+    DestroyWindow(dummyHwnd);
+    wglMakeCurrent(nullptr, nullptr);
+    return hglrc;
 }
 
-EXPORT void CALLCONV MsdShowWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
+EXPORT void MsdAttachRenderContext(win_handle* wh, HGLRC hglrc)
+{
+     wglMakeCurrent(wh->hdc, hglrc);
+}
 
-EXPORT void CALLCONV MsdHideWindow(whandle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
+EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
+{
+    HWND hwnd = CreateWindowExW(NULL, Monosand, title, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        width, height,
+        NULL, NULL, NULL, NULL
+    );
+    SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
+    ShowWindow(hwnd, SW_HIDE);
+    UpdateWindow(hwnd);
 
-EXPORT void CALLCONV MsdDestroyWindow(whandle* handle)
+    // TODO impl error handler
+    HDC hdc = GetDC(hwnd);
+    int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
+    SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
+
+    window_msg_loop_init(hwnd);
+
+    win_handle* wh = small_alloc<win_handle>();
+    wh->hwnd = hwnd;
+    wh->hdc = hdc;
+    return wh;
+}
+
+EXPORT void CALLCONV MsdShowWindow(win_handle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
+
+EXPORT void CALLCONV MsdHideWindow(win_handle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
+
+EXPORT void CALLCONV MsdDestroyWindow(win_handle* handle)
 {
     DestroyWindow(handle->hwnd);
     // make sure our window has received and handled WM_DESTORY
@@ -126,23 +151,23 @@ EXPORT void CALLCONV MsdDestroyWindow(whandle* handle)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
-    delete handle;
+    small_free(handle);
     timeEndPeriod(1);
 }
 
-EXPORT RECT CALLCONV MsdGetWindowRect(whandle* handle)
+EXPORT RECT CALLCONV MsdGetWindowRect(win_handle* handle)
 {
     RECT rect{};
     GetClientRect(handle->hwnd, &rect);
     return rect;
 }
 
-EXPORT void CALLCONV MsdSetWindowSize(whandle* handle, int width, int height)
+EXPORT void CALLCONV MsdSetWindowSize(win_handle* handle, int width, int height)
 {
     SetWindowPos(handle->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE);
 }
 
-EXPORT void CALLCONV MsdSetWindowPos(whandle* handle, int x, int y)
+EXPORT void CALLCONV MsdSetWindowPos(win_handle* handle, int x, int y)
 {
     SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
 }
@@ -159,12 +184,12 @@ EXPORT int64_t CALLCONV MsdGetUsecTimeline()
     return time;
 }
 
-EXPORT void CALLCONV MsdSetWindowTitle(whandle* handle, wchar_t* title)
+EXPORT void CALLCONV MsdSetWindowTitle(win_handle* handle, wchar_t* title)
 {
     SetWindowTextW(handle->hwnd, title);
 }
 
-EXPORT void CALLCONV MsdGetWindowTitle(whandle* handle, wchar_t* title)
+EXPORT void CALLCONV MsdGetWindowTitle(win_handle* handle, wchar_t* title)
 {
     int len = GetWindowTextLengthW(handle->hwnd);
     GetWindowTextW(handle->hwnd, title, 256);

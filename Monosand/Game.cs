@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Monosand;
+﻿namespace Monosand;
 
 public class Game
 {
@@ -8,19 +6,30 @@ public class Game
     public const int DefaultWindowHeight = 720;
 
     private static Game? instance;
-    private Window window;
+    private Window? window;
     private Platform platform;
     private long ticks;
     private int laggedFrames;
 
-    internal WinImpl WinImpl => window.WinImpl;
-    internal RenderContext RenderContext => WinImpl.GetRenderContext();
-
-    public static Game Instance
+    public RenderContext RenderContext { get; private set; }
+    public Window Window
     {
-        get => instance ?? throw SR.GameNotNewed;
-        set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
+        get => window ?? throw SR.PropNotSet(nameof(Window));
+        set
+        {
+            if (window is not null)
+                throw SR.PropSet(nameof(Window));
+            window = value;
+            platform.AttachRenderContext(RenderContext, window);
+            window.OnCreated();
+        }
     }
+
+    //public static Game Instance
+    //{
+    //    get => instance ?? throw SR.GameNotNewed;
+    //    set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
+    //}
 
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
@@ -55,46 +64,33 @@ public class Game
     /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>. Usally the refresh rate of your display.</summary>
     public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
-    public Window Window
-    {
-        get => window;
-        set
-        {
-            ThrowHelper.ThrowIfNull(value);
-            window = value;
-            window.Game = this;
-        }
-    }
-
-    public Game(Platform platform, Window? window = null)
+    public Game(Platform platform)
     {
         ThrowHelper.ThrowIfNull(platform);
-        Instance = this;
+        platform.Initialize();
+        RenderContext = platform.CreateRenderContext();
+
+        //Instance = this;
         this.platform = platform;
-        this.window = null!;
         ExpectedFps = 60d;
         FrameTime = 1d / ExpectedFps;
         ticks = 0;
-        platform.Init();
-        Window = window ?? new Window();
-
         ResourceLoader = new ResourceLoader(this);
-
-        Window.OnCreated();
     }
 
     public void Run()
     {
-        Window.Show();
+        ThrowHelper.ThrowIfInvalid(window is null);
+        window.Show();
         FrameTime = ExpectedFrameTime;
 
         // FIXME this is a silly method to sync with the display
         if (!VSyncEnabled)
         {
             VSyncEnabled = true;
-            Window.RenderContext.SwapBuffers();
-            Window.RenderContext.SwapBuffers();
-            Window.RenderContext.SwapBuffers();
+            Window.SwapBuffers();
+            Window.SwapBuffers();
+            Window.SwapBuffers();
             VSyncEnabled = false;
         }
 
@@ -112,9 +108,13 @@ public class Game
 
 
             // ----- tick ------
-            Window.PollEvents();
-            if (Window.IsClosed) break;
-            Window.Tick();
+
+            RenderContext.ProcessQueuedActions();
+            window.PollEvents();
+            if (window.IsClosed)
+                break;
+            window.Tick();
+
             ticks++;
             // -----------------
 
@@ -152,5 +152,6 @@ public class Game
                     laggedFrames = 0;
             }
         }
+        RenderContext.ProcessQueuedActions();
     }
 }

@@ -4,89 +4,70 @@ namespace Monosand;
 
 public class Window
 {
+    internal WindowImpl Impl { get; private set; }
+    private bool isClosed = false;
+
     private Size size;
     private Point position;
-
-    private bool isClosed = false;
-    private WinImpl? impl;
-    private Game? game;
-    private RenderContext? rc;
     private readonly KeyboardState keyboardState;
     private readonly PointerState pointerState;
 
-    public string Title { get => WinImpl.Title; set => WinImpl.Title = value; }
+    public string Title { get => Impl.Title; set => Impl.Title = value; }
 
-    /// <summary>Is this window invalid, usually be <see langword="true"/> when the window closed or disposed.</summary>
+    /// <summary>Is this window closed, will be <see langword="true"/> when the window closed or disposed.</summary>
     public bool IsClosed => isClosed;
 
-    /// <summary>The <see cref="Monosand.Game"/> instance the window belong to.</summary>
-    public Game Game
-    {
-        get => game ?? throw SR.PropNotSet(nameof(Game));
-        internal set
-        {
-            if (game is not null) throw SR.PropSet(nameof(Game));
-            game = value;
-            InitCreateWindow();
-        }
-    }
-
-    internal WinImpl WinImpl => impl ?? throw SR.PropNotSet(nameof(WinImpl));
-
-    /// <summary>
-    /// The <see cref="Monosand.RenderContext"/> of this window, use it to call methods like
-    /// <see cref="RenderContext.DrawPrimitives{T}(VertexDeclaration, PrimitiveType, T*, int)"/> or
-    /// construct a <see cref="SpriteBatch"/> with it.
-    /// </summary>
-    public RenderContext RenderContext => rc ?? throw SR.PropNotSet(nameof(RenderContext));
+    /// <summary>The <see cref="Monosand.Game"/> instance this window belong to.</summary>
+    public Game Game { get; private set; }
 
     #region Position & Size
     /// <summary>The X coord of this window.</summary>
     public int X
     {
         get => position.X;
-        set { position.X = value; WinImpl.SetPosition(value, Y); }
+        set { position.X = value; Impl.Position = new(value, Y); }
     }
 
     /// <summary>The Y coord of this window.</summary>
     public int Y
     {
         get => position.Y;
-        set { position.Y = value; WinImpl.SetPosition(X, value); }
+        set { position.Y = value; Impl.Position = new(X, value); }
     }
 
     /// <summary>The Width of this window.</summary>
     public int Width
     {
         get => size.Width;
-        set { size.Width = value; WinImpl.SetSize(value, Height); }
+        set { size.Width = value; Impl.Size = new(value, Height); }
     }
 
     /// <summary>The Height of this window.</summary>
     public int Height
     {
         get => size.Height;
-        set { size.Height = value; WinImpl.SetSize(Width, value); }
+        set { size.Height = value; Impl.Size = new(Width, value); }
     }
 
     /// <summary>The Position of this window on the screen.</summary>
     public Point Position
     {
         get => position;
-        set { position = value; WinImpl.SetPosition(value.X, value.Y); }
+        set { position = value; Impl.Position = new(value.X, value.Y); }
     }
 
     /// <summary>The Size of this window.</summary>
     public Size Size
     {
         get => size;
-        set { size = value; WinImpl.SetSize(value.Width, value.Height); }
+        set { size = value; Impl.Size = new(value.Width, value.Height); }
     }
     #endregion
 
-    /// <summary>The <see cref="Monosand.KeyboardState"/> of this window.</summary>
+    /// <summary>The <see cref="Monosand.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
     public KeyboardState KeyboardState => keyboardState;
 
+    /// <summary>The <see cref="Monosand.PointerState"/> of this window. Usually used for getting mouse input.</summary>
     public PointerState PointerState => pointerState;
 
     /// <summary>Occurs after the window closed. After the <see cref="OnClosing"/> be called.</summary>
@@ -101,35 +82,26 @@ public class Window
     public event Action<Window>? GotFocus;
 
     /// <summary>Construct a window.</summary>
-    public Window()
+    public Window(Game game)
     {
+        Game = game;
         keyboardState = new(this);
         pointerState = new(this);
-    }
-
-    private void InitCreateWindow()
-    {
-        impl = Game.Platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
-        rc = impl.GetRenderContext();
-        // don't do this at this time
-        // we can just do this in OnResize()
-        // as the Show() will actually call the OnResize()
-        //WinImpl.SetViewport(0, 0, Game.DefaultWindowWidth, Game.DefaultWindowHeight);
+        Impl = Game.Platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
     }
 
     /// <summary>Show the window.</summary>
-    public void Show() => WinImpl.Show();
+    public void Show() => Impl.Show();
 
     /// <summary>Hide the window.</summary>
-    public void Hide() => WinImpl.Hide();
+    public void Hide() => Impl.Hide();
 
     /// <summary>Close the window.</summary>
-    public void Close() => WinImpl.Destroy();
-    internal void PollEvents() => WinImpl.PollEvents();
+    public void Close() => Impl.Destroy();
+    internal void PollEvents() => Impl.PollEvents();
 
     internal void OnCallbackDestroy()
     {
-        impl!.MainThreadDispose();
         isClosed = true;
         OnClosed();
     }
@@ -153,7 +125,8 @@ public class Window
     /// <summary>Called when the window resized.</summary>
     public virtual void OnResized(int width, int height)
     {
-        RenderContext.SetViewport(0, 0, width, height);
+        if (Game.RenderContext is not null)
+            Game.RenderContext.Viewport = new(0, 0, width, height);
         size = new(width, height);
         Resized?.Invoke(this, width, height);
     }
@@ -161,8 +134,8 @@ public class Window
     /// <summary>Called when the window created.</summary>
     public virtual void OnCreated()
     {
-        size = WinImpl.GetSize();
-        position = WinImpl.GetPosition();
+        size = Impl.Size;
+        position = Impl.Position;
     }
 
     /// <summary>Called when a key pressed.</summary>
@@ -210,12 +183,16 @@ public class Window
         PointerState.AddWheelDelta(delta);
     }
 
+    internal void SwapBuffers() => Impl.SwapBuffers();
+
     internal void Tick()
     {
+        ThrowHelper.ThrowIfInvalid(Game.RenderContext is null, "No RenderContext attched to this window.");
+
         Update();
-        RenderContext.Clear(Color.CornflowerBlue);
+        Game.RenderContext.Clear(Color.CornflowerBlue);
         Render();
-        RenderContext.SwapBuffers();
+        Impl.SwapBuffers();
         // I think someone might try handling input in Render()
         // make them happy
         keyboardState.Update();

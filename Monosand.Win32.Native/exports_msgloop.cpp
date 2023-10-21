@@ -245,7 +245,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 #undef push_e
 }
 
-void window_msg_loop_init(whandle*)
+void window_msg_loop_init(HWND)
 {
     event_list = new event_list_t;
     event_list->reserve(16);
@@ -253,7 +253,7 @@ void window_msg_loop_init(whandle*)
     event_list_2->reserve(16);
 }
 
-EXPORT event_list_t* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count, win_event** events)
+EXPORT event_list_t* CALLCONV MsdBeginPollEvents(win_handle* whandle, size_t* count, win_event** events)
 {
     assert(began_polling == false);
 
@@ -277,7 +277,7 @@ EXPORT event_list_t* CALLCONV MsdBeginPollEvents(whandle* whandle, size_t* count
     return event_list_2;
 }
 
-EXPORT void CALLCONV MsdEndPollEvents(whandle* whandle, event_list_t* handle)
+EXPORT void CALLCONV MsdEndPollEvents(win_handle* whandle, event_list_t* handle)
 {
     assert(began_polling == true);
     handle->clear();

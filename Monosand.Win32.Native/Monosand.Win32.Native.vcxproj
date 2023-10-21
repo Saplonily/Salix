@@ -35,7 +35,6 @@
   <ItemGroup>
     <ClInclude Include="enums.h" />
     <ClInclude Include="exports.h" />
-    <ClInclude Include="exports_graphics.h" />
     <ClInclude Include="key_map.h" />
     <ClInclude Include="thirdparty\glad\glad.h" />
     <ClInclude Include="thirdparty\glad\glad_wgl.h" />

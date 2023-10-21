@@ -9,13 +9,13 @@ namespace Monosand;
 [StructLayout(LayoutKind.Sequential)]
 public partial struct Color : IEquatable<Color>
 {
-    /// <summary>Red component</summary>
+    /// <summary>Red component.</summary>
     public byte R;
-    /// <summary>Green component</summary>
+    /// <summary>Green component.</summary>
     public byte G;
-    /// <summary>Blue component</summary>
+    /// <summary>Blue component.</summary>
     public byte B;
-    /// <summary>Alpha component</summary>
+    /// <summary>Alpha component.</summary>
     public byte A;
 
     /// <summary>
@@ -51,10 +51,6 @@ public partial struct Color : IEquatable<Color>
         (byte)((packedValue >> 16) & 0x00ffffff),
         (byte)((packedValue >> 8) & 0x0000ffff),
         (byte)packedValue);
-
-    [CLSCompliant(false)]
-    public static implicit operator Color(uint packedValue)
-        => new(packedValue);
 
     public static bool operator ==(Color left, Color right)
         => left.Equals(right);

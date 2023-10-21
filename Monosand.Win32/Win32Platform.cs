@@ -4,8 +4,6 @@ namespace Monosand.Win32;
 
 public unsafe partial class Win32Platform : Platform
 {
-    internal int MainThreadId = -1;
-    internal List<Action> queuedActions = new();
 
     private GraphicsBackend graphicsBackend;
     private MonosandPlatform identifier;
@@ -15,38 +13,20 @@ public unsafe partial class Win32Platform : Platform
 
     public Win32Platform() { }
 
-    internal override void Init()
+    internal override void Initialize()
     {
         // TODO error handle
-        if (Interop.MsdInit() != 0)
-            throw new OperationFailedException("Interop.MsdInit() return non-zero value.");
+        if (Interop.MsdInitialize() != 0)
+            throw new OperationFailedException("MsdInitialize returned non-zero value.");
         graphicsBackend = Interop.MsdgGetGraphicsBackend();
         identifier = MonosandPlatform.Win32;
     }
 
-    internal override WinImpl CreateWindowImpl(int width, int height, string title, Window window)
-    {
-        var impl = new Win32WinImpl(width, height, title, window);
-        Debug.Assert(MainThreadId == -1);
-        MainThreadId = Environment.CurrentManagedThreadId;
-        return impl;
-    }
+    internal override WindowImpl CreateWindowImpl(int width, int height, string title, Window window)
+        => new Win32WinImpl(width, height, title, window);
 
-    internal override IVertexBufferImpl CreateVertexBufferImpl(
-        RenderContext context,
-        VertexDeclaration vertexDeclaration,
-        VertexBufferDataUsage dataUsage,
-        bool indexed
-        )
-        => new Win32VertexBufferImpl((Win32RenderContext)context, vertexDeclaration, dataUsage, indexed);
-
-    internal override ITexture2DImpl CreateTexture2DImpl(RenderContext context, int width, int height)
-        => new Win32Texture2DImpl((Win32RenderContext)context, width, height);
-
-    internal override unsafe IShaderImpl CreateShaderImplFromGlsl(RenderContext context, byte* vertSource, byte* fragSource)
-    => Win32ShaderImpl.FromGlsl((Win32RenderContext)context, vertSource, fragSource);
-
-    // other api
+    internal override RenderContext CreateRenderContext()
+        => new Win32RenderContext();
 
     internal override Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
@@ -74,7 +54,11 @@ public unsafe partial class Win32Platform : Platform
         }
     }
 
-    // time api
     internal override long GetUsecTimeline()
         => Interop.MsdGetUsecTimeline();
+
+    internal override void AttachRenderContext(RenderContext context, Window window)
+    {
+       ((Win32RenderContext)context).AttachTo(window);
+    }
 }

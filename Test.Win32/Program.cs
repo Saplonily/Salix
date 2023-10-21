@@ -16,6 +16,16 @@ public class MyMainWindow : Window
     [AllowNull] private SpriteFont sprFont;
     [AllowNull] private SpriteBatch spriteBatch;
 
+    Vector2 posBase;
+    Vector2 position;
+
+    float a;
+    int times = 3;
+
+    public MyMainWindow(Game game) : base(game)
+    {
+    }
+
     public override void OnCreated()
     {
         //texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
@@ -28,14 +38,8 @@ public class MyMainWindow : Window
         {
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of the Test.Win32!.");
         }
-        spriteBatch = new SpriteBatch(RenderContext);
+        spriteBatch = new SpriteBatch(Game);
     }
-
-    Vector2 posBase;
-    Vector2 position;
-
-    float a;
-    int times = 3;
 
     public override void Update()
     {
@@ -88,9 +92,11 @@ public class Program
 {
     public static void Main()
     {
-        Game game = new(new Win32Platform(), new MyMainWindow());
-        game.ExpectedFps = game.VSyncFps;
-        //game.VSyncEnabled = true;
+        Game game = new(new Win32Platform());
+        var win = new MyMainWindow(game);
+        game.Window = win;
+        //game.ExpectedFps = 10;
+        game.VSyncEnabled = true;
         game.Run();
     }
 }

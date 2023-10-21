@@ -4,21 +4,20 @@ using System.Text;
 
 namespace Monosand.Win32;
 
-internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
+internal class Win32ShaderImpl : Win32GraphicsImplBase, IShaderImpl
 {
-    private Win32RenderContext context;
-    private IntPtr shaderHandle;
+    private IntPtr handle;
+    internal IntPtr Handle { get { EnsureState(); return handle; } }
 
     private Win32ShaderImpl(Win32RenderContext context)
-        : base(context.GetWinHandle())
+        : base(context)
     {
-        this.context = context;
     }
 
     internal unsafe static Win32ShaderImpl FromGlsl(Win32RenderContext context, byte* vertSource, byte* fragSource)
     {
         Win32ShaderImpl impl = new(context);
-        impl.shaderHandle = Interop.MsdgCreateShaderFromGlsl(impl.winHandle, vertSource, fragSource);
+        impl.handle = Interop.MsdgCreateShaderFromGlsl(vertSource, fragSource);
         return impl;
     }
 
@@ -27,14 +26,14 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
         EnsureState();
         EnsureCurrentState();
 #if NETSTANDARD2_1_OR_GREATER
-        return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, name);
+        return Interop.MsdgGetShaderParamLocation(handle, name);
 #else
         byte[] utf8NameBytes = Encoding.UTF8.GetBytes(name);
         unsafe
         {
             fixed (byte* ptr = utf8NameBytes)
             {
-                return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, ptr);
+                return Interop.MsdgGetShaderParamLocation(handle, ptr);
             }
         }
 #endif
@@ -48,7 +47,7 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
         {
             fixed (byte* ptr = nameUtf8)
             {
-                return Interop.MsdgGetShaderParamLocation(winHandle, shaderHandle, ptr);
+                return Interop.MsdgGetShaderParamLocation(handle, ptr);
             }
         }
     }
@@ -61,51 +60,45 @@ internal class Win32ShaderImpl : GraphicsImplBase, IShaderImpl
 
         if (typeof(T) == typeof(int))
         {
-            Interop.MsdgSetShaderParamInt(winHandle, location, Unsafe.As<T, int>(ref value));
+            Interop.MsdgSetShaderParamInt(location, Unsafe.As<T, int>(ref value));
             return;
         }
 
         if (typeof(T) == typeof(float))
         {
-            Interop.MsdgSetShaderParamFloat(winHandle, location, Unsafe.As<T, float>(ref value));
+            Interop.MsdgSetShaderParamFloat(location, Unsafe.As<T, float>(ref value));
             return;
         }
 
         if (typeof(T) == typeof(Vector4))
         {
             ref var vec = ref Unsafe.As<T, Vector4>(ref value);
-            Interop.MsdgSetShaderParamVec4(winHandle, location, (float*)Unsafe.AsPointer(ref vec));
+            Interop.MsdgSetShaderParamVec4(location, (float*)Unsafe.AsPointer(ref vec));
             return;
         }
 
         if (typeof(T) == typeof(Matrix4x4))
         {
             ref var mat = ref Unsafe.As<T, Matrix4x4>(ref value);
-            Interop.MsdgSetShaderParamMat4(winHandle, location, (float*)Unsafe.AsPointer(ref mat), false);
+            Interop.MsdgSetShaderParamMat4(location, (float*)Unsafe.AsPointer(ref mat), false);
             return;
         }
 
         throw new NotSupportedException($"Type of {typeof(T)} is not supported in shader parameter.");
     }
 
-    internal IntPtr GetShaderHandle()
-    {
-        EnsureState();
-        return shaderHandle;
-    }
-
     private void EnsureCurrentState()
     {
-        ThrowHelper.ThrowIfInvalid(context.GetCurrentShader()?.GetImpl() != this, "This operation required this shader to be current.");
+        ThrowHelper.ThrowIfInvalid(RenderContext.Shader?.Impl != this, "This operation required this shader to be current.");
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (shaderHandle != IntPtr.Zero)
+        if (handle != IntPtr.Zero)
         {
-            Interop.MsdgDeleteShader(winHandle, shaderHandle);
-            shaderHandle = IntPtr.Zero;
+            Interop.MsdgDeleteShader(handle);
+            handle = IntPtr.Zero;
         }
     }
 }

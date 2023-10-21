@@ -56,7 +56,7 @@ public class ResourceLoader
 
             var img = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
 
-            Texture2D tex = new(width, height, img, format);
+            Texture2D tex = new(game.RenderContext, width, height, img, format);
             platform.FreeImage(img);
             return tex;
         }
@@ -68,16 +68,9 @@ public class ResourceLoader
         byte[] fsh = ReadAllBytes(fragStream);
         unsafe
         {
-            fixed (byte* vshPtr = vsh)
-            {
-                fixed (byte* fshPtr = fsh)
-                {
-                    var context = game.Window.RenderContext;
-                    var impl = platform.CreateShaderImplFromGlsl(context, vshPtr, fshPtr);
-                    Shader shader = new(context, impl);
-                    return shader;
-                }
-            }
+            var context = game.RenderContext;
+            var impl = context.CreateGlslShaderImpl(new(vsh), new(fsh));
+            return new(context, impl);
         }
 
         static byte[] ReadAllBytes(Stream stream)

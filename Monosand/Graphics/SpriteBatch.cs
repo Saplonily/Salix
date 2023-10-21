@@ -55,8 +55,8 @@ public sealed partial class SpriteBatch
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
     /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
-    public SpriteBatch(RenderContext context)
-        : this(context, null, null)
+    public SpriteBatch(Game game)
+        : this(game, null, null)
     {
     }
 
@@ -66,8 +66,8 @@ public sealed partial class SpriteBatch
     /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
     /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
     /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    public SpriteBatch(RenderContext context, Shader? spriteShader)
-        : this(context, spriteShader, null)
+    public SpriteBatch(Game game, Shader? spriteShader)
+        : this(game, spriteShader, null)
     {
     }
 
@@ -79,16 +79,16 @@ public sealed partial class SpriteBatch
     /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
     /// <param name="textShader">The default <see cref="TextShader"/> will be used.
     /// If set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
-    public SpriteBatch(RenderContext context, Shader? spriteShader, Shader? textShader)
+    public SpriteBatch(Game game, Shader? spriteShader, Shader? textShader)
     {
-        this.context = context;
+        this.context = game.RenderContext;
         batchItems = new();
-        vertices = new vpct[16 * 4];
-        indices = new ushort[16 * 6];
-        buffer = new(vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
+        vertices = new vpct[4 * 16];
+        indices = new ushort[6 * 16];
+        buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
         if (spriteShader is null)
         {
-            var rl = Game.Instance.ResourceLoader;
+            var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
             SpriteShader = rl.LoadGlslShader(vert, frag);
@@ -99,7 +99,7 @@ public sealed partial class SpriteBatch
         }
         if (textShader is null)
         {
-            var rl = Game.Instance.ResourceLoader;
+            var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
             TextShader = rl.LoadGlslShader(vert, frag);
@@ -111,15 +111,14 @@ public sealed partial class SpriteBatch
         transform = Matrix4x4.Identity;
         EnsureShader(SpriteShader);
         context.ViewportChanged += OnContextViewportChanged;
-        Rectangle rect = context.GetViewport();
-        OnContextViewportChanged(context, rect.X, rect.Y, rect.Width, rect.Height);
+        OnContextViewportChanged(context, context.Viewport);
     }
 
-    private void OnContextViewportChanged(RenderContext renderContext, int x, int y, int width, int height)
+    private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
     {
         Matrix4x4 mat = Matrix4x4.Identity;
-        mat *= Matrix4x4.CreateTranslation(-width / 2f, -height / 2f, 0f);
-        mat *= Matrix4x4.CreateScale(2f / width, -2f / height, 1f);
+        mat *= Matrix4x4.CreateTranslation(-rect.Width / 2f, -rect.Height / 2f, 0f);
+        mat *= Matrix4x4.CreateScale(2f / rect.Width, -2f / rect.Height, 1f);
         projection = mat;
         projectionParam.Set(ref mat);
     }

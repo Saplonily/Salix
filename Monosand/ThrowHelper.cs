@@ -28,8 +28,12 @@ public static class ThrowHelper
     }
 
     /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="condition"/> is true.</summary>
-    public static void ThrowIfInvalid([DoesNotReturnIf(true)] bool condition, string? msg = null)
+    public static void ThrowIfInvalid(
+        [DoesNotReturnIf(true)] bool condition,
+        string? msg = null,
+        [CallerArgumentExpression(nameof(condition))] string? conditionExpression = null
+        )
     {
-        if (condition) throw new InvalidOperationException(msg);
+        if (condition) throw new InvalidOperationException($"{msg} {conditionExpression}");
     }
 }

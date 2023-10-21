@@ -1,13 +1,18 @@
 ﻿using System.Drawing;
 
 namespace Monosand;
-#pragma warning disable CS3011
 
 // TODO dispose impl
 public abstract class RenderContext
 {
-    public delegate void ViewportChangedEventHandler(RenderContext renderContext, int x, int y, int width, int height);
+    private List<Action> queuedActions;
+    private int creationThreadId;
+    public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
+
+    public abstract Shader? Shader { get; set; }
+    public abstract RenderTarget? RenderTarget { get; set; }
+    public abstract Rectangle Viewport { get; set; }
 
     /// <summary>Indicates is this <see cref="RenderContext"/> enabled the Vertical Synchronization.</summary>
     public abstract bool VSyncEnabled { get; set; }
@@ -15,20 +20,20 @@ public abstract class RenderContext
     /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
     public abstract double VSyncFrameTime { get; }
 
-    /// <summary>Swap the buffers. (see: DoubleBuffered)</summary>
-    internal abstract void SwapBuffers();
-
-    /// <summary>Set the viewport of this RenderContext.</summary>
-    internal abstract void SetViewport(int x, int y, int width, int height);
+    public RenderContext()
+    {
+        queuedActions = new(4);
+        creationThreadId = Environment.CurrentManagedThreadId;
+    }
 
     /// <summary>Clear this RenderContext in a color.</summary>
     public abstract void Clear(Color color);
 
     /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
-    [CLSCompliant(false)]
-    public unsafe abstract void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration, PrimitiveType primitiveType,
-        T* vptr, int length
+    public abstract void DrawPrimitives<T>(
+        VertexDeclaration vertexDeclaration,
+        PrimitiveType primitiveType,
+        ReadOnlySpan<T> vertices
         ) where T : unmanaged;
 
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
@@ -37,25 +42,38 @@ public abstract class RenderContext
     /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
     public abstract void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
 
-    internal abstract void SetTexture(int index, ITexture2DImpl texImpl);
+    public abstract void SetTexture(int index, Texture2D texture2D);
 
-    public abstract void SetShader(Shader? shader);
+    internal abstract IVertexBufferImpl CreateVertexBufferImpl(
+        VertexDeclaration vertexDeclaration,
+        VertexBufferDataUsage dataUsage,
+        bool indexed
+        );
 
-    public abstract Shader? GetCurrentShader();
+    internal abstract ITexture2DImpl CreateTexture2DImpl(int width, int height);
 
-    public abstract Rectangle GetViewport();
+    internal abstract IShaderImpl CreateGlslShaderImpl(ReadOnlySpan<byte> vertSource, ReadOnlySpan<byte> fragSource);
 
-    public void SetTexture(int index, Texture2D texture2D)
-        => SetTexture(index, texture2D.GetImpl());
+    internal abstract IRenderTargetImpl CreateRenderTargetImpl(Texture2D texture2D);
 
-    public void DrawPrimitives<T>(VertexDeclaration vertexDeclaration, PrimitiveType primitiveType, ReadOnlySpan<T> vertices) where T : unmanaged
+    internal void ProcessQueuedActions()
     {
-        unsafe
+        lock (queuedActions)
         {
-            fixed (T* vptr = vertices)
-            {
-                DrawPrimitives(vertexDeclaration, primitiveType, vptr, vertices.Length);
-            }
+            foreach (var item in queuedActions)
+                item();
+            queuedActions.Clear();
         }
+    }
+
+    /// <summary>Invoke an action on the RenderContext creation thread.</summary>
+    public void Invoke(Action action)
+    {
+        Console.WriteLine($"RenderContext invoked, source thread name: {Thread.CurrentThread.Name}");
+        if (Environment.CurrentManagedThreadId != creationThreadId)
+            lock (queuedActions)
+                queuedActions.Add(action);
+        else
+            action();
     }
 }

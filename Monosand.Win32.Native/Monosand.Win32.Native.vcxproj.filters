@@ -42,9 +42,6 @@
     <ClInclude Include="pch.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="exports_graphics.h">
-      <Filter>exports</Filter>
-    </ClInclude>
     <ClInclude Include="thirdparty\glad\glad_wgl.h">
       <Filter>thirdparty\glad</Filter>
     </ClInclude>

@@ -27,13 +27,13 @@ inline void small_free(T* ptr)
     delete ptr;
 }
 
-struct whandle
+struct win_handle
 {
     HWND hwnd;
     HDC hdc;
-    HGLRC hglrc;
 };
 
 using byte = unsigned char;
+
 
 #endif

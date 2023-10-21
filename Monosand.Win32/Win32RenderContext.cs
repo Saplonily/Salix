@@ -1,66 +1,113 @@
 ﻿using System.Drawing;
+using System.Threading;
 
 namespace Monosand.Win32;
 
 // TODO dispose impl
 public sealed class Win32RenderContext : RenderContext
 {
-    private Shader? currentShader;
+    private readonly IntPtr rcHandle;
+    private readonly double vSyncFrameTime = 0d;
+
     private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
-    private IntPtr winHandle;
+    private Shader? currentShader;
+    private RenderTarget? currentRenderTarget = null;
     private Rectangle viewport;
     private bool vSyncEnabled = false;
-    private double vSyncFrameTime = 0d;
 
-    public override bool VSyncEnabled
+    public override event ViewportChangedEventHandler? ViewportChanged;
+
+    public override Shader? Shader
     {
-        get => vSyncEnabled;
+        get
+        {
+            EnsureState();
+            return currentShader;
+        }
+        set
+        {
+            if (value == currentShader) return;
+            if (value is not null)
+            {
+                var si = (Win32ShaderImpl)value.Impl;
+                Interop.MsdgSetShader(si.Handle);
+            }
+            else
+            {
+                Interop.MsdgSetShader(IntPtr.Zero);
+            }
+            currentShader = value;
+        }
+    }
+
+    public override Rectangle Viewport
+    {
+        get
+        {
+            EnsureState();
+            return viewport;
+        }
         set
         {
             EnsureState();
-            Interop.MsdgSetVSyncEnabled(winHandle, value ? (byte)1 : (byte)0);
+            Interop.MsdgViewport(value.X, value.Y, value.Width, value.Height);
+            ViewportChanged?.Invoke(this, value);
+            viewport = value;
+        }
+    }
+
+    public override bool VSyncEnabled
+    {
+        get
+        {
+            EnsureState();
+            return vSyncEnabled;
+        }
+        set
+        {
+            EnsureState();
+            Interop.MsdgSetVSyncEnabled(value ? (byte)1 : (byte)0);
             vSyncEnabled = value;
         }
     }
 
     public override double VSyncFrameTime
-        => vSyncFrameTime;
+    {
+        get
+        {
+            EnsureState();
+            return vSyncFrameTime;
+        }
+    }
 
+    public override RenderTarget? RenderTarget
+    {
+        get
+        {
+            EnsureState();
+            return currentRenderTarget;
+        }
+        set
+        {
+            if (value is null)
+                Interop.MsdgSetRenderTarget(IntPtr.Zero);
+            else
+                Interop.MsdgSetRenderTarget(((Win32RenderTargetImpl)value.Impl).Handle);
+        }
+    }
 
-    public override event ViewportChangedEventHandler? ViewportChanged;
-
-    internal Win32RenderContext(IntPtr winHandle)
+    internal Win32RenderContext()
     {
         vertexDeclarations = new();
-        this.winHandle = winHandle;
+        rcHandle = Interop.MsdCreateRenderContext();
 
-        vSyncFrameTime = Interop.MsdgGetVSyncFrameTime(winHandle);
-    }
-
-    internal override void SwapBuffers()
-    {
-        EnsureState();
-        Interop.MsdgSwapBuffers(winHandle);
-    }
-
-    internal override void SetViewport(int x, int y, int width, int height)
-    {
-        EnsureState();
-        Interop.MsdgViewport(winHandle, x, y, width, height);
-        ViewportChanged?.Invoke(this, x, y, width, height);
-        viewport = new(x, y, width, height);
-    }
-
-    public override Rectangle GetViewport()
-    {
-        EnsureState();
-        return viewport;
+        vSyncFrameTime = Interop.MsdgGetVSyncFrameTime();
     }
 
     public override void Clear(Color color)
     {
         EnsureState();
-        Interop.MsdgClear(winHandle, color);
+        Interop.MsdgClear(color);
     }
 
     internal unsafe IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
@@ -71,25 +118,25 @@ public sealed class Win32RenderContext : RenderContext
         {
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
             {
-                vertexType = Interop.MsdgRegisterVertexType(winHandle, ptr, vertexDeclaration.Count);
+                vertexType = Interop.MsdgRegisterVertexType(ptr, vertexDeclaration.Count);
                 vertexDeclarations.Add(vertexDeclaration, vertexType);
             }
         }
         return vertexType;
     }
 
-    [CLSCompliant(false)]
     public override unsafe void DrawPrimitives<T>(
         VertexDeclaration vertexDeclaration,
         PrimitiveType primitiveType,
-        T* vptr, int length
+        ReadOnlySpan<T> vertices
         )
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(vertexDeclaration);
 
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
-        Interop.MsdgDrawPrimitives(winHandle, vertexType, primitiveType, vptr, length * sizeof(T), length);
+        fixed (T* vptr = vertices)
+            Interop.MsdgDrawPrimitives(vertexType, primitiveType, vptr, vertices.Length * sizeof(T), vertices.Length);
     }
 
     public override void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
@@ -98,8 +145,8 @@ public sealed class Win32RenderContext : RenderContext
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
 
-        var impl = (Win32VertexBufferImpl)buffer.impl;
-        Interop.MsdgDrawBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetVerticesCount());
+        var impl = (Win32VertexBufferImpl)buffer.Impl;
+        Interop.MsdgDrawBufferPrimitives(impl.Handle, primitiveType, impl.VerticesCount);
     }
 
     public override void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType)
@@ -108,45 +155,44 @@ public sealed class Win32RenderContext : RenderContext
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
 
-        var impl = (Win32VertexBufferImpl)buffer.impl;
-        Interop.MsdgDrawIndexedBufferPrimitives(winHandle, impl.GetBufferHandle(), primitiveType, impl.GetIndicesCount());
+        var impl = (Win32VertexBufferImpl)buffer.Impl;
+        Interop.MsdgDrawIndexedBufferPrimitives(impl.Handle, primitiveType, impl.IndicesCount);
     }
 
-    internal override void SetTexture(int index, ITexture2DImpl texImpl)
+    public override void SetTexture(int index, Texture2D texture)
     {
         EnsureState();
         ThrowHelper.ThrowIfNegative(index);
 
-        Interop.MsdgSetTexture(winHandle, index, ((Win32Texture2DImpl)texImpl).texHandle);
-    }
-
-    internal IntPtr GetWinHandle()
-    {
-        EnsureState();
-        return winHandle;
+        Interop.MsdgSetTexture(index, ((Win32Texture2DImpl)texture.Impl).Handle);
     }
 
     private void EnsureState()
-        => ThrowHelper.ThrowIfDisposed(winHandle == IntPtr.Zero, this);
+        => ThrowHelper.ThrowIfDisposed(rcHandle == IntPtr.Zero, this);
 
-    public override Shader? GetCurrentShader()
+    internal override IVertexBufferImpl CreateVertexBufferImpl(
+        VertexDeclaration vertexDeclaration,
+        VertexBufferDataUsage dataUsage,
+        bool indexed
+        )
+        => new Win32VertexBufferImpl(this, vertexDeclaration, dataUsage, indexed);
+
+    internal override ITexture2DImpl CreateTexture2DImpl(int width, int height)
+        => new Win32Texture2DImpl(this, width, height);
+
+    internal override unsafe IShaderImpl CreateGlslShaderImpl(ReadOnlySpan<byte> vertSource, ReadOnlySpan<byte> fragSource)
     {
-        EnsureState();
-        return currentShader;
+        fixed (byte* vptr = vertSource)
+        fixed (byte* fptr = fragSource)
+            return Win32ShaderImpl.FromGlsl(this, vptr, fptr);
     }
 
-    public override void SetShader(Shader? shader)
+    internal override IRenderTargetImpl CreateRenderTargetImpl(Texture2D texture2D)
+        => new Win32RenderTargetImpl(this, (Win32Texture2DImpl)texture2D.Impl);
+
+    internal void AttachTo(Window win)
     {
-        if (shader == currentShader) return;
-        if (shader is not null)
-        {
-            Win32ShaderImpl si = (Win32ShaderImpl)shader.GetImpl();
-            Interop.MsdgSetShader(winHandle, si.GetShaderHandle());
-        }
-        else
-        {
-            Interop.MsdgSetShader(winHandle, IntPtr.Zero);
-        }
-        currentShader = shader;
+        var wh = ((Win32WinImpl)win.Impl).WinHandle;
+        Interop.MsdAttachRenderContext(wh, rcHandle);
     }
 }

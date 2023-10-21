@@ -1,13 +1,17 @@
 ﻿namespace Monosand.Win32;
 
-internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBufferImpl
+internal sealed unsafe class Win32VertexBufferImpl : Win32GraphicsImplBase, IVertexBufferImpl
 {
     private bool indexed;
     private VertexBufferDataUsage dataUsage;
-    private IntPtr bufferHandle;
+    private IntPtr handle;
     private int verticesCount;
     private int indicesCount;
     bool IVertexBufferImpl.Indexed => indexed;
+
+    internal int IndicesCount { get { EnsureState(); return indicesCount; } }
+    internal int VerticesCount { get { EnsureState(); return verticesCount; } }
+    internal IntPtr Handle { get { EnsureState(); return handle; } }
 
     internal Win32VertexBufferImpl(
         Win32RenderContext context,
@@ -15,51 +19,36 @@ internal sealed unsafe class Win32VertexBufferImpl : GraphicsImplBase, IVertexBu
         VertexBufferDataUsage dataUsage,
         bool indexed
         )
-        : base(context.GetWinHandle())
+        : base(context)
     {
         this.dataUsage = dataUsage;
         this.indexed = indexed;
+        indicesCount = -1;
         IntPtr vtype = context.SafeGetVertexType(vertexDeclaration);
-        bufferHandle = Interop.MsdgCreateVertexBuffer(winHandle, vtype, (byte)(indexed ? 1 : 0));
+        handle = Interop.MsdgCreateVertexBuffer(vtype, (byte)(indexed ? 1 : 0));
     }
 
     void IVertexBufferImpl.SetData<T>(T* data, int count)
     {
+        EnsureState();
         verticesCount = count;
-        Interop.MsdgSetVertexBufferData(winHandle, bufferHandle, data, sizeof(T) * count, dataUsage);
+        Interop.MsdgSetVertexBufferData(handle, data, sizeof(T) * count, dataUsage);
     }
 
     void IVertexBufferImpl.SetIndexData(ushort* data, int count)
     {
+        EnsureState();
         indicesCount = count;
-        Interop.MsdgSetIndexBufferData(winHandle, bufferHandle, data, sizeof(ushort) * count, dataUsage);
+        Interop.MsdgSetIndexBufferData(handle, data, sizeof(ushort) * count, dataUsage);
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (bufferHandle != IntPtr.Zero)
+        if (handle != IntPtr.Zero)
         {
-            Interop.MsdgDeleteVertexBuffer(winHandle, bufferHandle);
-            bufferHandle = IntPtr.Zero;
+            Interop.MsdgDeleteVertexBuffer(handle);
+            handle = IntPtr.Zero;
         }
-    }
-
-    internal IntPtr GetBufferHandle()
-    {
-        EnsureState();
-        return bufferHandle;
-    }
-
-    internal int GetVerticesCount()
-    {
-        EnsureState();
-        return verticesCount;
-    }
-
-    internal int GetIndicesCount()
-    {
-        EnsureState();
-        return indicesCount;
     }
 }
