@@ -8,7 +8,6 @@ internal class Win32RenderTargetImpl : Win32GraphicsImplBase, IRenderTargetImpl
     internal Win32RenderTargetImpl(Win32RenderContext renderContext, Win32Texture2DImpl impl)
         : base(renderContext)
     {
-        throw new NotImplementedException("Fuck you.");
         handle = Interop.MsdgCreateRenderTarget(impl.Handle);
     }
 }

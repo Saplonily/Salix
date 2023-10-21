@@ -277,18 +277,18 @@ EXPORT void CALLCONV MsdgSetShaderParamMat4(int loc, float* mat, byte transpose)
 }
 #pragma endregion
 
-EXPORT void* CALLCONV MsdgCreateRenderTarget(int width, int height, void* tex_handle)
+EXPORT void* CALLCONV MsdgCreateRenderTarget(void* tex_handle)
 {
     assert(tex_handle != 0);
     unsigned int fbo;
-    glGenFramebuffers(1, &fbo);
+    glGenFramebuffers(1, &fbo); GL_CHECK_ERROR;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (GLuint)(size_t)tex_handle, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, cur_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo); GL_CHECK_ERROR;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (GLuint)(size_t)tex_handle, 0); GL_CHECK_ERROR;
+    glBindFramebuffer(GL_FRAMEBUFFER, cur_fbo); GL_CHECK_ERROR;
 
     // TODO error handling
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE); GL_CHECK_ERROR;
     return (void*)(size_t)fbo;
 }
 
@@ -298,7 +298,7 @@ EXPORT void CALLCONV MsdgSetRenderTarget(void* fbo_handle)
     if (cur_fbo != fbo)
     {
         // no need to check wheather it's equals to 0
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo); GL_CHECK_ERROR;
         cur_fbo = fbo;
     }
 }

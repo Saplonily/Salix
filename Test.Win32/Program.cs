@@ -15,6 +15,7 @@ public class MyMainWindow : Window
     [AllowNull] private Texture2D texture500x500;
     [AllowNull] private SpriteFont sprFont;
     [AllowNull] private SpriteBatch spriteBatch;
+    [AllowNull] private RenderTarget tempTarget;
 
     Vector2 posBase;
     Vector2 position;
@@ -39,6 +40,7 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of the Test.Win32!.");
         }
         spriteBatch = new SpriteBatch(Game);
+        tempTarget = new(Game.RenderContext, 300, 300);
     }
 
     public override void Update()
@@ -70,6 +72,9 @@ public class MyMainWindow : Window
         if (KeyboardState.IsJustPressed(Key.J))
             times -= times / 3;
 
+        Game.RenderContext.RenderTarget = tempTarget;
+        Game.RenderContext.Clear(Color.Red);
+
         spriteBatch.DrawTexture(texture500x500, position, Vector2.One / 2f);
         string str =
             $"Ticks: {Game.Ticks}\n" +
@@ -85,6 +90,9 @@ public class MyMainWindow : Window
         for (int i = 0; i < times; i++)
             spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
+        Game.RenderContext.RenderTarget = null;
+        spriteBatch.DrawRenderTarget(tempTarget, Vector2.One * 100f);
+        spriteBatch.Flush();
     }
 }
 
@@ -95,8 +103,8 @@ public class Program
         Game game = new(new Win32Platform());
         var win = new MyMainWindow(game);
         game.Window = win;
-        //game.ExpectedFps = 10;
-        game.VSyncEnabled = true;
+        game.ExpectedFps = game.VSyncFps;
+        //game.VSyncEnabled = true;
         game.Run();
     }
 }

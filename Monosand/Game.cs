@@ -5,7 +5,7 @@ public class Game
     public const int DefaultWindowWidth = 1280;
     public const int DefaultWindowHeight = 720;
 
-    private static Game? instance;
+    //private static Game? instance;
     private Window? window;
     private Platform platform;
     private long ticks;

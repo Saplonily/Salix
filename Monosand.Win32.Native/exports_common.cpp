@@ -86,7 +86,6 @@ EXPORT HGLRC MsdCreateRenderContext()
     #else
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
     #endif
-
     #if _DEBUG
         WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
     #endif
@@ -94,13 +93,13 @@ EXPORT HGLRC MsdCreateRenderContext()
     };
     hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
 
+    wglMakeCurrent(hdc, hglrc);
     // TODO error handling
     assert(hglrc != nullptr);
     assert(GLAD_WGL_EXT_swap_control);
 #if _DEBUG
     glDebugMessageCallbackARB(gl_debug_callback, hglrc);
 #endif
-    wglMakeCurrent(hdc, hglrc);
     render_context_graphics_init(hglrc);
     ReleaseDC(dummyHwnd, hdc);
     DestroyWindow(dummyHwnd);
@@ -110,7 +109,7 @@ EXPORT HGLRC MsdCreateRenderContext()
 
 EXPORT void MsdAttachRenderContext(win_handle* wh, HGLRC hglrc)
 {
-     wglMakeCurrent(wh->hdc, hglrc);
+    wglMakeCurrent(wh->hdc, hglrc);
 }
 
 EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
