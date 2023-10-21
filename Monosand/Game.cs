@@ -67,6 +67,8 @@ public class Game
     /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>. Usally the refresh rate of your display.</summary>
     public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
+    public long LastDrawCalls { get; private set; }
+
     public Game(Platform platform)
     {
         ThrowHelper.ThrowIfNull(platform);
@@ -99,6 +101,7 @@ public class Game
 
         long currentTimeLine = platform.GetUsecTimeline();
         long expectedTimeLine = currentTimeLine + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
+        LastDrawCalls = 0;
         while (true)
         {
             // -------------------------------------------------------------------------------------------
@@ -116,7 +119,10 @@ public class Game
             window.PollEvents();
             if (window.IsClosed)
                 break;
+
+            long pdrawcalls = RenderContext.TotalDrawCalls;
             window.Tick();
+            LastDrawCalls = RenderContext.TotalDrawCalls - pdrawcalls;
 
             ticks++;
             // -----------------

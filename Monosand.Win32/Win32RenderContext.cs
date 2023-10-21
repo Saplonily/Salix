@@ -139,6 +139,7 @@ public sealed class Win32RenderContext : RenderContext
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(vertexDeclaration);
+        drawcalls++;
 
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
         fixed (T* vptr = vertices)
@@ -150,6 +151,7 @@ public sealed class Win32RenderContext : RenderContext
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
+        drawcalls++;
 
         var impl = (Win32VertexBufferImpl)buffer.Impl;
         Interop.MsdgDrawBufferPrimitives(impl.Handle, primitiveType, impl.VerticesCount);
@@ -160,6 +162,7 @@ public sealed class Win32RenderContext : RenderContext
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
+        drawcalls++;
 
         var impl = (Win32VertexBufferImpl)buffer.Impl;
         Interop.MsdgDrawIndexedBufferPrimitives(impl.Handle, primitiveType, impl.IndicesCount);

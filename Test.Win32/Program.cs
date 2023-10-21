@@ -77,6 +77,7 @@ public class MyMainWindow : Window
         Game.RenderContext.Clear(Color.Transparent with { A = 20 });
         spriteBatch.DrawTexture(texture500x500, position, Vector2.One / 2f);
         string str =
+            $"DrawCalls: {Game.LastDrawCalls}\n" +
             $"Ticks: {Game.Ticks}\n" +
             $"Ticks / {Game.Fps:F2}: {Game.Ticks / Game.Fps:F4}\n" +
             $"ExpectedFps: {Game.ExpectedFps:F4}\n" +

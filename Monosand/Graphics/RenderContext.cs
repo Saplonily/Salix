@@ -5,11 +5,12 @@ namespace Monosand;
 // TODO dispose impl
 public abstract class RenderContext
 {
+    protected long drawcalls;
+    protected Size windowSize;
     private List<Action> queuedActions;
     private int creationThreadId;
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
-    protected Size windowSize;
 
     public abstract Shader? Shader { get; set; }
     public abstract RenderTarget? RenderTarget { get; set; }
@@ -20,6 +21,7 @@ public abstract class RenderContext
 
     /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
     public abstract double VSyncFrameTime { get; }
+    public long TotalDrawCalls => drawcalls;
 
     public RenderContext()
     {
