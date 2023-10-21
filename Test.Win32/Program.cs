@@ -29,7 +29,7 @@ public class MyMainWindow : Window
 
     public override void OnCreated()
     {
-        //texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
+        texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
         texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
         try
         {
@@ -40,7 +40,7 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of the Test.Win32!.");
         }
         spriteBatch = new SpriteBatch(Game);
-        tempTarget = new(Game.RenderContext, 300, 300);
+        tempTarget = new(Game.RenderContext, 300, 600);
     }
 
     public override void Update()
@@ -57,8 +57,8 @@ public class MyMainWindow : Window
             dir += Vector2.UnitY;
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
-        posBase += dir * 400f * Game.FrameTimeF;
-        a += 2f * Game.FrameTimeF;
+        posBase += dir * 400f * Game.ExpectedFrameTimeF;
+        a += 2f * Game.ExpectedFrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
         Title = $"Monosand Test.Win32 {DateTime.Now}";
     }

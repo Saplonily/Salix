@@ -43,6 +43,9 @@ public class Game
     /// <summary>Expected frame time of the game.</summary>
     public double ExpectedFrameTime { get; set; }
 
+    /// <summary>Expected frame time of the game.</summary>
+    public float ExpectedFrameTimeF => (float)ExpectedFrameTime;
+
     /// <summary>Expected Fps of the game. This is just a shortcut to access '1.0 / <see cref="ExpectedFrameTime"/>'.</summary>
     public double ExpectedFps { get => 1.0 / ExpectedFrameTime; set => ExpectedFrameTime = 1.0 / value; }
 

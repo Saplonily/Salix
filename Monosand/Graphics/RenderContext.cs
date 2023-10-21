@@ -78,7 +78,6 @@ public abstract class RenderContext
     /// <summary>Invoke an action on the RenderContext creation thread.</summary>
     public void Invoke(Action action)
     {
-        Console.WriteLine($"RenderContext invoked, source thread name: {Thread.CurrentThread.Name}");
         if (Environment.CurrentManagedThreadId != creationThreadId)
             lock (queuedActions)
                 queuedActions.Add(action);

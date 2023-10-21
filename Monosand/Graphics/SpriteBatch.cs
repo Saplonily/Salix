@@ -123,11 +123,13 @@ public sealed partial class SpriteBatch
         projectionParam.Set(ref mat);
     }
 
+    // TODO a more elegant way to replace these methods?
+
     public void DrawTexture(Texture2D texture, Vector2 position)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.White);
 
     public void DrawRenderTarget(RenderTarget renderTarget, Vector2 position)
-        => DrawTexture(renderTarget.Texture, position + new Vector2(0f, renderTarget.Texture.Height), new Vector2(1f, -1f));
+        => DrawTexture(renderTarget.Texture, position + new Vector2(0f, renderTarget.Height), new Vector2(1f, -1f));
 
     public void DrawTexture(Texture2D texture, Vector2 position, Color color)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, color);
