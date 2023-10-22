@@ -1,6 +1,8 @@
 # Monosand
 
 > Chinese version at [Readme.md](./Readme.md)
+> Github Repository (source): https://github.com/Saplonily/Monosand
+> Gitee Repository: https://gitee.com/Saplonily/Monosand
 
 ## Introduction
 Monosand is a lightweight framework based on `.NET standard 2.0/2.1` and `.NET 6, 7, 8` focused on **2D**.  
