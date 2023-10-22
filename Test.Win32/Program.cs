@@ -92,7 +92,9 @@ public class MyMainWindow : Window
         spriteBatch.Flush();
 
         Game.RenderContext.RenderTarget = null;
-        spriteBatch.DrawRenderTarget(tempTarget, Vector2.One * 100f);
+        // hmmm, let me think about how to best design the DrawRenderTarget api...
+        // maybe we cound add the `flipX` and `flipY` parameters?
+        spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 100f, new(0f, 1f), new(1f, -1f), 0f);
         spriteBatch.Flush();
     }
 }

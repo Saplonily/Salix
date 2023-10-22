@@ -54,7 +54,7 @@ public sealed partial class SpriteBatch
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
-    /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
+    /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     public SpriteBatch(Game game)
         : this(game, null, null)
     {
@@ -63,9 +63,9 @@ public sealed partial class SpriteBatch
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
-    /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
+    /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
-    /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
+    /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
     public SpriteBatch(Game game, Shader? spriteShader)
         : this(game, spriteShader, null)
     {
@@ -74,11 +74,11 @@ public sealed partial class SpriteBatch
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
-    /// <param name="context">The <see cref="RenderContext"/> that this <see cref="SpriteBatch"/> will draw to.</param>
+    /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
-    /// If set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
+    /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
     /// <param name="textShader">The default <see cref="TextShader"/> will be used.
-    /// If set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
+    /// If's set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
     public SpriteBatch(Game game, Shader? spriteShader, Shader? textShader)
     {
         this.context = game.RenderContext;
@@ -128,9 +128,6 @@ public sealed partial class SpriteBatch
     public void DrawTexture(Texture2D texture, Vector2 position)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.White);
 
-    public void DrawRenderTarget(RenderTarget renderTarget, Vector2 position)
-        => DrawTexture(renderTarget.Texture, position + new Vector2(0f, renderTarget.Height), new Vector2(1f, -1f));
-
     public void DrawTexture(Texture2D texture, Vector2 position, Color color)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, color);
 
@@ -152,12 +149,48 @@ public sealed partial class SpriteBatch
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, Color color)
         => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
 
+    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix)
+        => DrawTextureMatrix(texture, in matrix, Color.White, Color.White, Color.White, Color.White, Vector2.Zero, Vector2.One);
+
+    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color)
+        => DrawTextureMatrix(texture, in matrix, color, color, color, color, Vector2.Zero, Vector2.One);
+
+    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
+        => DrawTextureMatrix(texture, in matrix, color, color, color, color, textureTopLeft, textureBottomRight);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Black);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale, Color color)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
+
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
+        where T : IEnumerable<char>
+        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Black);
+
     public void DrawTexture(
         Texture2D texture,
         Vector2 position, Vector2 origin,
-        Vector2 scale, float radian,
-        Color color,
-        Vector2 partRectTL, Vector2 partRectBR
+        Vector2 scale, float radian, Color color,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
         ThrowHelper.ThrowIfNull(texture);
@@ -197,28 +230,13 @@ public sealed partial class SpriteBatch
         br += position;
         bl += position;
 
-        Vector4 c = color.ToVector4();
-        // TODO need we pooling BatchItem?
-        batchItems.Add(new BatchItem
-        (
-            tex: texture,
-            topLeft: new(new(tl, 0f), c, partRectTL),
-            topRight: new(new(tr, 0f), c, new(partRectBR.X, partRectTL.Y)),
-            bottomLeft: new(new(bl, 0f), c, new(partRectTL.X, partRectBR.Y)),
-            bottomRight: new(new(br, 0f), c, partRectBR)
-        ));
+        DrawTextureRectangle(texture, color, color, color, color, textureTopLeft, textureBottomRight, tl, tr, br, bl);
     }
 
-    public void DrawTextureMatrix(Texture2D texture, ref Matrix3x2 matrix, Color color)
-         => DrawTextureMatrix(texture, ref matrix, color, color, color, color, new(0f, 0f), new(1f, 1f));
-
-    public void DrawTextureMatrix(Texture2D texture, ref Matrix3x2 matrix, Color color, Vector2 partRectTL, Vector2 partRectBR)
-        => DrawTextureMatrix(texture, ref matrix, color, color, color, color, partRectTL, partRectBR);
-
     public void DrawTextureMatrix(
-        Texture2D texture, ref Matrix3x2 matrix,
-        Color ctl, Color ctr, Color cbl, Color cbr,
-        Vector2 partRectTL, Vector2 partRectBR
+        Texture2D texture, in Matrix3x2 matrix,
+        Color colorTopLeft, Color colorTopRight, Color colorBottomLeft, Color colorBottomRight,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
         ThrowHelper.ThrowIfNull(texture);
@@ -230,50 +248,37 @@ public sealed partial class SpriteBatch
         Vector2 tr = Vector2.Transform(new Vector2(w, 0), matrix);
         Vector2 br = Vector2.Transform(new Vector2(w, h), matrix);
         Vector2 bl = Vector2.Transform(new Vector2(0, h), matrix);
-        // TODO need we pooling BatchItem?
+        DrawTextureRectangle(
+            texture,
+            colorTopLeft, colorTopRight, colorBottomRight, colorBottomLeft,
+            textureTopLeft, textureBottomRight,
+            tl, tr, br, bl
+            );
+    }
+
+    public void DrawTextureRectangle(
+        Texture2D texture,
+        Color colorTopLeft, Color colorTopRight, Color colorBottomLeft, Color colorBottomRight,
+        Vector2 textureTopLeft, Vector2 textureBottomRight,
+        Vector2 topLeft, Vector2 topRight, Vector2 bottomRight, Vector2 bottomLeft
+        )
+    {
+        // We only use batchItems here for easier refactoring later
         batchItems.Add(new BatchItem
         (
             tex: texture,
-            topLeft: new(new(tl, 0f), ctl.ToVector4(), partRectTL),
-            topRight: new(new(tr, 0f), ctr.ToVector4(), new(partRectBR.X, partRectTL.Y)),
-            bottomLeft: new(new(bl, 0f), cbl.ToVector4(), new(partRectTL.X, partRectBR.Y)),
-            bottomRight: new(new(br, 0f), cbr.ToVector4(), partRectBR)
+            topLeft: new(new(topLeft, 0f), colorTopLeft.ToVector4(), textureTopLeft),
+            topRight: new(new(topRight, 0f), colorTopRight.ToVector4(), new(textureBottomRight.X, textureTopLeft.Y)),
+            bottomLeft: new(new(bottomLeft, 0f), colorBottomLeft.ToVector4(), new(textureTopLeft.X, textureBottomRight.Y)),
+            bottomRight: new(new(bottomRight, 0f), colorBottomRight.ToVector4(), textureBottomRight)
         ));
     }
 
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Black);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, float radian)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Black);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, float radian, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, color);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 scale)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Black);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 scale, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Black);
-
-    public void DrawText<T>(SpriteFont spriteFont, T text,
+    public void DrawText<T>(SpriteFont spriteFont, in T text,
         Vector2 position, Vector2 origin,
         Vector2 scale, float radian,
         Color color
-    ) where T : IEnumerable<char>
+        ) where T : IEnumerable<char>
     {
         ThrowHelper.ThrowIfNull(spriteFont);
         EnsureShader(TextShader);

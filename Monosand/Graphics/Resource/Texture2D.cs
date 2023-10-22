@@ -11,6 +11,7 @@ public sealed class Texture2D : GraphicsResource
     public int Width => Impl.Width;
     public int Height => Impl.Height;
     public Vector2 Size => new(Impl.Width, Impl.Height);
+    public Vector2 Center => Size / 2.0f;
 
     public Texture2D(RenderContext renderContext, int width, int height) : base(renderContext)
         => Impl = renderContext.CreateTexture2DImpl(width, height);
