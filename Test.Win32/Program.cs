@@ -40,7 +40,7 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of the Test.Win32!.");
         }
         spriteBatch = new SpriteBatch(Game);
-        tempTarget = new(Game.RenderContext, 300, 600);
+        tempTarget = new(Game.RenderContext, 300, 400);
     }
 
     public override void Update()
@@ -92,9 +92,10 @@ public class MyMainWindow : Window
         spriteBatch.Flush();
 
         Game.RenderContext.RenderTarget = null;
-        // hmmm, let me think about how to best design the DrawRenderTarget api...
-        // maybe we cound add the `flipX` and `flipY` parameters?
-        spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 100f, new(0f, 1f), new(1f, -1f), 0f);
+        spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10f);
+        spriteBatch.Flush();
+
+        spriteBatch.DrawTexture(texture500x500, position + Vector2.One * 100f, Vector2.One / 3f);
         spriteBatch.Flush();
     }
 }

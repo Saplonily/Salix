@@ -230,7 +230,7 @@ public sealed partial class SpriteBatch
         br += position;
         bl += position;
 
-        DrawTextureRectangle(texture, color, color, color, color, textureTopLeft, textureBottomRight, tl, tr, br, bl);
+        DrawTextureRectangle(texture, color, color, color, color, textureTopLeft, textureBottomRight, tl, tr, bl, br);
     }
 
     public void DrawTextureMatrix(
@@ -250,9 +250,9 @@ public sealed partial class SpriteBatch
         Vector2 bl = Vector2.Transform(new Vector2(0, h), matrix);
         DrawTextureRectangle(
             texture,
-            colorTopLeft, colorTopRight, colorBottomRight, colorBottomLeft,
+            colorTopLeft, colorTopRight, colorBottomLeft, colorBottomRight,
             textureTopLeft, textureBottomRight,
-            tl, tr, br, bl
+            tl, tr, bl, br
             );
     }
 
@@ -260,17 +260,21 @@ public sealed partial class SpriteBatch
         Texture2D texture,
         Color colorTopLeft, Color colorTopRight, Color colorBottomLeft, Color colorBottomRight,
         Vector2 textureTopLeft, Vector2 textureBottomRight,
-        Vector2 topLeft, Vector2 topRight, Vector2 bottomRight, Vector2 bottomLeft
+        Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight
         )
     {
         // We only use batchItems here for easier refactoring later
+
         batchItems.Add(new BatchItem
         (
+            // flip our texture coords since the loaded image is also flipped
+            // why we flip loaded image is because RenderTargets are also "flipped"
+            // and then we can unite the flip behaviour in this way
             tex: texture,
-            topLeft: new(new(topLeft, 0f), colorTopLeft.ToVector4(), textureTopLeft),
-            topRight: new(new(topRight, 0f), colorTopRight.ToVector4(), new(textureBottomRight.X, textureTopLeft.Y)),
-            bottomLeft: new(new(bottomLeft, 0f), colorBottomLeft.ToVector4(), new(textureTopLeft.X, textureBottomRight.Y)),
-            bottomRight: new(new(bottomRight, 0f), colorBottomRight.ToVector4(), textureBottomRight)
+            topLeft: new(new(topLeft, 0f), colorTopLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureTopLeft.Y)),
+            topRight: new(new(topRight, 0f), colorTopRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureTopLeft.Y)),
+            bottomLeft: new(new(bottomLeft, 0f), colorBottomLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureBottomRight.Y)),
+            bottomRight: new(new(bottomRight, 0f), colorBottomRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureBottomRight.Y))
         ));
     }
 
