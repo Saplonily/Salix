@@ -158,30 +158,37 @@ public sealed partial class SpriteBatch
     public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
         => DrawTextureMatrix(texture, in matrix, color, color, color, color, textureTopLeft, textureBottomRight);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Black);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Color color)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Black);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian, Color color)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, origin, Vector2.One, radian, color);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Black);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale, Color color)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, origin, scale, radian, Color.Black);
@@ -278,6 +285,15 @@ public sealed partial class SpriteBatch
         ));
     }
 
+    /// <summary>Draw lines of text to the <see cref="Monosand.RenderContext"/>.</summary>
+    /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
+    /// <param name="spriteFont">The <see cref="SpriteFont"/> will be used to draw.</param>
+    /// <param name="text">Text to draw, allowing '\n' for newlines.</param>
+    /// <param name="position">Destination position.</param>
+    /// <param name="origin">Origin, as percentage.</param>
+    /// <param name="scale">Scaling factor</param>
+    /// <param name="radian">Rotation radians.</param>
+    /// <param name="color">Color, usually <see cref="Color.Black"/>.</param>
     public void DrawText<T>(SpriteFont spriteFont, in T text,
         Vector2 position, Vector2 origin,
         Vector2 scale, float radian,
@@ -341,6 +357,7 @@ public sealed partial class SpriteBatch
         isInDrawText = false;
     }
 
+    /// <summary>Flush the batched draw actions.</summary>
     public void Flush()
     {
         int batchItemsCount = batchItems.Count;
