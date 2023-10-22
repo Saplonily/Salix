@@ -13,4 +13,7 @@ internal static class SR
 
     internal static InvalidOperationException PropNotSet(string propName)
         => new($"The '{propName}' property has NOT been set or inited.");
+
+    internal static ArgumentException ShaderParamNotFound(string paramName)
+        => new ArgumentException($"Shader parameter '{paramName}' does not exist.");
 }

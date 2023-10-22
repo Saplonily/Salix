@@ -6,6 +6,7 @@ public readonly struct ShaderParameter : IEquatable<ShaderParameter>
     private readonly int location;
 
     public readonly Shader Shader => shader;
+    public bool Valid => location != -1;
     internal readonly int Location => location;
 
     internal ShaderParameter(Shader shader, int location)

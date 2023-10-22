@@ -31,24 +31,23 @@ public sealed partial class SpriteBatch
     private readonly List<BatchItem> batchItems;
     private readonly RenderContext context;
 
-    private bool isInDrawText = false;
-    private Shader? shader;
-    private ShaderParameter projectionParam;
-    private ShaderParameter transformParam;
+    private SpriteEffect currentEffect = null!;
+    private bool isDrawingText = false;
     private Matrix4x4 transform;
     private Matrix4x4 projection;
+
     private vpct[] vertices;
     private ushort[] indices;
 
     public RenderContext RenderContext => context;
 
-    public Shader SpriteShader { get; set; }
-    public Shader TextShader { get; set; }
+    public SpriteEffect SpriteEffect { get; set; }
+    public SpriteEffect TextEffect { get; set; }
 
     public Matrix4x4 Transform
     {
         get => transform;
-        set { transform = value; transformParam.Set(ref value); }
+        set { transform = value; currentEffect.SetTransform(ref value); }
     }
 
     /// <summary>
@@ -66,8 +65,8 @@ public sealed partial class SpriteBatch
     /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
     /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    public SpriteBatch(Game game, Shader? spriteShader)
-        : this(game, spriteShader, null)
+    public SpriteBatch(Game game, SpriteEffect? spriteEffect)
+        : this(game, spriteEffect, null)
     {
     }
 
@@ -79,37 +78,38 @@ public sealed partial class SpriteBatch
     /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
     /// <param name="textShader">The default <see cref="TextShader"/> will be used.
     /// If's set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
-    public SpriteBatch(Game game, Shader? spriteShader, Shader? textShader)
+    public SpriteBatch(Game game, SpriteEffect? spriteEffect, SpriteEffect? textEffect)
     {
-        this.context = game.RenderContext;
+        context = game.RenderContext;
         batchItems = new();
         vertices = new vpct[4 * 16];
         indices = new ushort[6 * 16];
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
-        if (spriteShader is null)
+        if (spriteEffect is null)
         {
             var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            SpriteShader = rl.LoadGlslShader(vert, frag);
+            SpriteEffect = new(rl.LoadGlslShader(vert, frag));
         }
         else
         {
-            SpriteShader = spriteShader;
+            SpriteEffect = spriteEffect;
         }
-        if (textShader is null)
+        if (textEffect is null)
         {
             var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
-            TextShader = rl.LoadGlslShader(vert, frag);
+            TextEffect = new(rl.LoadGlslShader(vert, frag));
         }
         else
         {
-            TextShader = textShader;
+            TextEffect = textEffect;
         }
         transform = Matrix4x4.Identity;
-        EnsureShader(SpriteShader);
+        EnsureEffect(SpriteEffect);
+
         context.ViewportChanged += OnContextViewportChanged;
         OnContextViewportChanged(context, context.Viewport);
     }
@@ -120,7 +120,7 @@ public sealed partial class SpriteBatch
         mat *= Matrix4x4.CreateTranslation(-rect.Width / 2f, -rect.Height / 2f, 0f);
         mat *= Matrix4x4.CreateScale(2f / rect.Width, -2f / rect.Height, 1f);
         projection = mat;
-        projectionParam.Set(ref mat);
+        currentEffect.SetProjection(ref mat);
     }
 
     // TODO a more elegant way to replace these methods?
@@ -200,8 +200,6 @@ public sealed partial class SpriteBatch
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
-        ThrowHelper.ThrowIfNull(texture);
-        if (!isInDrawText) EnsureShader(SpriteShader);
         float w = texture.Width;
         float h = texture.Height;
         Vector2 texSize = new(w, h);
@@ -246,8 +244,6 @@ public sealed partial class SpriteBatch
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
-        ThrowHelper.ThrowIfNull(texture);
-        if (!isInDrawText) EnsureShader(SpriteShader);
         float w = texture.Width;
         float h = texture.Height;
 
@@ -270,6 +266,8 @@ public sealed partial class SpriteBatch
         Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight
         )
     {
+        ThrowHelper.ThrowIfNull(texture);
+        if (!isDrawingText) EnsureEffect(SpriteEffect);
         // We only use batchItems here for easier refactoring later
 
         batchItems.Add(new BatchItem
@@ -301,8 +299,8 @@ public sealed partial class SpriteBatch
         ) where T : IEnumerable<char>
     {
         ThrowHelper.ThrowIfNull(spriteFont);
-        EnsureShader(TextShader);
-        isInDrawText = true;
+        EnsureEffect(TextEffect);
+        isDrawingText = true;
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 #if NETSTANDARD2_0
@@ -354,7 +352,7 @@ public sealed partial class SpriteBatch
             DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radian, color, tl, br);
             x += entry.Advance / 64f;
         }
-        isInDrawText = false;
+        isDrawingText = false;
     }
 
     /// <summary>Flush the batched draw actions.</summary>
@@ -413,21 +411,16 @@ public sealed partial class SpriteBatch
         verticesCount = 0;
     }
 
-    // TODO cache parameter?
-    private void EnsureShader(Shader shader)
+    private void EnsureEffect(SpriteEffect effect)
     {
-        ThrowHelper.ThrowIfNull(shader);
-        if (this.shader != shader)
+        ThrowHelper.ThrowIfNull(effect);
+        if (currentEffect != effect)
         {
             Flush();
-            this.shader = shader;
-            this.shader.Use();
-            projectionParam = shader.GetParameter("projection"u8);
-            transformParam = shader.GetParameter("extra"u8);
-            shader.GetParameter("tex"u8).Set(0);
-
-            projectionParam.Set(ref projection);
-            transformParam.Set(ref transform);
+            effect.Apply();
+            effect.SetProjection(ref projection);
+            effect.SetTransform(ref transform);
+            currentEffect = effect;
         }
     }
 }

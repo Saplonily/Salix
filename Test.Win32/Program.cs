@@ -75,7 +75,7 @@ public class MyMainWindow : Window
         Game.RenderContext.RenderTarget = tempTarget;
 
         Game.RenderContext.Clear(Color.Transparent with { A = 20 });
-        spriteBatch.DrawTexture(texture500x500, position, Vector2.One / 2f);
+        spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f);
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +
             $"Ticks: {Game.Ticks}\n" +
@@ -95,7 +95,7 @@ public class MyMainWindow : Window
         spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10f);
         spriteBatch.Flush();
 
-        spriteBatch.DrawTexture(texture500x500, position + Vector2.One * 100f, Vector2.One / 3f);
+        spriteBatch.DrawTexture(texture665x680, position + Vector2.One * 100f, Vector2.One / 3f);
         spriteBatch.Flush();
     }
 }
