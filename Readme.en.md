@@ -1,7 +1,7 @@
 # Monosand
 
-> Chinese version at [Readme.md](./Readme.md)
-> Github Repository (source): https://github.com/Saplonily/Monosand
+> Chinese version at [Readme.md](./Readme.md)  
+> Github Repository (source): https://github.com/Saplonily/Monosand  
 > Gitee Repository: https://gitee.com/Saplonily/Monosand
 
 ## Introduction
