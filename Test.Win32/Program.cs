@@ -77,10 +77,12 @@ public class MyMainWindow : Window
         if (KeyboardState.IsJustPressed(Key.J))
             times -= times / 3;
 
+        RectangleProp<Color> c = new(Color.Known.AliceBlue, Color.Known.Yellow, Color.Known.RosyBrown, Color.Known.Black);
+
         Game.RenderContext.RenderTarget = tempTarget;
 
         Game.RenderContext.Clear(Color.Known.Transparent with { A = 20 });
-        spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f);
+        spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f, c);
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +
             $"Ticks: {Game.Ticks}\n" +
@@ -96,7 +98,7 @@ public class MyMainWindow : Window
         spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10f);
         spriteBatch.Flush();
 
-        spriteBatch.DrawTexture(texture665x680, position2 + new Vector2(350f, 0f), Vector2.One / 3f);
+        spriteBatch.DrawTexture(texture665x680, position2 + new Vector2(350f, 0f), Vector2.One / 3f, c);
         spriteBatch.Flush();
     }
 }
