@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.Versioning;
 
@@ -19,6 +20,9 @@ public class MyMainWindow : Window
 
     Vector2 posBase;
     Vector2 position;
+    Vector2 position2;
+
+    Stopwatch sw = new();
 
     float a;
     int times = 3;
@@ -37,10 +41,10 @@ public class MyMainWindow : Window
         }
         catch (FileNotFoundException)
         {
-            throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of the Test.Win32!.");
+            throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of Test.Win32!");
         }
         spriteBatch = new SpriteBatch(Game);
-        tempTarget = new(Game.RenderContext, 300, 400);
+        tempTarget = new(Game.RenderContext, 300, 600);
     }
 
     public override void Update()
@@ -57,9 +61,10 @@ public class MyMainWindow : Window
             dir += Vector2.UnitY;
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
-        posBase += dir * 400f * Game.ExpectedFrameTimeF;
-        a += 2f * Game.ExpectedFrameTimeF;
+        posBase += dir * 400f * Game.FrameTimeF;
+        a += 2f * Game.FrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
+        position2 = posBase + new Vector2(0f, (MathF.Sin(a / 1.4f) + 1f) / 2f * 300f);
         Title = $"Monosand Test.Win32 {DateTime.Now}";
     }
 
@@ -74,17 +79,13 @@ public class MyMainWindow : Window
 
         Game.RenderContext.RenderTarget = tempTarget;
 
-        Game.RenderContext.Clear(Color.Transparent with { A = 20 });
+        Game.RenderContext.Clear(Color.Known.Transparent with { A = 20 });
         spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f);
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +
             $"Ticks: {Game.Ticks}\n" +
-            $"Ticks / {Game.Fps:F2}: {Game.Ticks / Game.Fps:F4}\n" +
             $"ExpectedFps: {Game.ExpectedFps:F4}\n" +
             $"Fps: {Game.Fps:F4}\n" +
-            $"FrameTime: {Game.FrameTime:F4}\n" +
-            $"VSyncFps: {Game.VSyncFps}\n" +
-            $"VSyncEnabled: {Game.VSyncEnabled}\n" +
             $"DrawText repeats: {times}\n" +
             $"IsRunningSlowly: {Game.IsRunningSlowly}";
         for (int i = 0; i < times; i++)
@@ -95,7 +96,7 @@ public class MyMainWindow : Window
         spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10f);
         spriteBatch.Flush();
 
-        spriteBatch.DrawTexture(texture665x680, position + Vector2.One * 100f, Vector2.One / 3f);
+        spriteBatch.DrawTexture(texture665x680, position2 + new Vector2(350f, 0f), Vector2.One / 3f);
         spriteBatch.Flush();
     }
 }

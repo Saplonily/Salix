@@ -4,31 +4,13 @@ using System.Runtime.CompilerServices;
 
 #pragma warning disable CS8981
 
-using vpct = Monosand.VertexPositionColorTexture;
+using vpct = Monosand.VertexPosition2DColorTexture;
 
 namespace Monosand;
 
 public sealed partial class SpriteBatch
 {
-    private struct BatchItem
-    {
-        public Texture2D tex;
-        public vpct topLeft;
-        public vpct topRight;
-        public vpct bottomLeft;
-        public vpct bottomRight;
-        public BatchItem(Texture2D tex, vpct topLeft, vpct topRight, vpct bottomLeft, vpct bottomRight)
-        {
-            this.tex = tex;
-            this.topLeft = topLeft;
-            this.topRight = topRight;
-            this.bottomLeft = bottomLeft;
-            this.bottomRight = bottomRight;
-        }
-    }
-
     private readonly VertexBuffer<vpct> buffer;
-    private readonly List<BatchItem> batchItems;
     private readonly RenderContext context;
 
     private SpriteEffect currentEffect = null!;
@@ -36,8 +18,11 @@ public sealed partial class SpriteBatch
     private Matrix4x4 transform;
     private Matrix4x4 projection;
 
+    private Texture2D? lastTexture;
     private vpct[] vertices;
     private ushort[] indices;
+    private int verticesIndex;
+    private int indicesIndex;
 
     public RenderContext RenderContext => context;
 
@@ -81,7 +66,6 @@ public sealed partial class SpriteBatch
     public SpriteBatch(Game game, SpriteEffect? spriteEffect, SpriteEffect? textEffect)
     {
         context = game.RenderContext;
-        batchItems = new();
         vertices = new vpct[4 * 16];
         indices = new ushort[6 * 16];
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
@@ -124,44 +108,53 @@ public sealed partial class SpriteBatch
     }
 
     // TODO a more elegant way to replace these methods?
+    #region tons of Drawxxx methods
 
     public void DrawTexture(Texture2D texture, Vector2 position)
-        => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.White);
+        => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.Known.White);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Color color)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian)
-        => DrawTexture(texture, position, origin, Vector2.One, radian, Color.White);
+        => DrawTexture(texture, position, origin, Vector2.One, radian, Color.Known.White);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian, Color color)
         => DrawTexture(texture, position, origin, Vector2.One, radian, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale)
-        => DrawTexture(texture, position, Vector2.Zero, scale, 0f, Color.White);
+        => DrawTexture(texture, position, Vector2.Zero, scale, 0f, Color.Known.White);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale, Color color)
         => DrawTexture(texture, position, Vector2.Zero, scale, 0f, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian)
-        => DrawTexture(texture, position, origin, scale, radian, Color.White);
+        => DrawTexture(texture, position, origin, scale, radian, Color.Known.White);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, Color color)
         => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
 
+    public void DrawTexture(
+        Texture2D texture,
+        Vector2 position, Vector2 origin,
+        Vector2 scale, float radian, Color color,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
+        )
+        => DrawTexture(texture, position, origin, scale, radian, new RectangleProp<Color>(color), textureTopLeft, textureBottomRight);
+
     public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix)
-        => DrawTextureMatrix(texture, in matrix, Color.White, Color.White, Color.White, Color.White, Vector2.Zero, Vector2.One);
+        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
 
     public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color)
-        => DrawTextureMatrix(texture, in matrix, color, color, color, color, Vector2.Zero, Vector2.One);
+        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(color), Vector2.Zero, Vector2.One);
 
     public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
-        => DrawTextureMatrix(texture, in matrix, color, color, color, color, textureTopLeft, textureBottomRight);
+        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(color), textureTopLeft, textureBottomRight);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Black);
+        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Known.Black);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Color color)
@@ -171,7 +164,7 @@ public sealed partial class SpriteBatch
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Black);
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Known.Black);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian, Color color)
@@ -181,7 +174,7 @@ public sealed partial class SpriteBatch
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Black);
+        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Known.Black);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale, Color color)
@@ -191,97 +184,9 @@ public sealed partial class SpriteBatch
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Black);
+        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Known.Black);
 
-    public void DrawTexture(
-        Texture2D texture,
-        Vector2 position, Vector2 origin,
-        Vector2 scale, float radian, Color color,
-        Vector2 textureTopLeft, Vector2 textureBottomRight
-        )
-    {
-        float w = texture.Width;
-        float h = texture.Height;
-        Vector2 texSize = new(w, h);
-        Vector2 tl = new Vector2(0, 0) - origin * texSize;
-        Vector2 tr = new Vector2(w, 0) - origin * texSize;
-        Vector2 br = new Vector2(w, h) - origin * texSize;
-        Vector2 bl = new Vector2(0, h) - origin * texSize;
-        tl *= scale;
-        tr *= scale;
-        br *= scale;
-        bl *= scale;
-
-        // why there isn't MathF in .net std 2.0?
-#if NETSTANDARD2_0
-        float sin = (float)Math.Sin(radian);
-        float cos = (float)Math.Cos(radian);
-#else
-        float sin = MathF.Sin(radian);
-        float cos = MathF.Cos(radian);
-#endif
-
-        // [ cos  -sin ]     [ x ]     [ x * cos - y * sin ]
-        // [           ]  *  [   ]  =  [                   ]
-        // [ sin   cos ]     [ y ]     [ x * sin + y * cos ]
-
-        tl = new(tl.X * cos - tl.Y * sin, tl.X * sin + tl.Y * cos);
-        tr = new(tr.X * cos - tr.Y * sin, tr.X * sin + tr.Y * cos);
-        br = new(br.X * cos - br.Y * sin, br.X * sin + br.Y * cos);
-        bl = new(bl.X * cos - bl.Y * sin, bl.X * sin + bl.Y * cos);
-
-        tl += position;
-        tr += position;
-        br += position;
-        bl += position;
-
-        DrawTextureRectangle(texture, color, color, color, color, textureTopLeft, textureBottomRight, tl, tr, bl, br);
-    }
-
-    public void DrawTextureMatrix(
-        Texture2D texture, in Matrix3x2 matrix,
-        Color colorTopLeft, Color colorTopRight, Color colorBottomLeft, Color colorBottomRight,
-        Vector2 textureTopLeft, Vector2 textureBottomRight
-        )
-    {
-        float w = texture.Width;
-        float h = texture.Height;
-
-        Vector2 tl = Vector2.Transform(new Vector2(0, 0), matrix);
-        Vector2 tr = Vector2.Transform(new Vector2(w, 0), matrix);
-        Vector2 br = Vector2.Transform(new Vector2(w, h), matrix);
-        Vector2 bl = Vector2.Transform(new Vector2(0, h), matrix);
-        DrawTextureRectangle(
-            texture,
-            colorTopLeft, colorTopRight, colorBottomLeft, colorBottomRight,
-            textureTopLeft, textureBottomRight,
-            tl, tr, bl, br
-            );
-    }
-
-    public void DrawTextureRectangle(
-        Texture2D texture,
-        Color colorTopLeft, Color colorTopRight, Color colorBottomLeft, Color colorBottomRight,
-        Vector2 textureTopLeft, Vector2 textureBottomRight,
-        Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight
-        )
-    {
-        ThrowHelper.ThrowIfNull(texture);
-        if (!isDrawingText) EnsureEffect(SpriteEffect);
-        // We only use batchItems here for easier refactoring later
-
-        batchItems.Add(new BatchItem
-        (
-            // flip our texture coords since the loaded image is also flipped
-            // why we flip loaded image is because RenderTargets are also "flipped"
-            // and then we can unite the flip behaviour in this way
-            tex: texture,
-            topLeft: new(new(topLeft, 0f), colorTopLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureTopLeft.Y)),
-            topRight: new(new(topRight, 0f), colorTopRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureTopLeft.Y)),
-            bottomLeft: new(new(bottomLeft, 0f), colorBottomLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureBottomRight.Y)),
-            bottomRight: new(new(bottomRight, 0f), colorBottomRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureBottomRight.Y))
-        ));
-    }
+    #endregion
 
     /// <summary>Draw lines of text to the <see cref="Monosand.RenderContext"/>.</summary>
     /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
@@ -355,60 +260,122 @@ public sealed partial class SpriteBatch
         isDrawingText = false;
     }
 
+    public void DrawTexture(
+        Texture2D texture,
+        Vector2 position, Vector2 origin,
+        Vector2 scale, float radian, in RectangleProp<Color> color,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
+        )
+    {
+        float w = texture.Width;
+        float h = texture.Height;
+        Vector2 texSize = new(w, h);
+        Vector2 tl = new Vector2(0, 0) - origin * texSize;
+        Vector2 tr = new Vector2(w, 0) - origin * texSize;
+        Vector2 br = new Vector2(w, h) - origin * texSize;
+        Vector2 bl = new Vector2(0, h) - origin * texSize;
+        tl *= scale;
+        tr *= scale;
+        br *= scale;
+        bl *= scale;
+
+        // why there isn't MathF in .net std 2.0?
+#if NETSTANDARD2_0
+        float sin = (float)Math.Sin(radian);
+        float cos = (float)Math.Cos(radian);
+#else
+        float sin = MathF.Sin(radian);
+        float cos = MathF.Cos(radian);
+#endif
+
+        // [ cos  -sin ]     [ x ]     [ x * cos - y * sin ]
+        // [           ]  *  [   ]  =  [                   ]
+        // [ sin   cos ]     [ y ]     [ x * sin + y * cos ]
+
+        tl = new(tl.X * cos - tl.Y * sin, tl.X * sin + tl.Y * cos);
+        tr = new(tr.X * cos - tr.Y * sin, tr.X * sin + tr.Y * cos);
+        br = new(br.X * cos - br.Y * sin, br.X * sin + br.Y * cos);
+        bl = new(bl.X * cos - bl.Y * sin, bl.X * sin + bl.Y * cos);
+
+        tl += position;
+        tr += position;
+        br += position;
+        bl += position;
+
+        DrawTextureRectangle(texture, color, new(tl, tr, bl, br), textureTopLeft, textureBottomRight);
+    }
+
+    public void DrawTextureMatrix(
+        Texture2D texture, in Matrix3x2 matrix,
+        in RectangleProp<Color> color,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
+        )
+    {
+        float w = texture.Width;
+        float h = texture.Height;
+
+        Vector2 tl = Vector2.Transform(new Vector2(0, 0), matrix);
+        Vector2 tr = Vector2.Transform(new Vector2(w, 0), matrix);
+        Vector2 br = Vector2.Transform(new Vector2(w, h), matrix);
+        Vector2 bl = Vector2.Transform(new Vector2(0, h), matrix);
+        DrawTextureRectangle(texture, color, new(tl, tr, bl, br), textureTopLeft, textureBottomRight);
+    }
+
+    public unsafe void DrawTextureRectangle(
+        Texture2D texture,
+        in RectangleProp<Color> color,
+        in RectangleProp<Vector2> position,
+        Vector2 textureTopLeft, Vector2 textureBottomRight
+    )
+    {
+        ThrowHelper.ThrowIfNull(texture);
+        if (!isDrawingText) EnsureEffect(SpriteEffect);
+        if (lastTexture != texture) Flush();
+        if (verticesIndex >= ushort.MaxValue - 8) Flush();
+        int vind = verticesIndex;
+        int iind = indicesIndex;
+
+        lastTexture = texture;
+
+        if (vertices.Length <= vind)
+            Array.Resize(ref vertices, Math.Max(vind + 8, vertices.Length * 2));
+        if (indices.Length <= iind)
+            Array.Resize(ref indices, Math.Max(iind + 12, indices.Length * 2));
+
+        fixed (vpct* vptr = vertices)
+        fixed (ushort* iptr = indices)
+        {
+            vptr[vind + 0] =
+                new(position.TopLeft, color.TopLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureTopLeft.Y));
+            vptr[vind + 1] =
+                new(position.TopRight, color.TopRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureTopLeft.Y));
+            vptr[vind + 2] =
+                new(position.BottomLeft, color.BottomLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureBottomRight.Y));
+            vptr[vind + 3] =
+                new(position.BottomRight, color.BottomRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureBottomRight.Y));
+
+            iptr[indicesIndex + 0] = (ushort)(vind + 0);
+            iptr[indicesIndex + 1] = (ushort)(vind + 1);
+            iptr[indicesIndex + 2] = (ushort)(vind + 2);
+            iptr[indicesIndex + 3] = (ushort)(vind + 1);
+            iptr[indicesIndex + 4] = (ushort)(vind + 2);
+            iptr[indicesIndex + 5] = (ushort)(vind + 3);
+        }
+
+        verticesIndex += 4;
+        indicesIndex += 6;
+    }
+
     /// <summary>Flush the batched draw actions.</summary>
     public void Flush()
     {
-        int batchItemsCount = batchItems.Count;
-        if (batchItemsCount == 0) return;
+        if (verticesIndex == 0) return;
+        context.SetTexture(0, lastTexture!);
 
-        Texture2D? currentTex = batchItems[0].tex;
-        context.SetTexture(0, currentTex);
-        int cvid = 0;
-        for (int i = 0; i < batchItemsCount; i++)
-        {
-            BatchItem item = batchItems[i];
-            if (item.tex != currentTex)
-            {
-                FlushBuffer(ref cvid);
-                currentTex = item.tex;
-                context.SetTexture(0, currentTex);
-            }
-            if (cvid * 4 + 4 > ushort.MaxValue)
-                FlushBuffer(ref cvid);
-
-            if (cvid * 4 + 4 >= vertices.Length)
-                Array.Resize(ref vertices, Math.Max(cvid * 4 + 8, vertices.Length * 2));
-            if (cvid * 6 + 6 >= indices.Length)
-                Array.Resize(ref indices, Math.Max(cvid * 6 + 12, vertices.Length * 2));
-
-            ref vpct vfirst = ref vertices[cvid * 4];
-            ref ushort ifirst = ref indices[cvid * 6];
-
-            Unsafe.Add(ref vfirst, 0) = item.topLeft;
-            Unsafe.Add(ref vfirst, 1) = item.topRight;
-            Unsafe.Add(ref vfirst, 2) = item.bottomLeft;
-            Unsafe.Add(ref vfirst, 3) = item.bottomRight;
-
-            Unsafe.Add(ref ifirst, 0) = (ushort)(cvid * 4 + 0);
-            Unsafe.Add(ref ifirst, 1) = (ushort)(cvid * 4 + 1);
-            Unsafe.Add(ref ifirst, 2) = (ushort)(cvid * 4 + 2);
-            Unsafe.Add(ref ifirst, 3) = (ushort)(cvid * 4 + 1);
-            Unsafe.Add(ref ifirst, 4) = (ushort)(cvid * 4 + 2);
-            Unsafe.Add(ref ifirst, 5) = (ushort)(cvid * 4 + 3);
-            cvid += 1;
-        }
-        batchItems.Clear();
-        FlushBuffer(ref cvid);
-    }
-
-    private void FlushBuffer(ref int verticesCount)
-    {
-        if (verticesCount == 0) return;
-        //Console.WriteLine($"try to flush: {verticesCount}");
-        buffer.SetIndexData(indices.AsSpan(0, verticesCount * 6));
-        buffer.SetData(vertices.AsSpan(0, verticesCount * 4));
+        buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
+        buffer.SetData(vertices.AsSpan(0, verticesIndex));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
-        verticesCount = 0;
+        verticesIndex = indicesIndex = 0;
     }
 
     private void EnsureEffect(SpriteEffect effect)

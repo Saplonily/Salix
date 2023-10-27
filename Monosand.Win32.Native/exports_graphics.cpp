@@ -217,6 +217,7 @@ EXPORT void CALLCONV MsdgSetTexture(int index, void* tex_handle)
 {
     glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
     glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
+    
 }
 
 EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(const char* vert_source, const char* frag_source)

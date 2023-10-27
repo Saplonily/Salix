@@ -189,7 +189,7 @@ public class Window
         ThrowHelper.ThrowIfInvalid(Game.RenderContext is null, "No RenderContext attched to this window.");
 
         Update();
-        Game.RenderContext.Clear(Color.CornflowerBlue);
+        Game.RenderContext.Clear(Color.Known.CornflowerBlue);
         Render();
         Impl.SwapBuffers();
         // I think someone might try handling input in Render()

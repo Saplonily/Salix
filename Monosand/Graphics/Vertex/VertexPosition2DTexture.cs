@@ -4,38 +4,38 @@ using System.Runtime.InteropServices;
 namespace Monosand;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct VertexPositionTexture : IEquatable<VertexPositionTexture>
+public struct VertexPosition2DTexture : IEquatable<VertexPosition2DTexture>
 {
     public static readonly VertexDeclaration VertexDeclaration;
 
-    public Vector3 Position;
+    public Vector2 Position;
     public Vector2 TextureCoord;
 
-    static VertexPositionTexture()
+    static VertexPosition2DTexture()
     {
-        VertexDeclaration = new(VertexElementType.Vector3, VertexElementType.Vector2);
+        VertexDeclaration = new(VertexElementType.Vector2, VertexElementType.Vector2);
     }
 
-    public VertexPositionTexture(Vector3 position, Vector2 textureCoord)
+    public VertexPosition2DTexture(Vector2 position, Vector2 textureCoord)
     {
         Position = position;
         TextureCoord = textureCoord;
     }
 
     public readonly override bool Equals(object? obj)
-        => obj is VertexPositionTexture texture && Equals(texture);
+        => obj is VertexPosition2DTexture texture && Equals(texture);
 
 
-    public readonly bool Equals(VertexPositionTexture other)
+    public readonly bool Equals(VertexPosition2DTexture other)
         => Position.Equals(other.Position) &&
            TextureCoord.Equals(other.TextureCoord);
 
     public readonly override int GetHashCode()
         => HashCode.Combine(Position, TextureCoord);
 
-    public static bool operator ==(VertexPositionTexture left, VertexPositionTexture right)
+    public static bool operator ==(VertexPosition2DTexture left, VertexPosition2DTexture right)
         => left.Equals(right);
 
-    public static bool operator !=(VertexPositionTexture left, VertexPositionTexture right)
+    public static bool operator !=(VertexPosition2DTexture left, VertexPosition2DTexture right)
         => !(left == right);
 }
