@@ -65,6 +65,8 @@ public class MyMainWindow : Window
         a += 2f * Game.FrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a) + 1f) / 2f * 300f);
         position2 = posBase + new Vector2(0f, (MathF.Sin(a / 1.4f) + 1f) / 2f * 300f);
+        position.Floor();
+        position2.Floor();
         Title = $"Monosand Test.Win32 {DateTime.Now}";
     }
 
@@ -81,7 +83,7 @@ public class MyMainWindow : Window
 
         Game.RenderContext.RenderTarget = tempTarget;
 
-        Game.RenderContext.Clear(Color.Known.Transparent with { A = 20 });
+        Game.RenderContext.Clear(Color.Known.Transparent with { A = 0.2f });
         spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f, c);
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +

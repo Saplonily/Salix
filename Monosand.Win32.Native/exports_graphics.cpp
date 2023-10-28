@@ -4,8 +4,6 @@
 #include "exports.h"
 #include "enums.h"
 
-struct Color { BYTE r, g, b, a; };
-
 class vertex_type_handle
 {
 public:
@@ -75,9 +73,9 @@ EXPORT void CALLCONV MsdgViewport(int x, int y, int width, int height)
     GL_CHECK_ERROR;
 }
 
-EXPORT void CALLCONV MsdgClear(Color c)
+EXPORT void CALLCONV MsdgClear(float* color)
 {
-    glClearColor(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f);
+    glClearColor(color[0], color[1], color[2], color[3]);
     GL_CHECK_ERROR;
     glClear(GL_COLOR_BUFFER_BIT);
     GL_CHECK_ERROR;

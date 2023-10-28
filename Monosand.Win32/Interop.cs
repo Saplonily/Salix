@@ -29,7 +29,7 @@ internal unsafe class Interop
 
     [DllImport(DllPath)] public static extern void MsdgSwapBuffers(IntPtr winHandle);
     [DllImport(DllPath)] public static extern void MsdgViewport(int x, int y, int width, int height);
-    [DllImport(DllPath)] public static extern void MsdgClear(Color color);
+    [DllImport(DllPath)] public static extern void MsdgClear(in Color color);
 
     [DllImport(DllPath)] public static extern IntPtr MsdgRegisterVertexType(VertexElementType* vdecl, int len);
 
