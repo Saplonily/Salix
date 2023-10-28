@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Monosand.Win32;
+﻿namespace Monosand.Win32;
 
 public unsafe partial class Win32Platform : Platform
 {
@@ -59,6 +57,6 @@ public unsafe partial class Win32Platform : Platform
 
     internal override void AttachRenderContext(RenderContext context, Window window)
     {
-       ((Win32RenderContext)context).AttachTo(window);
+        ((Win32RenderContext)context).AttachTo(window);
     }
 }

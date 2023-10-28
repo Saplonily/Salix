@@ -1,8 +1,5 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-
-#pragma warning disable CS8981
 
 using vpct = Monosand.VertexPosition2DColorTexture;
 

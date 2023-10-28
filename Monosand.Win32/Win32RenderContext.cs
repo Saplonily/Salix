@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using System.Threading;
 
 namespace Monosand.Win32;
 
