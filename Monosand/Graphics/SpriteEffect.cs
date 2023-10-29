@@ -7,6 +7,7 @@ public class SpriteEffect : Effect
     protected ShaderParameter paramTex;
     protected ShaderParameter paramTrans;
     protected ShaderParameter paramProjection;
+    protected ShaderParameter paramIsDrawingText;
 
     public SpriteEffect(Shader shader)
         : base(shader)
@@ -21,6 +22,9 @@ public class SpriteEffect : Effect
 
         paramProjection = shader.GetParameter("projection"u8);
         if (!paramProjection.Valid) throw SR.ShaderParamNotFound("projection");
+
+        paramIsDrawingText = shader.GetParameter("isDrawingText"u8);
+        if (!paramIsDrawingText.Valid) throw SR.ShaderParamNotFound("isDrawingText");
         shader.RenderContext.Shader = pshader;
     }
 
@@ -32,4 +36,7 @@ public class SpriteEffect : Effect
 
     public void SetProjection(ref Matrix4x4 projection)
         => paramProjection.Set(ref projection);
+
+    public void SetIsDrawingText(bool value)
+        => paramIsDrawingText.Set(value);
 }

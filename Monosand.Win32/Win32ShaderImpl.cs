@@ -64,6 +64,12 @@ internal class Win32ShaderImpl : Win32GraphicsImplBase, IShaderImpl
             return;
         }
 
+        if (typeof(T) == typeof(bool))
+        {
+            Interop.MsdgSetShaderParamInt(location, Unsafe.As<T, bool>(ref value) ? 1 : 0);
+            return;
+        }
+
         if (typeof(T) == typeof(float))
         {
             Interop.MsdgSetShaderParamFloat(location, Unsafe.As<T, float>(ref value));

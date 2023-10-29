@@ -7,6 +7,6 @@ public abstract class Effect
     public Effect(Shader shader)
         => this.shader = shader;
 
-    public virtual void Apply()
+    public virtual void Use()
         => shader.Use();
 }

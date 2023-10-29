@@ -11,8 +11,7 @@ public sealed partial class SpriteBatch
     private readonly VertexBuffer<vpct> buffer;
     private readonly RenderContext context;
 
-    private SpriteEffect currentEffect = null!;
-    private bool isDrawingText = false;
+    private SpriteEffect effect = null!;
     private Matrix4x4 transform;
     private Matrix4x4 projection;
 
@@ -24,13 +23,28 @@ public sealed partial class SpriteBatch
 
     public RenderContext RenderContext => context;
 
-    public SpriteEffect SpriteEffect { get; set; }
-    public SpriteEffect TextEffect { get; set; }
+    public SpriteEffect Effect
+    {
+        get => effect;
+        set
+        {
+            ThrowHelper.ThrowIfNull(value);
+            if (effect != value)
+            {
+                Flush();
+                value.Use();
+                value.SetProjection(ref projection);
+                value.SetTransform(ref transform);
+                value.SetIsDrawingText(false);
+                effect = value;
+            }
+        }
+    }
 
     public Matrix4x4 Transform
     {
         get => transform;
-        set { transform = value; currentEffect.SetTransform(ref value); }
+        set { transform = value; Effect.SetTransform(ref value); }
     }
 
     /// <summary>
@@ -38,7 +52,7 @@ public sealed partial class SpriteBatch
     /// </summary>
     /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     public SpriteBatch(Game game)
-        : this(game, null, null)
+        : this(game, null)
     {
     }
 
@@ -46,63 +60,38 @@ public sealed partial class SpriteBatch
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
     /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
-    /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
+    /// <param name="spriteEffect">The default <see cref="SpriteBatch.Effect"/> will be used.
     /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
     public SpriteBatch(Game game, SpriteEffect? spriteEffect)
-        : this(game, spriteEffect, null)
-    {
-    }
-
-    /// <summary>
-    /// Construct a <see cref="SpriteBatch"/>.
-    /// </summary>
-    /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
-    /// <param name="spriteShader">The default <see cref="SpriteShader"/> will be used.
-    /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    /// <param name="textShader">The default <see cref="TextShader"/> will be used.
-    /// If's set to <see langword="null"/>, then glsl shader "TextShader.frag" "TextShader.vert" will be loaded and used.</param>
-    public SpriteBatch(Game game, SpriteEffect? spriteEffect, SpriteEffect? textEffect)
     {
         context = game.RenderContext;
         vertices = new vpct[4 * 16];
         indices = new ushort[6 * 16];
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
+        transform = Matrix4x4.Identity;
         if (spriteEffect is null)
         {
             var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            SpriteEffect = new(rl.LoadGlslShader(vert, frag));
+            Effect = new(rl.LoadGlslShader(vert, frag));
         }
         else
         {
-            SpriteEffect = spriteEffect;
+            Effect = spriteEffect;
         }
-        if (textEffect is null)
-        {
-            var rl = game.ResourceLoader;
-            using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
-            using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
-            TextEffect = new(rl.LoadGlslShader(vert, frag));
-        }
-        else
-        {
-            TextEffect = textEffect;
-        }
-        transform = Matrix4x4.Identity;
-        EnsureEffect(SpriteEffect);
 
         context.ViewportChanged += OnContextViewportChanged;
-        OnContextViewportChanged(context, context.Viewport);
     }
 
     private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
     {
+        Effect.Use();
         Matrix4x4 mat = Matrix4x4.Identity;
         mat *= Matrix4x4.CreateTranslation(-rect.Width / 2f, -rect.Height / 2f, 0f);
         mat *= Matrix4x4.CreateScale(2f / rect.Width, -2f / rect.Height, 1f);
         projection = mat;
-        currentEffect.SetProjection(ref mat);
+        Effect.SetProjection(ref mat);
     }
 
     // TODO a more elegant way to replace these methods?
@@ -194,8 +183,8 @@ public sealed partial class SpriteBatch
         ) where T : IEnumerable<char>
     {
         ThrowHelper.ThrowIfNull(spriteFont);
-        EnsureEffect(TextEffect);
-        isDrawingText = true;
+        Flush();
+        Effect.SetIsDrawingText(true);
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 #if NETSTANDARD2_0
@@ -247,7 +236,8 @@ public sealed partial class SpriteBatch
             DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radians, color, tl, br);
             x += entry.Advance / 64f;
         }
-        isDrawingText = false;
+        Flush();
+        Effect.SetIsDrawingText(false);
     }
 
     public void DrawTexture(
@@ -316,10 +306,9 @@ public sealed partial class SpriteBatch
         in RectangleProp<Color> color,
         in RectangleProp<Vector2> position,
         Vector2 textureTopLeft, Vector2 textureBottomRight
-    )
+        )
     {
         ThrowHelper.ThrowIfNull(texture);
-        if (!isDrawingText) EnsureEffect(SpriteEffect);
         if (lastTexture != texture) Flush();
         if (verticesIndex >= ushort.MaxValue - 8) Flush();
         int vind = verticesIndex;
@@ -366,18 +355,5 @@ public sealed partial class SpriteBatch
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
         verticesIndex = indicesIndex = 0;
-    }
-
-    private void EnsureEffect(SpriteEffect effect)
-    {
-        ThrowHelper.ThrowIfNull(effect);
-        if (currentEffect != effect)
-        {
-            Flush();
-            effect.Apply();
-            effect.SetProjection(ref projection);
-            effect.SetTransform(ref transform);
-            currentEffect = effect;
-        }
     }
 }

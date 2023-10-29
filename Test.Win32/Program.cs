@@ -99,25 +99,21 @@ public class MyMainWindow : Window
         if (KeyboardState.IsJustPressed(Key.J))
             times -= times / 3;
 
-        RectangleProp<Color> c = new(Color.Known.AliceBlue, Color.Known.Yellow, Color.Known.RosyBrown, Color.Known.Black);
-
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +
-            $"Ticks: {Game.Ticks}\n" +
-            $"ExpectedFps: {Game.ExpectedFps:F4}\n" +
-            $"Fps: {Game.Fps:F4}\n" +
-            $"DrawText repeats: {times}\n" +
-            $"IsRunningSlowly: {Game.IsRunningSlowly}\n" +
+            $"FrameTime: {Game.FrameTime:F4}\n" +
+            $"DrawTex repeats: {times}\n" +
             $"TextureFilter: {filterType}, F to change\n" +
             $"TextureWrap: {wrapType}, P to change";
 
-        spriteBatch.DrawTexture(
-            texture64x64,
-            position2 + new Vector2(350f, 0f),
-            origin: Vector2.Zero, scale: Vector2.One * 6f,
-            radians: 0.1f, color: c,
-            textureTopLeft: Vector2.Zero, textureBottomRight: Vector2.One * 1.2f
-            );
+        for (int i = 0; i < times; i++)
+            spriteBatch.DrawTexture(
+                texture64x64,
+                position2 + new Vector2(350f, 0f),
+                origin: Vector2.Zero, scale: Vector2.One * 3f,
+                radians: 0.1f + i / 50.0f, color: Color.Known.White,
+                textureTopLeft: Vector2.Zero, textureBottomRight: Vector2.One * 1.2f
+                );
         spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
     }

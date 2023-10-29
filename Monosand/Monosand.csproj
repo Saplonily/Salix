@@ -27,8 +27,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Embedded\SpriteShader.frag" />
     <EmbeddedResource Include="Embedded\SpriteShader.vert" />
-    <EmbeddedResource Include="Embedded\TextShader.frag" />
-    <EmbeddedResource Include="Embedded\TextShader.vert" />
   </ItemGroup>
 
 </Project>
