@@ -90,10 +90,10 @@ public class ResourceLoader
         return LoadTexture2D(fs);
     }
 
-    public Shader LoadGlslShader(string vshFileName, string fshFileName)
+    public Shader LoadGlslShader(string vertFileName, string fragFileName)
     {
-        using var vshfs = OpenReadStream(vshFileName);
-        using var fshfs = OpenReadStream(fshFileName);
+        using var vshfs = OpenReadStream(vertFileName);
+        using var fshfs = OpenReadStream(fragFileName);
         return LoadGlslShader(vshfs, fshfs);
     }
 

@@ -12,6 +12,7 @@ public sealed partial class SpriteBatch
     private readonly RenderContext context;
 
     private SpriteEffect effect = null!;
+    private bool isDrawingText;
     private Matrix4x4 transform;
     private Matrix4x4 projection;
 
@@ -32,20 +33,12 @@ public sealed partial class SpriteBatch
             if (effect != value)
             {
                 Flush();
-                value.Use();
-                value.SetProjection(ref projection);
-                value.SetTransform(ref transform);
-                value.SetIsDrawingText(false);
                 effect = value;
             }
         }
     }
 
-    public Matrix4x4 Transform
-    {
-        get => transform;
-        set { transform = value; Effect.SetTransform(ref value); }
-    }
+    public Matrix4x4 Transform { get => transform; set => transform = value; }
 
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
@@ -86,12 +79,10 @@ public sealed partial class SpriteBatch
 
     private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
     {
-        Effect.Use();
         Matrix4x4 mat = Matrix4x4.Identity;
         mat *= Matrix4x4.CreateTranslation(-rect.Width / 2f, -rect.Height / 2f, 0f);
         mat *= Matrix4x4.CreateScale(2f / rect.Width, -2f / rect.Height, 1f);
         projection = mat;
-        Effect.SetProjection(ref mat);
     }
 
     // TODO a more elegant way to replace these methods?
@@ -184,7 +175,7 @@ public sealed partial class SpriteBatch
     {
         ThrowHelper.ThrowIfNull(spriteFont);
         Flush();
-        Effect.SetIsDrawingText(true);
+        isDrawingText = true;
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 #if NETSTANDARD2_0
@@ -237,7 +228,7 @@ public sealed partial class SpriteBatch
             x += entry.Advance / 64f;
         }
         Flush();
-        Effect.SetIsDrawingText(false);
+        isDrawingText = false;
     }
 
     public void DrawTexture(
@@ -350,6 +341,10 @@ public sealed partial class SpriteBatch
     {
         if (verticesIndex == 0) return;
         context.SetTexture(0, lastTexture!);
+        Effect.Use();
+        Effect.SetIsDrawingText(isDrawingText);
+        Effect.SetProjection(ref projection);
+        Effect.SetTransform(ref transform);
 
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
