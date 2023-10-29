@@ -14,9 +14,12 @@ public class MyMainWindow : Window
 {
     [AllowNull] private Texture2D texture665x680;
     [AllowNull] private Texture2D texture500x500;
+    [AllowNull] private Texture2D texture64x64;
     [AllowNull] private SpriteFont sprFont;
     [AllowNull] private SpriteBatch spriteBatch;
     [AllowNull] private RenderTarget tempTarget;
+    private TextureFilterType filterType;
+    private TextureWrapType wrapType;
 
     Vector2 posBase;
     Vector2 position;
@@ -35,6 +38,7 @@ public class MyMainWindow : Window
     {
         texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
         texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
+        texture64x64 = Game.ResourceLoader.LoadTexture2D("64x64.png");
         try
         {
             sprFont = Game.ResourceLoader.LoadSpriteFont("atlas.png", "atlas_info.bin");
@@ -68,11 +72,27 @@ public class MyMainWindow : Window
         position.Floor();
         position2.Floor();
         Title = $"Monosand Test.Win32 {DateTime.Now}";
+
+        if (KeyboardState.IsJustPressed(Key.F))
+        {
+            filterType += 1;
+            if (filterType == TextureFilterType.LinearMipmapLinear)
+                filterType = TextureFilterType.Linear;
+            (texture500x500.Filter, texture64x64.Filter, texture665x680.Filter) = (filterType, filterType, filterType);
+        }
+        if (KeyboardState.IsJustPressed(Key.P))
+        {
+            wrapType += 1;
+            if (wrapType == TextureWrapType.MirroredRepeat + 1)
+                wrapType = TextureWrapType.ClampToEdge;
+            (texture500x500.Wrap, texture64x64.Wrap, texture665x680.Wrap) = (wrapType, wrapType, wrapType);
+        }
     }
 
     public override void Render()
     {
         base.Render();
+        Game.RenderContext.Clear(Color.Known.CornflowerBlue);
 
         if (KeyboardState.IsJustPressed(Key.H))
             times += times / 3;
@@ -81,26 +101,24 @@ public class MyMainWindow : Window
 
         RectangleProp<Color> c = new(Color.Known.AliceBlue, Color.Known.Yellow, Color.Known.RosyBrown, Color.Known.Black);
 
-        Game.RenderContext.RenderTarget = tempTarget;
-
-        Game.RenderContext.Clear(Color.Known.Transparent with { A = 0.2f });
-        spriteBatch.DrawTexture(texture665x680, position, Vector2.One / 2f, c);
         string str =
             $"DrawCalls: {Game.LastDrawCalls}\n" +
             $"Ticks: {Game.Ticks}\n" +
             $"ExpectedFps: {Game.ExpectedFps:F4}\n" +
             $"Fps: {Game.Fps:F4}\n" +
             $"DrawText repeats: {times}\n" +
-            $"IsRunningSlowly: {Game.IsRunningSlowly}";
-        for (int i = 0; i < times; i++)
-            spriteBatch.DrawText(sprFont, str, position, Vector2.One);
-        spriteBatch.Flush();
+            $"IsRunningSlowly: {Game.IsRunningSlowly}\n" +
+            $"TextureFilter: {filterType}, F to change\n" +
+            $"TextureWrap: {wrapType}, P to change";
 
-        Game.RenderContext.RenderTarget = null;
-        spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10f);
-        spriteBatch.Flush();
-
-        spriteBatch.DrawTexture(texture665x680, position2 + new Vector2(350f, 0f), Vector2.One / 3f, c);
+        spriteBatch.DrawTexture(
+            texture64x64,
+            position2 + new Vector2(350f, 0f),
+            origin: Vector2.Zero, scale: Vector2.One * 6f,
+            radians: 0.1f, color: c,
+            textureTopLeft: Vector2.Zero, textureBottomRight: Vector2.One * 1.2f
+            );
+        spriteBatch.DrawText(sprFont, str, position, Vector2.One);
         spriteBatch.Flush();
     }
 }

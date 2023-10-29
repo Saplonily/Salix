@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Numerics;
 
+#pragma warning disable CS8981
 using vpct = Monosand.VertexPosition2DColorTexture;
 
 namespace Monosand;
@@ -151,14 +152,14 @@ public sealed partial class SpriteBatch
         => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian)
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radians)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, Color.Known.Black);
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radians, Color.Known.Black);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radian, Color color)
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radians, Color color)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radian, color);
+        => DrawText(spriteFont, text, position, origin, Vector2.One, radians, color);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale)
@@ -171,9 +172,9 @@ public sealed partial class SpriteBatch
         => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radian)
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radians)
         where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, scale, radian, Color.Known.Black);
+        => DrawText(spriteFont, text, position, origin, scale, radians, Color.Known.Black);
 
     #endregion
 
@@ -184,11 +185,11 @@ public sealed partial class SpriteBatch
     /// <param name="position">Destination position.</param>
     /// <param name="origin">Origin, as percentage.</param>
     /// <param name="scale">Scaling factor</param>
-    /// <param name="radian">Rotation radians.</param>
+    /// <param name="radians">Rotation radians.</param>
     /// <param name="color">Color, usually <see cref="Color.Black"/>.</param>
     public void DrawText<T>(SpriteFont spriteFont, in T text,
         Vector2 position, Vector2 origin,
-        Vector2 scale, float radian,
+        Vector2 scale, float radians,
         Color color
         ) where T : IEnumerable<char>
     {
@@ -198,11 +199,11 @@ public sealed partial class SpriteBatch
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 #if NETSTANDARD2_0
-        float sin = (float)Math.Sin(radian);
-        float cos = (float)Math.Cos(radian);
+        float sin = (float)Math.Sin(radians);
+        float cos = (float)Math.Cos(radians);
 #else
-        float sin = MathF.Sin(radian);
-        float cos = MathF.Cos(radian);
+        float sin = MathF.Sin(radians);
+        float cos = MathF.Cos(radians);
 #endif
 
         // measure the string
@@ -243,7 +244,7 @@ public sealed partial class SpriteBatch
                 (origin * new Vector2(totalWidth, totalHeight) - new Vector2(x + entry.BearingX, y + spriteFont.Size - entry.BearingY))
                 / new Vector2(entry.Width, entry.Height);
 
-            DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radian, color, tl, br);
+            DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radians, color, tl, br);
             x += entry.Advance / 64f;
         }
         isDrawingText = false;
@@ -252,7 +253,7 @@ public sealed partial class SpriteBatch
     public void DrawTexture(
         Texture2D texture,
         Vector2 position, Vector2 origin,
-        Vector2 scale, float radian, in RectangleProp<Color> color,
+        Vector2 scale, float radians, in RectangleProp<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -270,11 +271,11 @@ public sealed partial class SpriteBatch
 
         // why there isn't MathF in .net std 2.0?
 #if NETSTANDARD2_0
-        float sin = (float)Math.Sin(radian);
-        float cos = (float)Math.Cos(radian);
+        float sin = (float)Math.Sin(radians);
+        float cos = (float)Math.Cos(radians);
 #else
-        float sin = MathF.Sin(radian);
-        float cos = MathF.Cos(radian);
+        float sin = MathF.Sin(radians);
+        float cos = MathF.Cos(radians);
 #endif
 
         // [ cos  -sin ]     [ x ]     [ x * cos - y * sin ]

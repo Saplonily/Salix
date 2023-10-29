@@ -3,7 +3,7 @@
 #define H_ENUMS
 #include "pch.h"
 
-// ../Monosand/Graphics/VertexElementType.cs
+// ../Monosand/Graphics/Vertex/VertexElementType.cs
 enum class VertexElementType
 {
     Single,
@@ -13,7 +13,7 @@ enum class VertexElementType
     Vector4,
 };
 
-// ../Monosand/Graphics/PrimitiveType.cs
+// ../Monosand/Graphics/Vertex/PrimitiveType.cs
 enum class PrimitiveType
 {
     TriangleList,
@@ -23,7 +23,7 @@ enum class PrimitiveType
     PointList
 };
 
-// ../Monosand/Graphics/VertexBufferDataUsage.cs
+// ../Monosand/Graphics/Vertex/VertexBufferDataUsage.cs
 enum class VertexBufferDataUsage
 {
     StaticDraw,
@@ -48,22 +48,33 @@ enum class ImageFormat
     Rgba32
 };
 
-struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };
+enum class TextureFilterType
+{
+    Linear,
+    Nearest,
+    LinearMipmapLinear,
+    LinearMipmapNearest,
+    NearestMipmapLinear,
+    NearestMipmapNearest
+};
 
+enum class TextureWrapType
+{
+    ClampToEdge,
+    Repeat,
+    MirroredRepeat
+};
+
+struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };
 inline vertex_element_glinfo VertexElementType_get_glinfo(VertexElementType type)
 {
     switch (type)
     {
-    case VertexElementType::Single:
-        return vertex_element_glinfo{ 1, GL_FLOAT, sizeof(float) };
-    case VertexElementType::Color:
-        return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
-    case VertexElementType::Vector2:
-        return vertex_element_glinfo{ 2, GL_FLOAT, sizeof(float) };
-    case VertexElementType::Vector3:
-        return vertex_element_glinfo{ 3, GL_FLOAT, sizeof(float) };
-    case VertexElementType::Vector4:
-        return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
+    case VertexElementType::Color: return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
+    case VertexElementType::Single: return vertex_element_glinfo{ 1, GL_FLOAT, sizeof(float) };
+    case VertexElementType::Vector2: return vertex_element_glinfo{ 2, GL_FLOAT, sizeof(float) };
+    case VertexElementType::Vector3: return vertex_element_glinfo{ 3, GL_FLOAT, sizeof(float) };
+    case VertexElementType::Vector4: return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
     }
     assert(false);
     return vertex_element_glinfo{ -1 , NULL, -1 };
@@ -74,16 +85,11 @@ inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
 {
     switch (type)
     {
-    case PrimitiveType::TriangleList:
-        return GL_TRIANGLES;
-    case PrimitiveType::TriangleStrip:
-        return GL_TRIANGLE_STRIP;
-    case PrimitiveType::LineList:
-        return GL_LINES;
-    case PrimitiveType::LineStrip:
-        return GL_LINE_STRIP;
-    case PrimitiveType::PointList:
-        return GL_POINTS;
+    case PrimitiveType::LineList: return GL_LINES;
+    case PrimitiveType::LineStrip: return GL_LINE_STRIP;
+    case PrimitiveType::PointList: return GL_POINTS;
+    case PrimitiveType::TriangleList: return GL_TRIANGLES;
+    case PrimitiveType::TriangleStrip: return GL_TRIANGLE_STRIP;
     }
     assert(false);
     return NULL;
@@ -94,12 +100,9 @@ inline GLenum VertexBufferDataUsage_to_gl(VertexBufferDataUsage type)
 {
     switch (type)
     {
-    case VertexBufferDataUsage::StaticDraw:
-        return GL_STATIC_DRAW;
-    case VertexBufferDataUsage::DynamicDraw:
-        return GL_DYNAMIC_DRAW;
-    case VertexBufferDataUsage::StreamDraw:
-        return GL_STREAM_DRAW;
+    case VertexBufferDataUsage::StreamDraw: return GL_STREAM_DRAW;
+    case VertexBufferDataUsage::StaticDraw: return GL_STATIC_DRAW;
+    case VertexBufferDataUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
     }
     assert(false);
     return NULL;
@@ -110,14 +113,10 @@ inline GLenum ImageFormat_to_gl(ImageFormat format)
 {
     switch (format)
     {
-    case ImageFormat::R8:
-        return GL_RED;
-    case ImageFormat::Rg16:
-        return GL_RG;
-    case ImageFormat::Rgb24:
-        return GL_RGB;
-    case ImageFormat::Rgba32:
-        return GL_RGBA;
+    case ImageFormat::R8: return GL_RED;
+    case ImageFormat::Rg16: return GL_RG;
+    case ImageFormat::Rgb24: return GL_RGB;
+    case ImageFormat::Rgba32: return GL_RGBA;
     }
     assert(false);
     return NULL;
@@ -127,14 +126,37 @@ inline int ImageFormat_get_size(ImageFormat format)
 {
     switch (format)
     {
-    case ImageFormat::R8:
-        return 1;
-    case ImageFormat::Rg16:
-        return 2;
-    case ImageFormat::Rgb24:
-        return 3;
-    case ImageFormat::Rgba32:
-        return 4;
+    case ImageFormat::R8: return 1;
+    case ImageFormat::Rg16: return 2;
+    case ImageFormat::Rgb24: return 3;
+    case ImageFormat::Rgba32: return 4;
+    }
+    assert(false);
+    return -1;
+}
+
+inline GLenum TextureFilterType_to_gl(TextureFilterType type)
+{
+    switch (type)
+    {
+    case TextureFilterType::Linear: return GL_LINEAR;
+    case TextureFilterType::Nearest: return GL_NEAREST;
+    case TextureFilterType::LinearMipmapLinear: return GL_LINEAR_MIPMAP_LINEAR;
+    case TextureFilterType::LinearMipmapNearest: return GL_LINEAR_MIPMAP_NEAREST;
+    case TextureFilterType::NearestMipmapLinear: return GL_NEAREST_MIPMAP_LINEAR;
+    case TextureFilterType::NearestMipmapNearest: return GL_NEAREST_MIPMAP_NEAREST;
+    }
+    assert(false);
+    return -1;
+}
+
+inline GLenum TextureWrapType_to_gl(TextureWrapType type)
+{
+    switch (type)
+    {
+    case TextureWrapType::ClampToEdge: return GL_CLAMP_TO_EDGE;
+    case TextureWrapType::Repeat: return GL_REPEAT;
+    case TextureWrapType::MirroredRepeat: return GL_MIRRORED_REPEAT;
     }
     assert(false);
     return -1;

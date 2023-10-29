@@ -173,13 +173,23 @@ EXPORT void* CALLCONV MsdgCreateTexture(int width, int height)
     GLuint tex;
     glGenTextures(1, &tex); GL_CHECK_ERROR;
     glBindTexture(GL_TEXTURE_2D, tex); GL_CHECK_ERROR;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); GL_CHECK_ERROR;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); GL_CHECK_ERROR;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); GL_CHECK_ERROR;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); GL_CHECK_ERROR;
-    const float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); GL_CHECK_ERROR;
     return (void*)(size_t)tex;
+}
+
+EXPORT void CALLCONV MsdgSetTextureFilter(void* tex_handle, TextureFilterType min, TextureFilterType max)
+{
+    GLuint tex = (GLuint)(size_t)tex_handle;
+    glBindTexture(GL_TEXTURE_2D, tex); GL_CHECK_ERROR;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TextureFilterType_to_gl(min)); GL_CHECK_ERROR;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TextureFilterType_to_gl(max)); GL_CHECK_ERROR;
+}
+
+EXPORT void CALLCONV MsdgSetTextureWrap(void* tex_handle, TextureWrapType wrap)
+{
+    GLuint tex = (GLuint)(size_t)tex_handle;
+    glBindTexture(GL_TEXTURE_2D, tex); GL_CHECK_ERROR;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, TextureWrapType_to_gl(wrap)); GL_CHECK_ERROR;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, TextureWrapType_to_gl(wrap)); GL_CHECK_ERROR;
 }
 
 // TODO support more other formats
@@ -215,7 +225,7 @@ EXPORT void CALLCONV MsdgSetTexture(int index, void* tex_handle)
 {
     glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
     glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
-    
+
 }
 
 EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(const char* vert_source, const char* frag_source)

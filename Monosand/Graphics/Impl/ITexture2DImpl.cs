@@ -2,8 +2,7 @@
 
 internal interface ITexture2DImpl : IDisposable
 {
-    int Width { get; }
-    int Height { get; }
-
     unsafe abstract void SetData(int width, int height, void* data, ImageFormat format);
+    void SetFilter(TextureFilterType filter);
+    void SetWrap(TextureWrapType wrap);
 }

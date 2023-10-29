@@ -15,6 +15,9 @@
     <None Update="500x500.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="64x64.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="665x680.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

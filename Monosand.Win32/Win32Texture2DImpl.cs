@@ -22,6 +22,18 @@ internal sealed class Win32Texture2DImpl : Win32GraphicsImplBase, ITexture2DImpl
         Interop.MsdgSetTextureData(handle, width, height, data, format);
     }
 
+    public void SetFilter(TextureFilterType filter)
+    {
+        EnsureState();
+        Interop.MsdgSetTextureFilter(handle, filter, filter);
+    }
+
+    public void SetWrap(TextureWrapType wrap)
+    {
+        EnsureState();
+        Interop.MsdgSetTextureWrap(handle, wrap);
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
