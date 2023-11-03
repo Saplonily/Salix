@@ -18,6 +18,7 @@ enum class PrimitiveType
 {
     TriangleList,
     TriangleStrip,
+    TriangleFan,
     LineList,
     LineStrip,
     PointList
@@ -88,6 +89,7 @@ inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
     case PrimitiveType::LineList: return GL_LINES;
     case PrimitiveType::LineStrip: return GL_LINE_STRIP;
     case PrimitiveType::PointList: return GL_POINTS;
+    case PrimitiveType::TriangleFan: return GL_TRIANGLE_FAN;
     case PrimitiveType::TriangleList: return GL_TRIANGLES;
     case PrimitiveType::TriangleStrip: return GL_TRIANGLE_STRIP;
     }

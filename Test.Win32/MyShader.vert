@@ -5,6 +5,7 @@ layout (location = 2) in vec2 aTex;
 out vec4 vColor;
 out vec2 vTex;
 
+uniform mat3x2 trans2d;
 uniform mat4 trans;
 uniform mat4 projection;
 
@@ -12,5 +13,5 @@ void main()
 {
     vColor = aColor;
     vTex = aTex;
-    gl_Position = projection * trans * vec4(aPos, 0.0, 1.0);
+    gl_Position = projection * trans * vec4(trans2d * vec3(aPos, 0.0), 0.0, 1.0);
 }

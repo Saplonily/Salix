@@ -6,6 +6,7 @@ public class SpriteEffect : Effect
 {
     protected ShaderParameter paramTex;
     protected ShaderParameter paramTrans;
+    protected ShaderParameter paramTrans2d;
     protected ShaderParameter paramProjection;
     protected ShaderParameter paramIsDrawingText;
 
@@ -23,9 +24,14 @@ public class SpriteEffect : Effect
         paramProjection = shader.GetParameter("projection"u8);
         if (!paramProjection.Valid) throw SR.ShaderParamNotFound("projection");
 
+        paramTrans2d = shader.GetParameter("trans2d"u8);
+        if (!paramTrans2d.Valid) throw SR.ShaderParamNotFound("trans2d");
+
         paramIsDrawingText = shader.GetParameter("isDrawingText"u8);
         if (!paramIsDrawingText.Valid) throw SR.ShaderParamNotFound("isDrawingText");
         shader.RenderContext.Shader = pshader;
+
+        
     }
 
     public void SetTextureIndex(int value)
@@ -33,6 +39,9 @@ public class SpriteEffect : Effect
 
     public void SetTransform(ref Matrix4x4 transform)
         => paramTrans.Set(ref transform);
+
+    public void SetTransform2D(ref Matrix3x2 transform2d)
+        => paramTrans2d.Set(ref transform2d);
 
     public void SetProjection(ref Matrix4x4 projection)
         => paramProjection.Set(ref projection);

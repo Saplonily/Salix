@@ -13,6 +13,7 @@ public sealed partial class SpriteBatch
 
     private SpriteEffect effect = null!;
     private bool isDrawingText;
+    private Matrix3x2 transform2d;
     private Matrix4x4 transform;
     private Matrix4x4 projection;
 
@@ -39,6 +40,7 @@ public sealed partial class SpriteBatch
     }
 
     public Matrix4x4 Transform { get => transform; set => transform = value; }
+    public Matrix3x2 Transform2D { get => transform2d; set => transform2d = value; }
 
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
@@ -62,6 +64,7 @@ public sealed partial class SpriteBatch
         indices = new ushort[6 * 16];
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
         transform = Matrix4x4.Identity;
+        transform2d = Matrix3x2.Identity;
         if (spriteEffect is null)
         {
             var rl = game.ResourceLoader;
@@ -345,6 +348,7 @@ public sealed partial class SpriteBatch
         Effect.SetIsDrawingText(isDrawingText);
         Effect.SetProjection(ref projection);
         Effect.SetTransform(ref transform);
+        Effect.SetTransform2D(ref transform2d);
 
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         buffer.SetData(vertices.AsSpan(0, verticesIndex));

@@ -83,6 +83,13 @@ internal class Win32ShaderImpl : Win32GraphicsImplBase, IShaderImpl
             return;
         }
 
+        if (typeof(T) == typeof(Matrix3x2))
+        {
+            ref var mat = ref Unsafe.As<T, Matrix3x2>(ref value);
+            Interop.MsdgSetShaderParamMat3x2(location, (float*)Unsafe.AsPointer(ref mat), false);
+            return;
+        }
+
         if (typeof(T) == typeof(Matrix4x4))
         {
             ref var mat = ref Unsafe.As<T, Matrix4x4>(ref value);

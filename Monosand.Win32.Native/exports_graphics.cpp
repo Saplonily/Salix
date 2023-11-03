@@ -284,6 +284,10 @@ EXPORT void CALLCONV MsdgSetShaderParamMat4(int loc, float* mat, byte transpose)
 {
     glUniformMatrix4fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
 }
+EXPORT void CALLCONV MsdgSetShaderParamMat3x2(int loc, float* mat, byte transpose)
+{
+    glUniformMatrix3x2fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
+}
 #pragma endregion
 
 EXPORT void* CALLCONV MsdgCreateRenderTarget(void* tex_handle)
