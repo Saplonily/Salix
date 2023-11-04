@@ -87,6 +87,7 @@ public sealed partial class SpriteBatch
         context.ViewportChanged += OnContextViewportChanged;
         OnContextViewportChanged(context, context.Viewport);
         game.Window.PreviewSwapBuffer += Flush;
+        context.PreviewViewportChanged += Flush;
     }
 
     private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
