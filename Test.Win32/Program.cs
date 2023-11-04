@@ -48,7 +48,8 @@ public class MyMainWindow : Window
         }
         tempTarget = new(Game.RenderContext, 300, 600);
         spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
-        spriteBatch = new SpriteBatch(Game, spriteEffect);
+        //spriteBatch = new SpriteBatch(Game, spriteEffect);
+        spriteBatch = new(Game);
     }
 
     public override void Update()
@@ -89,21 +90,17 @@ public class MyMainWindow : Window
             $"FrameTime: {Game.FrameTime:F4}\n" +
             $"DrawTex repeats: {times}\n";
 
-        for (int i = -10; i < 30; i++)
-            for (int j = -10; j < 30; j++)
-            {
-                spriteBatch.DrawTexture(spriteBatch.Texture1x1White, new Vector2(i * 50f, j * 50f), Vector2.One * 5f);
-                spriteBatch.DrawTexture(
-                    spriteBatch.Texture1x1White, 
-                    new Vector2(i * 50f, j * 50f) + new Vector2(25f, 25f),
-                    Vector2.One * 5f,
-                    Color.Known.Black
-                    );
-            }
-
         for (int i = 0; i < times; i++)
             spriteBatch.DrawTexture(texture768x448, position + new Vector2(350f, 0f), scale: Vector2.One);
         spriteBatch.DrawText(sprFont, str, position2, Vector2.One);
+
+        for (int i = 0; i < times; i++)
+            spriteBatch.DrawCircle(
+            texture665x680,
+            Matrix3x2.CreateSkew(0.1f, 0.1f) *
+            Matrix3x2.CreateScale(75f, 75f) *
+            Matrix3x2.CreateTranslation(500f, 250f)
+            );
     }
 }
 

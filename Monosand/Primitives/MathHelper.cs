@@ -13,9 +13,5 @@ public static class MathHelper
     // TODO remove these tool methods after making our own Vector2
 
     public static Vector2 Floored(this Vector2 vector)
-#if NETSTANDARD2_0
-        => new((float)Math.Floor(vector.X), (float)Math.Floor(vector.Y));
-#else
         => new(MathF.Floor(vector.X), MathF.Floor(vector.Y));
-#endif
 }

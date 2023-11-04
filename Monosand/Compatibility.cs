@@ -1,15 +1,20 @@
-﻿#if NETSTANDARD2_1
-namespace System.Runtime.CompilerServices
-{
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    public sealed class CallerArgumentExpressionAttribute : Attribute
-    {
-        public CallerArgumentExpressionAttribute(string parameterName)
-        {
-            ParameterName = parameterName;
-        }
+﻿#if NETSTANDARD2_0
 
-        public string ParameterName { get; }
+namespace System
+{
+    public static class MathF
+    {
+        public const float PI = 3.14159274F;
+
+        public static float Sin(float x)
+            => (float)Math.Sin(x);
+
+        public static float Cos(float x)
+            => (float)Math.Cos(x);
+
+        public static float Floor(float x)
+            => (int)x;
     }
 }
+
 #endif

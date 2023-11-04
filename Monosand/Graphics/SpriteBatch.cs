@@ -9,6 +9,7 @@ namespace Monosand;
 public sealed partial class SpriteBatch
 {
     private readonly VertexBuffer<vpct> buffer;
+    private readonly VertexBuffer<vpct> circleBuffer;
     private readonly RenderContext context;
 
     private SpriteShader shader = null!;
@@ -62,9 +63,11 @@ public sealed partial class SpriteBatch
         context = game.RenderContext;
         vertices = new vpct[4 * 16];
         indices = new ushort[6 * 16];
-        buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
         transform2d = Matrix3x2.Identity;
         projection2d = Matrix3x2.Identity;
+        buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
+        circleBuffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.DynamicDraw, false);
+        PrepareCircleVertices();
         ReadOnlySpan<byte> imgData = stackalloc byte[4] { 255, 255, 255, 255 };
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
@@ -121,14 +124,14 @@ public sealed partial class SpriteBatch
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, in RectangleProp<Color> color)
         => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
 
-    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix)
-        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
+    public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix)
+        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
 
-    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color)
-        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(color), Vector2.Zero, Vector2.One);
+    public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color)
+        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(color), Vector2.Zero, Vector2.One);
 
-    public void DrawTextureMatrix(Texture2D texture, in Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
-        => DrawTextureMatrix(texture, in matrix, new RectangleProp<Color>(color), textureTopLeft, textureBottomRight);
+    public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
+        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(color), textureTopLeft, textureBottomRight);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
@@ -167,6 +170,7 @@ public sealed partial class SpriteBatch
 
     #endregion
 
+
     /// <summary>Draw lines of text to the <see cref="Monosand.RenderContext"/>.</summary>
     /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
     /// <param name="spriteFont">The <see cref="SpriteFont"/> will be used to draw.</param>
@@ -187,13 +191,6 @@ public sealed partial class SpriteBatch
         isDrawingText = true;
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
-#if NETSTANDARD2_0
-        float sin = (float)Math.Sin(radians);
-        float cos = (float)Math.Cos(radians);
-#else
-        float sin = MathF.Sin(radians);
-        float cos = MathF.Cos(radians);
-#endif
 
         // measure the string
         float totalWidth = 0;
@@ -286,7 +283,7 @@ public sealed partial class SpriteBatch
     }
 
     public void DrawTextureMatrix(
-        Texture2D texture, in Matrix3x2 matrix,
+        Texture2D texture, Matrix3x2 matrix,
         in RectangleProp<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
@@ -345,19 +342,47 @@ public sealed partial class SpriteBatch
         indicesIndex += 6;
     }
 
+    public void DrawCircle(Texture2D texture, Matrix3x2 matrix)
+    {
+        ThrowHelper.ThrowIfNull(texture);
+        Flush();
+        context.SetTexture(0, texture);
+        Shader.Use();
+        Shader.SetTransform2D(transform2d * matrix);
+        Shader.SetProjection2D(projection2d);
+        Shader.SetIsDrawingText(false);
+        context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
+        Shader.SetTransform2D(transform2d);
+    }
+
     /// <summary>Flush the batched draw actions.</summary>
     public void Flush()
     {
         if (verticesIndex == 0) return;
         context.SetTexture(0, lastTexture!);
         Shader.Use();
-        Shader.SetIsDrawingText(isDrawingText);
         Shader.SetTransform2D(transform2d);
         Shader.SetProjection2D(projection2d);
+        Shader.SetIsDrawingText(isDrawingText);
 
-        buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
+        buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
         verticesIndex = indicesIndex = 0;
+    }
+
+    private unsafe void PrepareCircleVertices()
+    {
+        int sides = 24;
+        float radianPerSide = MathF.PI * 2f / sides;
+
+        var vertices = stackalloc vpct[sides];
+        for (int i = 0; i < sides; i++)
+        {
+            Vector2 pos = new(MathF.Cos(radianPerSide * i), MathF.Sin(radianPerSide * i));
+            vertices[i] = new(pos, Vector4.One, new(pos.X / 2f + 0.5f, 1.0f - (pos.Y / 2f + 0.5f)));
+        }
+
+        circleBuffer.SetData(vertices, sides);
     }
 }
