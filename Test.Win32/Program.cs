@@ -19,7 +19,7 @@ public class MyMainWindow : Window
     [AllowNull] private SpriteFont sprFont;
     [AllowNull] private SpriteBatch spriteBatch;
     [AllowNull] private RenderTarget tempTarget;
-    [AllowNull] private SpriteEffect spriteEffect;
+    [AllowNull] private SpriteShader spriteEffect;
 
     Vector2 posBase;
     Vector2 position;
@@ -32,7 +32,7 @@ public class MyMainWindow : Window
     {
     }
 
-    public override void OnCreated()
+    public override void OnInitialize()
     {
         texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
         texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
@@ -47,7 +47,7 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of Test.Win32!");
         }
         tempTarget = new(Game.RenderContext, 300, 600);
-        spriteEffect = new SpriteEffect(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
+        spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
         spriteBatch = new SpriteBatch(Game, spriteEffect);
     }
 
@@ -69,8 +69,8 @@ public class MyMainWindow : Window
         a += 2f * Game.FrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a / 20.0f) + 1f) / 2f * 300f);
         position2 = posBase + new Vector2(0f, (MathF.Sin(a / 14.0f) + 1f) / 2f * 300f);
-        position.Floor();
-        position2.Floor();
+        position = position.Floored();
+        position2 = position2.Floored();
         Title = $"Monosand Test.Win32 | {DateTime.Now} | FPS: {Game.Fps:F2} | FrameTime: {Game.FrameTime:F4} | Times: {times}";
     }
 
@@ -89,10 +89,21 @@ public class MyMainWindow : Window
             $"FrameTime: {Game.FrameTime:F4}\n" +
             $"DrawTex repeats: {times}\n";
 
+        for (int i = -10; i < 30; i++)
+            for (int j = -10; j < 30; j++)
+            {
+                spriteBatch.DrawTexture(spriteBatch.Texture1x1White, new Vector2(i * 50f, j * 50f), Vector2.One * 5f);
+                spriteBatch.DrawTexture(
+                    spriteBatch.Texture1x1White, 
+                    new Vector2(i * 50f, j * 50f) + new Vector2(25f, 25f),
+                    Vector2.One * 5f,
+                    Color.Known.Black
+                    );
+            }
+
         for (int i = 0; i < times; i++)
-            spriteBatch.DrawTexture(texture768x448, position2 + new Vector2(350f, 0f), scale: Vector2.One);
-        spriteBatch.DrawText(sprFont, str, position, Vector2.One);
-        spriteBatch.Flush();
+            spriteBatch.DrawTexture(texture768x448, position + new Vector2(350f, 0f), scale: Vector2.One);
+        spriteBatch.DrawText(sprFont, str, position2, Vector2.One);
     }
 }
 

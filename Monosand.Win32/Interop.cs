@@ -98,8 +98,8 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetShaderParamInt(int location, int value);
     [DllImport(DllPath)] public static extern void MsdgSetShaderParamFloat(int location, float value);
     [DllImport(DllPath)] public static extern void MsdgSetShaderParamVec4(int location, float* value);
-    [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat4(int location, float* value, bool transpose);
-    [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat3x2(int location, float* value, bool transpose);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat4(int location, float* value);
+    [DllImport(DllPath)] public static extern void MsdgSetShaderParamMat3x2(int location, float* value);
 
     #endregion
 

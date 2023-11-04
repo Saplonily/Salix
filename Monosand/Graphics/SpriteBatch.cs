@@ -11,11 +11,10 @@ public sealed partial class SpriteBatch
     private readonly VertexBuffer<vpct> buffer;
     private readonly RenderContext context;
 
-    private SpriteEffect effect = null!;
+    private SpriteShader shader = null!;
     private bool isDrawingText;
     private Matrix3x2 transform2d;
-    private Matrix4x4 transform;
-    private Matrix4x4 projection;
+    private Matrix3x2 projection2d;
 
     private Texture2D? lastTexture;
     private vpct[] vertices;
@@ -25,22 +24,23 @@ public sealed partial class SpriteBatch
 
     public RenderContext RenderContext => context;
 
-    public SpriteEffect Effect
+    public Texture2D Texture1x1White { get; }
+    public ref Matrix3x2 Transform2D => ref transform2d;
+
+    public SpriteShader Shader
     {
-        get => effect;
+        get => shader;
         set
         {
             ThrowHelper.ThrowIfNull(value);
-            if (effect != value)
+            if (shader != value)
             {
                 Flush();
-                effect = value;
+                shader = value;
             }
         }
     }
 
-    public Matrix4x4 Transform { get => transform; set => transform = value; }
-    public Matrix3x2 Transform2D { get => transform2d; set => transform2d = value; }
 
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
@@ -55,37 +55,43 @@ public sealed partial class SpriteBatch
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
     /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
-    /// <param name="spriteEffect">The default <see cref="SpriteBatch.Effect"/> will be used.
+    /// <param name="spriteEffect">The default <see cref="SpriteBatch.Shader"/> will be used.
     /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    public SpriteBatch(Game game, SpriteEffect? spriteEffect)
+    public SpriteBatch(Game game, SpriteShader? spriteEffect)
     {
         context = game.RenderContext;
         vertices = new vpct[4 * 16];
         indices = new ushort[6 * 16];
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
-        transform = Matrix4x4.Identity;
         transform2d = Matrix3x2.Identity;
+        projection2d = Matrix3x2.Identity;
+        ReadOnlySpan<byte> imgData = stackalloc byte[4] { 255, 255, 255, 255 };
+        Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
+        Texture1x1White.Filter = TextureFilterType.Nearest;
+
         if (spriteEffect is null)
         {
             var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            Effect = new(rl.LoadGlslShader(vert, frag));
+            Shader = new(rl.LoadGlslShader(vert, frag));
         }
         else
         {
-            Effect = spriteEffect;
+            Shader = spriteEffect;
         }
 
         context.ViewportChanged += OnContextViewportChanged;
+        OnContextViewportChanged(context, context.Viewport);
+        game.Window.PreviewSwapBuffer += Flush;
     }
 
     private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
     {
-        Matrix4x4 mat = Matrix4x4.Identity;
-        mat *= Matrix4x4.CreateTranslation(-rect.Width / 2f, -rect.Height / 2f, 0f);
-        mat *= Matrix4x4.CreateScale(2f / rect.Width, -2f / rect.Height, 1f);
-        projection = mat;
+        Matrix3x2 mat = Matrix3x2.Identity;
+        mat *= Matrix3x2.CreateScale(2f / rect.Width, -2f / rect.Height);
+        mat *= Matrix3x2.CreateTranslation(-1f, 1f);
+        projection2d = mat;
     }
 
     // TODO a more elegant way to replace these methods?
@@ -344,11 +350,10 @@ public sealed partial class SpriteBatch
     {
         if (verticesIndex == 0) return;
         context.SetTexture(0, lastTexture!);
-        Effect.Use();
-        Effect.SetIsDrawingText(isDrawingText);
-        Effect.SetProjection(ref projection);
-        Effect.SetTransform(ref transform);
-        Effect.SetTransform2D(ref transform2d);
+        Shader.Use();
+        Shader.SetIsDrawingText(isDrawingText);
+        Shader.SetTransform2D(transform2d);
+        Shader.SetProjection2D(projection2d);
 
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         buffer.SetData(vertices.AsSpan(0, verticesIndex));

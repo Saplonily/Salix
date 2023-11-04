@@ -15,6 +15,7 @@ public sealed class Win32RenderContext : RenderContext
     private bool vSyncEnabled = false;
 
     public override event ViewportChangedEventHandler? ViewportChanged;
+    public override event Action? PreviewViewportChanged;
 
     public override Shader? Shader
     {
@@ -49,6 +50,7 @@ public sealed class Win32RenderContext : RenderContext
         set
         {
             EnsureState();
+            PreviewViewportChanged?.Invoke();
             Interop.MsdgViewport(value.X, value.Y, value.Width, value.Height);
             ViewportChanged?.Invoke(this, value);
             viewport = value;

@@ -5,9 +5,8 @@ public class Game
     public const int DefaultWindowWidth = 1280;
     public const int DefaultWindowHeight = 720;
 
-    //private static Game? instance;
+    private readonly Platform platform;
     private Window? window;
-    private Platform platform;
     private long ticks;
     private int laggedFrames;
 
@@ -21,15 +20,9 @@ public class Game
                 throw SR.PropSet(nameof(Window));
             window = value;
             platform.AttachRenderContext(RenderContext, window);
-            window.OnCreated();
+            window.OnInitialize();
         }
     }
-
-    //public static Game Instance
-    //{
-    //    get => instance ?? throw SR.GameNotNewed;
-    //    set => instance = instance is null ? value : throw SR.GameHasBeenNewed;
-    //}
 
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
@@ -75,7 +68,6 @@ public class Game
         platform.Initialize();
         RenderContext = platform.CreateRenderContext();
 
-        //Instance = this;
         this.platform = platform;
         ExpectedFps = 60d;
         FrameTime = 1d / ExpectedFps;

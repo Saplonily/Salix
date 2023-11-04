@@ -6,7 +6,7 @@ in vec2 vTex;
 uniform sampler2D tex;
 uniform bool isDrawingText;
 
-const float offset = 1.0 / 200.0;
+const float offset = 1.0 / 300.0;
 
 void main()
 {
@@ -23,9 +23,9 @@ void main()
     );
 
     float kernel[9] = float[](
-        1.0 / 16, 2.0 / 16, 1.0 / 16,
-        2.0 / 16, 4.0 / 16, 2.0 / 16,
-        1.0 / 16, 2.0 / 16, 1.0 / 16
+        0.0947416, 0.118318, 0.0947416,
+        0.1183180, 0.147761, 0.1183180,
+        0.0947416, 0.118318, 0.0947416
     );
 
     vec4 sampleTex[9];

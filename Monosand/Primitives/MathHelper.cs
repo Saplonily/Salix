@@ -18,11 +18,4 @@ public static class MathHelper
 #else
         => new(MathF.Floor(vector.X), MathF.Floor(vector.Y));
 #endif
-
-    public static void Floor(this ref Vector2 vector)
-#if NETSTANDARD2_0
-        => (vector.X, vector.Y) = ((float)Math.Floor(vector.X), (float)Math.Floor(vector.Y));
-#else
-        => (vector.X, vector.Y) = (MathF.Floor(vector.X), MathF.Floor(vector.Y));
-#endif
 }

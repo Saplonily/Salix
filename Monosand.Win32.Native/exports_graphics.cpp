@@ -280,13 +280,13 @@ EXPORT void CALLCONV MsdgSetShaderParamVec4(int loc, float* vec)
 {
     glUniform4fv(loc, 1, vec); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamMat4(int loc, float* mat, byte transpose)
+EXPORT void CALLCONV MsdgSetShaderParamMat4(int loc, float* mat)
 {
-    glUniformMatrix4fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
+    glUniformMatrix4fv(loc, 1, true, mat); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamMat3x2(int loc, float* mat, byte transpose)
+EXPORT void CALLCONV MsdgSetShaderParamMat3x2(int loc, float* mat)
 {
-    glUniformMatrix3x2fv(loc, 1, transpose, mat); GL_CHECK_ERROR;
+    glUniformMatrix3x2fv(loc, 1, false, mat); GL_CHECK_ERROR;
 }
 #pragma endregion
 

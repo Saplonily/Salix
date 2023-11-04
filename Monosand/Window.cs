@@ -81,6 +81,8 @@ public class Window
     /// <summary>Occurs after the window got focus.</summary>
     public event Action<Window>? GotFocus;
 
+    internal event Action? PreviewSwapBuffer;
+
     /// <summary>Construct a window.</summary>
     public Window(Game game)
     {
@@ -130,8 +132,8 @@ public class Window
         Resized?.Invoke(this, width, height);
     }
 
-    /// <summary>Called when the window created.</summary>
-    public virtual void OnCreated()
+    /// <summary>Called when the window is ready to initialize.</summary>
+    public virtual void OnInitialize()
     {
         size = Impl.Size;
         position = Impl.Position;
@@ -182,7 +184,11 @@ public class Window
         PointerState.AddWheelDelta(delta);
     }
 
-    internal void SwapBuffers() => Impl.SwapBuffers();
+    internal void SwapBuffers()
+    {
+        PreviewSwapBuffer?.Invoke();
+        Impl.SwapBuffers();
+    }
 
     internal void Tick()
     {

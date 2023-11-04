@@ -11,6 +11,7 @@ public abstract class RenderContext
     private int creationThreadId;
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
+    public abstract event Action? PreviewViewportChanged;
 
     public abstract Shader? Shader { get; set; }
     public abstract RenderTarget? RenderTarget { get; set; }
