@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-internal interface IRenderTargetImpl : IDisposable
+internal interface IRenderTargetImpl : IGraphicsImpl
 {
 
 }

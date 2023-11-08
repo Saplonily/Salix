@@ -5,10 +5,11 @@ namespace Monosand;
 // TODO dispose impl
 public abstract class RenderContext
 {
+    private readonly List<Action> queuedActions;
+    private readonly int creationThreadId;
     protected long drawcalls;
     protected Size windowSize;
-    private List<Action> queuedActions;
-    private int creationThreadId;
+
     public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
     public abstract event ViewportChangedEventHandler? ViewportChanged;
     public abstract event Action? PreviewViewportChanged;
@@ -26,7 +27,7 @@ public abstract class RenderContext
 
     public RenderContext()
     {
-        queuedActions = new(4);
+        queuedActions = new(8);
         creationThreadId = Environment.CurrentManagedThreadId;
     }
 
@@ -48,11 +49,7 @@ public abstract class RenderContext
 
     public abstract void SetTexture(int index, Texture2D texture2D);
 
-    internal abstract IVertexBufferImpl CreateVertexBufferImpl(
-        VertexDeclaration vertexDeclaration,
-        VertexBufferDataUsage dataUsage,
-        bool indexed
-        );
+    internal abstract IVertexBufferImpl CreateVertexBufferImpl(VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage, bool indexed);
 
     internal abstract ITexture2DImpl CreateTexture2DImpl(int width, int height);
 

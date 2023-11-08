@@ -97,7 +97,6 @@ public class MyMainWindow : Window
         for (int i = 0; i < times; i++)
             spriteBatch.DrawCircle(
             texture665x680,
-            Matrix3x2.CreateSkew(0.1f, 0.1f) *
             Matrix3x2.CreateScale(75f, 75f) *
             Matrix3x2.CreateTranslation(500f, 250f)
             );

@@ -7,14 +7,11 @@ public sealed class RenderTarget : GraphicsResource
     public Texture2D Texture { get; private set; }
     internal IRenderTargetImpl Impl { get; private set; }
 
-    public RenderTarget(RenderContext renderContext, int width, int height)
+    public unsafe RenderTarget(RenderContext renderContext, int width, int height)
         : base(renderContext)
     {
         var tex = new Texture2D(renderContext, width, height);
-        unsafe
-        {
-            tex.SetData(width, height, (void*)0, ImageFormat.Rgba32);
-        }
+        tex.SetData(width, height, (void*)0, ImageFormat.Rgba32);
         Impl = renderContext.CreateRenderTargetImpl(tex);
         Texture = tex;
     }

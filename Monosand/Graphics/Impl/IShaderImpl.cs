@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-internal interface IShaderImpl : IDisposable
+internal interface IShaderImpl : IGraphicsImpl
 {
     int GetParameterLocation(string name);
     int GetParameterLocation(ReadOnlySpan<byte> nameUtf8);

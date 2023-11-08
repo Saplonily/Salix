@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-internal interface IVertexBufferImpl : IDisposable
+internal interface IVertexBufferImpl : IGraphicsImpl
 {
     bool Indexed { get; }
     unsafe void SetIndexData(ushort* data, int count);
