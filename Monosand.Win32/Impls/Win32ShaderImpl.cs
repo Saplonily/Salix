@@ -108,10 +108,7 @@ internal class Win32ShaderImpl : Win32GraphicsImplBase, IShaderImpl
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (handle != IntPtr.Zero)
-        {
-            Interop.MsdgDeleteShader(handle);
-            handle = IntPtr.Zero;
-        }
+        Interop.MsdgDeleteShader(handle);
+        handle = IntPtr.Zero;
     }
 }

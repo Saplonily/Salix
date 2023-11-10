@@ -52,13 +52,13 @@ internal unsafe class Interop
 
     [DllImport(DllPath)]
     public static extern void MsdgSetIndexBufferData(
-         IntPtr vertexBuffer,
+        IntPtr vertexBuffer,
         void* data, int dataSize, VertexBufferDataUsage dataUsage
     );
 
     [DllImport(DllPath)]
     public static extern void MsdgDrawBufferPrimitives(
-         IntPtr bufferHandle, PrimitiveType primitiveType,
+        IntPtr bufferHandle, PrimitiveType primitiveType,
         int verticesCount
         );
 

@@ -47,9 +47,13 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of Test.Win32!");
         }
         tempTarget = new(Game.RenderContext, 300, 600);
-        spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
-        //spriteBatch = new SpriteBatch(Game, spriteEffect);
-        spriteBatch = new(Game);
+            spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
+            //spriteBatch = new SpriteBatch(Game, spriteEffect);
+        for (int i = 0; i < 100; i++)
+        {
+            spriteBatch = new(Game);
+            GC.Collect();
+        }
     }
 
     public override void Update()

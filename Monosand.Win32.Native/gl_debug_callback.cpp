@@ -40,6 +40,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum se
     fwrite(msg, sizeof(GLchar), length, stderr);
     if (length && msg[length - 1] != '\n')
         putc('\n', stderr);
+    DebugBreak();
 }
 
 #endif

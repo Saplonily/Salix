@@ -1,5 +1,6 @@
 ﻿namespace Monosand.Win32;
 
+// TODO dispose impl
 internal class Win32RenderTargetImpl : Win32GraphicsImplBase, IRenderTargetImpl
 {
     private IntPtr handle;

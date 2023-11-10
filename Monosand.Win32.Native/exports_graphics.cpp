@@ -88,8 +88,10 @@ EXPORT void CALLCONV MsdgSetVSyncEnabled(byte enable)
 
 EXPORT void* CALLCONV MsdgRegisterVertexType(VertexElementType* type, int len)
 {
+    VertexElementType* tptr = new VertexElementType[len];
+    memcpy(tptr, type, len * sizeof(VertexElementType));
     vertex_type_handle* h = small_alloc<vertex_type_handle>();
-    h->type_ptr = type;
+    h->type_ptr = tptr;
     h->length = len;
     h->default_vao_id = 0;
     return h;
@@ -242,7 +244,6 @@ EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(const char* vert_source, const ch
     glLinkProgram(prog); GL_CHECK_ERROR;
     glDeleteShader(vsh); GL_CHECK_ERROR;
     glDeleteShader(fsh); GL_CHECK_ERROR;
-
     return (void*)(size_t)prog;
 }
 
@@ -250,7 +251,7 @@ EXPORT void CALLCONV MsdgDeleteShader(void* shader_handle)
 {
     GLuint prog = (GLuint)(size_t)shader_handle;
     assert(prog != 0);
-    glDeleteShader(prog); GL_CHECK_ERROR;
+    glDeleteProgram(prog); GL_CHECK_ERROR;
 }
 
 EXPORT void CALLCONV MsdgSetShader(void* shader_handle)

@@ -1,12 +1,15 @@
-﻿namespace Monosand.Win32;
+﻿using System.Diagnostics;
+
+namespace Monosand.Win32;
 
 internal sealed unsafe class Win32VertexBufferImpl : Win32GraphicsImplBase, IVertexBufferImpl
 {
-    private bool indexed;
-    private VertexBufferDataUsage dataUsage;
+    private readonly bool indexed;
+    private readonly VertexBufferDataUsage dataUsage;
     private IntPtr handle;
     private int verticesCount;
     private int indicesCount;
+
     bool IVertexBufferImpl.Indexed => indexed;
 
     internal int IndicesCount { get { EnsureState(); return indicesCount; } }
@@ -45,10 +48,7 @@ internal sealed unsafe class Win32VertexBufferImpl : Win32GraphicsImplBase, IVer
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (handle != IntPtr.Zero)
-        {
-            Interop.MsdgDeleteVertexBuffer(handle);
-            handle = IntPtr.Zero;
-        }
+        Interop.MsdgDeleteVertexBuffer(handle);
+        handle = IntPtr.Zero;
     }
 }

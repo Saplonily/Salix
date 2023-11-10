@@ -37,10 +37,7 @@ internal sealed class Win32Texture2DImpl : Win32GraphicsImplBase, ITexture2DImpl
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (handle != IntPtr.Zero)
-        {
-            Interop.MsdgDeleteTexture(handle);
-            handle = IntPtr.Zero;
-        }
+        Interop.MsdgDeleteTexture(handle);
+        handle = IntPtr.Zero;
     }
 }
