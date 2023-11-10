@@ -60,7 +60,7 @@ public class Game
     /// <summary>Shortcut to 1d / <see cref="VSyncFrameTime"/>. Usally the refresh rate of your display.</summary>
     public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
-    public long LastDrawCalls { get; private set; }
+    public int LastDrawCalls { get; private set; }
 
     public Game(Platform platform)
     {
@@ -114,8 +114,8 @@ public class Game
 
             long pdrawcalls = RenderContext.TotalDrawCalls;
             window.Tick();
-            LastDrawCalls = RenderContext.TotalDrawCalls - pdrawcalls;
-
+            LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
+            
             ticks++;
             // -----------------
 
