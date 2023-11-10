@@ -11,4 +11,11 @@ internal class Win32RenderTargetImpl : Win32GraphicsImplBase, IRenderTargetImpl
     {
         handle = Interop.MsdgCreateRenderTarget(impl.Handle);
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        Interop.MsdgDeleteRenderTarget(handle);
+        handle = IntPtr.Zero;
+    }
 }

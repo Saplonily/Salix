@@ -13,7 +13,8 @@ internal class Win32GraphicsImplBase : IGraphicsImpl
         => renderContext = context;
 
     protected virtual void Dispose(bool disposing)
-    { }
+    { 
+    }
 
     protected void EnsureState()
         => ThrowHelper.ThrowIfDisposed(renderContext is null, this);

@@ -317,6 +317,13 @@ EXPORT void CALLCONV MsdgSetRenderTarget(void* fbo_handle)
     }
 }
 
+EXPORT void CALLCONV MsdgDeleteRenderTarget(void* fbo_handle)
+{
+    GLuint fbo = (GLuint)(size_t)fbo_handle;
+    assert(fbo != 0);
+    glDeleteFramebuffers(1, &fbo);
+}
+
 // just temporarily use stb_image as it's head-only
 // you can always switch to other libraries you like easily here
 static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
