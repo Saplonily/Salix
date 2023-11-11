@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monosand.Win32", "Monosand.
 		{0DE20E94-D183-433D-90BA-EAEE08893075} = {0DE20E94-D183-433D-90BA-EAEE08893075}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Monosand.Win32.Native", "Monosand.Win32.Native\Monosand.Win32.Native.vcxproj", "{0DE20E94-D183-433D-90BA-EAEE08893075}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmsd", "libmsd\build\libmsd.vcxproj", "{0DE20E94-D183-433D-90BA-EAEE08893075}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Win32", "Test.Win32\Test.Win32.csproj", "{E07D9D86-52E8-466F-9020-B6FFBBBD446E}"
 EndProject

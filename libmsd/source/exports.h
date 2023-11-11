@@ -2,7 +2,7 @@
 #ifndef H_EXPORTS
 #define H_EXPORTS
 
-#include <WinUser.h>
+#include <Windows.h>
 #include "enums.h"
 #define EXPORT extern "C" __declspec(dllexport)
 #define CALLCONV __stdcall

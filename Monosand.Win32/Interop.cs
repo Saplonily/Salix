@@ -6,7 +6,7 @@ namespace Monosand.Win32;
 
 internal unsafe class Interop
 {
-    private const string DllPath = "Monosand.Win32.Native.dll";
+    private const string DllPath = "libmsd.dll";
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct RECT { public int left, top, right, bottom; }
