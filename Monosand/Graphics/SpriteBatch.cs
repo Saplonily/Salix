@@ -16,6 +16,7 @@ public sealed partial class SpriteBatch
     private bool isDrawingText;
     private Matrix3x2 transform2d;
     private Matrix3x2 projection2d;
+    private bool projection2dDirty = true;
 
     private Texture2D? lastTexture;
     private vpct[] vertices;
@@ -23,8 +24,26 @@ public sealed partial class SpriteBatch
     private int verticesIndex;
     private int indicesIndex;
 
-    public RenderContext RenderContext => context;
+    private ref Matrix3x2 CleanedProjection2D
+    {
+        get
+        {
+            if (projection2dDirty)
+            {
+                Rectangle rect = RenderContext.Viewport;
+                Matrix3x2 mat = Matrix3x2.Identity;
+                mat *= Matrix3x2.CreateScale(2f / rect.Width, -2f / rect.Height);
+                mat *= Matrix3x2.CreateTranslation(-1f, 1f);
+                if (RenderContext.RenderTarget is not null)
+                    mat *= Matrix3x2.CreateScale(1f, -1f);
+                projection2d = mat;
+                return ref projection2d;
+            }
+            return ref projection2d;
+        }
+    }
 
+    public RenderContext RenderContext => context;
     public Texture2D Texture1x1White { get; }
     public ref Matrix3x2 Transform2D => ref transform2d;
 
@@ -84,18 +103,11 @@ public sealed partial class SpriteBatch
             Shader = spriteEffect;
         }
 
-        context.ViewportChanged += OnContextViewportChanged;
-        OnContextViewportChanged(context, context.Viewport);
+
         game.Window.PreviewSwapBuffer += Flush;
         context.PreviewViewportChanged += Flush;
-    }
-
-    private void OnContextViewportChanged(RenderContext renderContext, Rectangle rect)
-    {
-        Matrix3x2 mat = Matrix3x2.Identity;
-        mat *= Matrix3x2.CreateScale(2f / rect.Width, -2f / rect.Height);
-        mat *= Matrix3x2.CreateTranslation(-1f, 1f);
-        projection2d = mat;
+        context.PreviewRenderTargetChanged += Flush;
+        context.ViewportChanged += () => projection2dDirty = true;
     }
 
     // TODO a more elegant way to replace these methods?
@@ -203,7 +215,7 @@ public sealed partial class SpriteBatch
             if (chr == '\n')
             {
                 curWidth = 0f;
-                totalHeight += spriteFont.Size;
+                totalHeight += spriteFont.Size * 1.2f;
                 continue;
             }
             if (!spriteFont.Entries.TryGetValue(chr, out var entry))
@@ -323,13 +335,13 @@ public sealed partial class SpriteBatch
         fixed (ushort* iptr = indices)
         {
             vptr[vind + 0] =
-                new(position.TopLeft, color.TopLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureTopLeft.Y));
+                new(position.TopLeft, color.TopLeft.ToVector4(), new(textureTopLeft.X, textureTopLeft.Y));
             vptr[vind + 1] =
-                new(position.TopRight, color.TopRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureTopLeft.Y));
+                new(position.TopRight, color.TopRight.ToVector4(), new(textureBottomRight.X, textureTopLeft.Y));
             vptr[vind + 2] =
-                new(position.BottomLeft, color.BottomLeft.ToVector4(), new(textureTopLeft.X, 1.0f - textureBottomRight.Y));
+                new(position.BottomLeft, color.BottomLeft.ToVector4(), new(textureTopLeft.X, textureBottomRight.Y));
             vptr[vind + 3] =
-                new(position.BottomRight, color.BottomRight.ToVector4(), new(textureBottomRight.X, 1.0f - textureBottomRight.Y));
+                new(position.BottomRight, color.BottomRight.ToVector4(), new(textureBottomRight.X, textureBottomRight.Y));
 
             iptr[indicesIndex + 0] = (ushort)(vind + 0);
             iptr[indicesIndex + 1] = (ushort)(vind + 1);
@@ -350,7 +362,7 @@ public sealed partial class SpriteBatch
         context.SetTexture(0, texture);
         Shader.Use();
         Shader.SetTransform2D(transform2d * matrix);
-        Shader.SetProjection2D(projection2d);
+        Shader.SetProjection2D(CleanedProjection2D);
         Shader.SetIsDrawingText(false);
         context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
         Shader.SetTransform2D(transform2d);
@@ -363,7 +375,7 @@ public sealed partial class SpriteBatch
         context.SetTexture(0, lastTexture!);
         Shader.Use();
         Shader.SetTransform2D(transform2d);
-        Shader.SetProjection2D(projection2d);
+        Shader.SetProjection2D(CleanedProjection2D);
         Shader.SetIsDrawingText(isDrawingText);
 
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
@@ -381,7 +393,7 @@ public sealed partial class SpriteBatch
         for (int i = 0; i < sides; i++)
         {
             Vector2 pos = new(MathF.Cos(radianPerSide * i), MathF.Sin(radianPerSide * i));
-            vertices[i] = new(pos, Vector4.One, new(pos.X / 2f + 0.5f, 1.0f - (pos.Y / 2f + 0.5f)));
+            vertices[i] = new(pos, Vector4.One, new(pos.X / 2f + 0.5f, pos.Y / 2f + 0.5f));
         }
 
         circleBuffer.SetData(vertices, sides);

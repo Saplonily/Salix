@@ -104,6 +104,12 @@ public class MyMainWindow : Window
             Matrix3x2.CreateScale(75f, 75f) *
             Matrix3x2.CreateTranslation(500f, 250f)
             );
+
+        Game.RenderContext.RenderTarget = tempTarget;
+        Game.RenderContext.Clear(Color.Known.Blue with { A = 0.2f });
+        spriteBatch.DrawTexture(texture768x448, Vector2.One * 100.0f);
+        Game.RenderContext.RenderTarget = null;
+        spriteBatch.DrawTexture(tempTarget.Texture, position + Vector2.One * 10.0f);
     }
 }
 

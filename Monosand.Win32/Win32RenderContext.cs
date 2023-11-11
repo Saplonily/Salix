@@ -14,8 +14,9 @@ public sealed class Win32RenderContext : RenderContext
     private Rectangle viewport;
     private bool vSyncEnabled = false;
 
-    public override event ViewportChangedEventHandler? ViewportChanged;
-    public override event Action? PreviewViewportChanged;
+    internal override event Action? ViewportChanged;
+    internal override event Action? PreviewViewportChanged;
+    internal override event Action? PreviewRenderTargetChanged;
 
     public override Shader? Shader
     {
@@ -52,8 +53,8 @@ public sealed class Win32RenderContext : RenderContext
             EnsureState();
             PreviewViewportChanged?.Invoke();
             Interop.MsdgViewport(value.X, value.Y, value.Width, value.Height);
-            ViewportChanged?.Invoke(this, value);
             viewport = value;
+            ViewportChanged?.Invoke();
         }
     }
 
@@ -90,14 +91,17 @@ public sealed class Win32RenderContext : RenderContext
         }
         set
         {
+            PreviewRenderTargetChanged?.Invoke();
             if (value is null)
             {
                 Interop.MsdgSetRenderTarget(IntPtr.Zero);
+                currentRenderTarget = value;
                 Viewport = new(0, 0, windowSize.Width, windowSize.Height);
             }
             else
             {
                 Interop.MsdgSetRenderTarget(((Win32RenderTargetImpl)value.Impl).Handle);
+                currentRenderTarget = value;
                 Viewport = new(0, 0, value.Width, value.Height);
             }
         }

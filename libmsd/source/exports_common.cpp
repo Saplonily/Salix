@@ -54,7 +54,6 @@ EXPORT int CALLCONV MsdInitialize()
     };
 
     timeBeginPeriod(1);
-    stbi_set_flip_vertically_on_load(true);
 
     return 0;
 }

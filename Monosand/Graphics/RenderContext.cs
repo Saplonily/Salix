@@ -10,9 +10,9 @@ public abstract class RenderContext
     protected long drawcalls;
     protected Size windowSize;
 
-    public delegate void ViewportChangedEventHandler(RenderContext renderContext, Rectangle rectangle);
-    public abstract event ViewportChangedEventHandler? ViewportChanged;
-    public abstract event Action? PreviewViewportChanged;
+    internal abstract event Action? ViewportChanged;
+    internal abstract event Action? PreviewViewportChanged;
+    internal abstract event Action? PreviewRenderTargetChanged;
 
     public abstract Shader? Shader { get; set; }
     public abstract RenderTarget? RenderTarget { get; set; }

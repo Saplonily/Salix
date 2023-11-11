@@ -196,7 +196,7 @@ public class Window
 
         Update();
         Render();
-        Impl.SwapBuffers();
+        SwapBuffers();
         // I think someone might try handling input in Render()
         // make them happy
         keyboardState.Update();
