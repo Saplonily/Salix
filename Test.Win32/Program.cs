@@ -48,7 +48,7 @@ public class MyMainWindow : Window
         }
         for (int i = 0; i < 1; i++)
         {
-            tempTarget = new(Game.RenderContext, 300, 600);
+            tempTarget = new(Game.RenderContext, 1200, 600);
             spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
             //spriteBatch = new SpriteBatch(Game, spriteEffect);
             spriteBatch = new(Game);
@@ -70,6 +70,10 @@ public class MyMainWindow : Window
             dir += Vector2.UnitY;
         if (dir != Vector2.Zero)
             dir = Vector2.Normalize(dir);
+        if (KeyboardState.IsJustPressed(Key.H))
+            times += times / 3;
+        if (KeyboardState.IsJustPressed(Key.J))
+            times -= times / 3;
         posBase += dir * 400f * Game.FrameTimeF;
         a += 2f * Game.FrameTimeF;
         position = posBase + new Vector2(0f, (MathF.Sin(a / 20.0f) + 1f) / 2f * 300f);
@@ -83,33 +87,29 @@ public class MyMainWindow : Window
     {
         base.Render();
         Game.RenderContext.Clear(Color.Known.CornflowerBlue);
-
-        if (KeyboardState.IsJustPressed(Key.H))
-            times += times / 3;
-        if (KeyboardState.IsJustPressed(Key.J))
-            times -= times / 3;
-
-        string str =
-            $"DrawCalls: {Game.LastDrawCalls}\n" +
-            $"FrameTime: {Game.FrameTime:F4}\n" +
-            $"DrawTex repeats: {times}\n";
-
-        for (int i = 0; i < times; i++)
-            spriteBatch.DrawTexture(texture768x448, position + new Vector2(350f, 0f), scale: Vector2.One);
-        spriteBatch.DrawText(sprFont, str, position2, Vector2.One);
-
-        for (int i = 0; i < times; i++)
-            spriteBatch.DrawCircle(
-            texture665x680,
-            Matrix3x2.CreateScale(75f, 75f) *
-            Matrix3x2.CreateTranslation(500f, 250f)
-            );
-
         Game.RenderContext.RenderTarget = tempTarget;
-        Game.RenderContext.Clear(Color.Known.Blue with { A = 0.2f });
-        spriteBatch.DrawTexture(texture768x448, Vector2.One * 100.0f);
+        {
+            Game.RenderContext.Clear(Color.Known.Black with { A = 0.2f});
+            string str =
+                $"DrawCalls: {Game.LastDrawCalls}\n" +
+                $"FrameTime: {Game.FrameTime:F4}\n" +
+                $"DrawTex repeats: {times}\n";
+
+            for (int i = 0; i < times; i++)
+                spriteBatch.DrawTexture(texture768x448, position + new Vector2(350f, 0f), scale: Vector2.One);
+            spriteBatch.DrawText(sprFont, str, position2, Vector2.One);
+
+            for (int i = 0; i < times; i++)
+                spriteBatch.DrawCircle(
+                texture665x680,
+                Matrix3x2.CreateScale(75f, 75f) *
+                Matrix3x2.CreateTranslation(500f, 250f) *
+                Matrix3x2.CreateTranslation(position)
+                );
+
+        }
         Game.RenderContext.RenderTarget = null;
-        spriteBatch.DrawTexture(tempTarget.Texture, position + Vector2.One * 10.0f);
+        spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10.0f);
     }
 }
 
