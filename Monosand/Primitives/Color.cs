@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Monosand;
 
-/// <summary>Represents a RGBA (Red, Green, Blue, Alpha) color. 4bytes per component.</summary>
+/// <summary>Represents an RGBA (Red, Green, Blue, Alpha) color. 4 bytes per component.</summary>
 [DebuggerDisplay("RGBA: ({R}, {G}, {B}, {A})")]
 [StructLayout(LayoutKind.Sequential)]
 public partial struct Color : IEquatable<Color>
