@@ -114,7 +114,7 @@ EXPORT void MsdAttachRenderContext(win_handle* wh, HGLRC hglrc)
 
 EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
 {
-    HWND hwnd = CreateWindowExW(NULL, Monosand, title, WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowExW(0L, Monosand, title, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
         width, height,
         NULL, NULL, NULL, NULL

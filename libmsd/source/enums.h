@@ -78,7 +78,7 @@ inline vertex_element_glinfo VertexElementType_get_glinfo(VertexElementType type
     case VertexElementType::Vector4: return vertex_element_glinfo{ 4, GL_FLOAT, sizeof(float) };
     }
     assert(false);
-    return vertex_element_glinfo{ -1 , NULL, -1 };
+    return vertex_element_glinfo{ -1 , 0, -1 };
     // TODO: error handling
 }
 
@@ -94,7 +94,8 @@ inline GLenum PrimitiveType_get_glinfo(PrimitiveType type)
     case PrimitiveType::TriangleStrip: return GL_TRIANGLE_STRIP;
     }
     assert(false);
-    return NULL;
+    // hmm, why GL_POINTS is 0
+    return UINT_MAX;
     // TODO: error handling
 }
 
@@ -107,7 +108,7 @@ inline GLenum VertexBufferDataUsage_to_gl(VertexBufferDataUsage type)
     case VertexBufferDataUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
     }
     assert(false);
-    return NULL;
+    return 0;
     // TODO: error handling
 }
 
@@ -121,7 +122,7 @@ inline GLenum ImageFormat_to_gl(ImageFormat format)
     case ImageFormat::Rgba32: return GL_RGBA;
     }
     assert(false);
-    return NULL;
+    return 0;
 }
 
 inline int ImageFormat_get_size(ImageFormat format)
