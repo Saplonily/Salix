@@ -77,10 +77,10 @@ Now let's see what the above code is doing:
 - Then we create a `SpriteBatch` with the `RenderContext` of the current window. If you have written XNA code before this should looks familiar!
 - Finally in the render loop we draw the texture at the top left corner of the window using the `SpriteBatch`, and call `Flush` at the end. Note that we **MUST** remember to call this or drawing commands may be deferred causing unexpected behavior.
 
+(Currently I'm trying to remove this limitation, actually now you needn't call `Flush` when viewport changed or `Render` ended.)
+
 ### End
 
 Well, here comes the end. Why is it so short? Because I'm lazy XD.
 
 In fact there's also text rendering and basic keyboard input support, which you can find examples in [`Test.Win32`](https://github.com/Saplonily/Monosand/blob/e88fd32ed01ac309c1bf411624149f6530826561/Test.Win32/Program.cs#L18C37-L65).  
-
-So, this ends? May be.
