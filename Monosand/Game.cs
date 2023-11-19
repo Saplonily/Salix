@@ -9,6 +9,7 @@ public class Game
     private Window? window;
     private long ticks;
     private int laggedFrames;
+    private List<Action> deferredActions;
 
     public RenderContext RenderContext { get; private set; }
     public Window Window
@@ -64,6 +65,7 @@ public class Game
 
     public Game()
     {
+        deferredActions = new();
         platform = new Platform();
         platform.Initialize();
         RenderContext = new RenderContext();
@@ -73,6 +75,9 @@ public class Game
         ticks = 0;
         ResourceLoader = new ResourceLoader(this);
     }
+
+    public void DeferredInvoke(Action action)
+        => deferredActions.Add(action);
 
     public void Run()
     {
@@ -107,6 +112,8 @@ public class Game
             // ----- tick ------
 
             RenderContext.ProcessQueuedActions();
+            foreach (var item in deferredActions) item();
+            deferredActions.Clear();
             window.PollEvents();
             if (window.IsClosed)
                 break;
@@ -114,7 +121,7 @@ public class Game
             long pdrawcalls = RenderContext.TotalDrawCalls;
             window.Tick();
             LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
-            
+
             ticks++;
             // -----------------
 
