@@ -1,10 +1,11 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
 public class Window
 {
-    internal WindowImpl Impl { get; private set; }
     private bool isClosed = false;
 
     private Size size;
@@ -12,7 +13,10 @@ public class Window
     private readonly KeyboardState keyboardState;
     private readonly PointerState pointerState;
 
-    public string Title { get => Impl.Title; set => Impl.Title = value; }
+    private IntPtr nativeHandle;
+
+    /// <summary>Native handle of this Window, on windows it's an HWND.</summary>
+    public IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
 
     /// <summary>Is this window closed, will be <see langword="true"/> when the window closed or disposed.</summary>
     public bool IsClosed => isClosed;
@@ -20,47 +24,64 @@ public class Window
     /// <summary>The <see cref="Monosand.Game"/> instance this window belong to.</summary>
     public Game Game { get; private set; }
 
+    public unsafe string Title
+    {
+        get
+        {
+            EnsureState();
+            char* str = stackalloc char[256];
+            Interop.MsdGetWindowTitle(nativeHandle, str);
+            return new string(str);
+        }
+        set
+        {
+            EnsureState();
+            fixed (char* str = value)
+                Interop.MsdSetWindowTitle(nativeHandle, str);
+        }
+    }
+
     #region Position & Size
     /// <summary>The X coord of this window.</summary>
     public int X
     {
         get => position.X;
-        set { position.X = value; Impl.Position = new(value, Y); }
+        set { position.X = value; Position = new(value, Y); }
     }
 
     /// <summary>The Y coord of this window.</summary>
     public int Y
     {
         get => position.Y;
-        set { position.Y = value; Impl.Position = new(X, value); }
+        set { position.Y = value; Position = new(X, value); }
     }
 
     /// <summary>The Width of this window.</summary>
     public int Width
     {
         get => size.Width;
-        set { size.Width = value; Impl.Size = new(value, Height); }
+        set { size.Width = value; Size = new(value, Height); }
     }
 
     /// <summary>The Height of this window.</summary>
     public int Height
     {
         get => size.Height;
-        set { size.Height = value; Impl.Size = new(Width, value); }
+        set { size.Height = value; Size = new(Width, value); }
     }
 
     /// <summary>The Position of this window on the screen.</summary>
     public Point Position
     {
-        get => position;
-        set { position = value; Impl.Position = new(value.X, value.Y); }
+        get { EnsureState(); return position; }
+        set { EnsureState(); position = value; Interop.MsdSetWindowPos(nativeHandle, value.X, value.Y); }
     }
 
     /// <summary>The Size of this window.</summary>
     public Size Size
     {
-        get => size;
-        set { size = value; Impl.Size = new(value.Width, value.Height); }
+        get { EnsureState(); return size; }
+        set { EnsureState(); size = value; Interop.MsdSetWindowSize(nativeHandle, value.Width, value.Height); }
     }
     #endregion
 
@@ -84,28 +105,126 @@ public class Window
     internal event Action? PreviewSwapBuffer;
 
     /// <summary>Construct a window.</summary>
-    public Window(Game game)
+    public unsafe Window(Game game, int width, int height, string title)
     {
         Game = game;
         keyboardState = new(this);
         pointerState = new(this);
-        Impl = Game.Platform.CreateWindowImpl(Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand), this);
+
+        IntPtr winHandle;
+        fixed (char* ptitle = title)
+            winHandle = Interop.MsdCreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
+
+        if (winHandle == IntPtr.Zero)
+            throw new OperationFailedException("Can't create window.");
+
+        nativeHandle = winHandle;
     }
 
-    /// <summary>Show the window.</summary>
-    public void Show() => Impl.Show();
+    public Window(Game game) : this(game, Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand))
+    { }
 
-    /// <summary>Hide the window.</summary>
-    public void Hide() => Impl.Hide();
+    public void Show()
+    {
+        EnsureState();
+        Interop.MsdShowWindow(nativeHandle);
+    }
 
-    /// <summary>Close the window.</summary>
-    public void Close() => Impl.Destroy();
-    internal void PollEvents() => Impl.PollEvents();
+    public void Hide()
+    {
+        EnsureState();
+        Interop.MsdHideWindow(nativeHandle);
+    }
+
+    public void Close()
+    {
+        EnsureState();
+        Interop.MsdDestroyWindow(nativeHandle);
+        nativeHandle = IntPtr.Zero;
+    }
+
+    internal void SwapBuffers()
+    {
+        EnsureState();
+        PreviewSwapBuffer?.Invoke();
+        Interop.MsdgSwapBuffers(nativeHandle);
+    }
 
     internal void OnCallbackDestroy()
     {
         isClosed = true;
         OnClosed();
+    }
+
+    internal void Tick()
+    {
+        ThrowHelper.ThrowIfInvalid(Game.RenderContext is null, "No RenderContext attched to this window.");
+
+        Update();
+        Render();
+        SwapBuffers();
+        // I think someone might try handling input in Render()
+        // make them happy
+        keyboardState.Update();
+        pointerState.Update();
+    }
+
+    internal unsafe void PollEvents()
+    {
+        EnsureState();
+        Game.RenderContext.ProcessQueuedActions();
+        int count;
+        int* e;
+        void* handle = Interop.MsdBeginPollEvents(nativeHandle, out var ncount, out e);
+        if (ncount > int.MaxValue)
+            throw new OperationFailedException("Too many win events.(> int.MaxValue)");
+        count = (int)ncount;
+        int sizeInInt = 4 + sizeof(IntPtr) / 4;
+
+        // magic number at ../Monosand.Win32.Native/win32_msg_loop.cpp :: event
+        for (int i = 0; i < count * sizeInInt; i += sizeInInt)
+        {
+            IntPtr v = ((IntPtr*)(e + i + 4))[0];
+            Window win = HandleToWin(v);
+            switch (e[i])
+            {
+            case 1: if (win.OnClosing()) Interop.MsdDestroyWindow(nativeHandle); break;
+            case 2: win.OnCallbackDestroy(); break;
+            case 3: win.OnMoved(e[i + 1], e[i + 2]); break;
+            case 4: win.OnResized(e[i + 1], e[i + 2]); break;
+            case 5: win.OnKeyPressed((Key)e[i + 1]); break;
+            case 6: win.OnKeyReleased((Key)e[i + 1]); break;
+            case 7: win.OnGotFocus(); break;
+            case 8: win.OnLostFocus(); break;
+            case 9:
+            {
+                int x = e[i + 1], y = e[i + 2];
+                short btnType = *((short*)(e + i + 3) + 0);
+                PointerButton button = (PointerButton)btnType;
+                short downType = *((short*)(e + i + 3) + 1);
+                if (downType == 0)
+                    win.OnPointerPressed(x, y, button);
+                else if (downType == 1)
+                    win.OnPointerReleased(x, y, button);
+                else if (downType == 2 && button == PointerButton.None)
+                    win.OnPointerMoved(x, y);
+            }
+            break;
+            case 10:
+            {
+                int x = e[i + 1], y = e[i + 2];
+                int delta = e[i + 3];
+                win.OnPointerWheelMoved(x, y, delta);
+            }
+            break;
+            default: Debug.Fail("Unknown event type."); break;
+            }
+        }
+
+        Interop.MsdEndPollEvents(nativeHandle, handle);
+
+        static Window HandleToWin(IntPtr handle)
+            => (Window)GCHandle.FromIntPtr(handle).Target!;
     }
 
     /// <summary>Called when the window closed.</summary>
@@ -135,8 +254,9 @@ public class Window
     /// <summary>Called when the window is ready to initialize.</summary>
     public virtual void OnInitialize()
     {
-        size = Impl.Size;
-        position = Impl.Position;
+        var r = Interop.MsdGetWindowRect(nativeHandle);
+        size = new(r.right - r.left, r.bottom - r.top);
+        position = new(r.left, r.top);
     }
 
     /// <summary>Called when a key pressed.</summary>
@@ -184,25 +304,6 @@ public class Window
         PointerState.AddWheelDelta(delta);
     }
 
-    internal void SwapBuffers()
-    {
-        PreviewSwapBuffer?.Invoke();
-        Impl.SwapBuffers();
-    }
-
-    internal void Tick()
-    {
-        ThrowHelper.ThrowIfInvalid(Game.RenderContext is null, "No RenderContext attched to this window.");
-
-        Update();
-        Render();
-        SwapBuffers();
-        // I think someone might try handling input in Render()
-        // make them happy
-        keyboardState.Update();
-        pointerState.Update();
-    }
-
     /// <summary>The update logic.</summary>
     public virtual void Update()
     {
@@ -212,4 +313,7 @@ public class Window
     public virtual void Render()
     {
     }
+
+    private void EnsureState()
+        => ThrowHelper.ThrowIfDisposed(nativeHandle == IntPtr.Zero, this);
 }

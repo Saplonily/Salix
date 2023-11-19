@@ -2,7 +2,7 @@
 
 namespace System
 {
-    public static class MathF
+    internal static class MathF
     {
         public const float PI = 3.14159274F;
 

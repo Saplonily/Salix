@@ -33,4 +33,18 @@
     <EmbeddedResource Include="Embedded\SpriteShader.vert" />
   </ItemGroup>
 
+  <!--Any other way to simplify these?-->
+  <ItemGroup>
+    <None Include="..\libmsd\bin\win-x64\libmsd.dll" Condition="Exists('..\libmsd\bin\win-x64\libmsd.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes\win-x64\native</PackagePath>
+      <Pack>true</Pack>
+    </None>
+
+    <None Include="..\libmsd\bin\win-x32\libmsd.dll" Condition="Exists('..\libmsd\bin\win-x32\libmsd.dll')">
+      <PackagePath>runtimes\win-x32\native</PackagePath>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+
 </Project>

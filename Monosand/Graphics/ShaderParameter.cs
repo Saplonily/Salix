@@ -6,7 +6,7 @@ public readonly struct ShaderParameter : IEquatable<ShaderParameter>
     private readonly int location;
 
     public readonly Shader Shader => shader;
-    public bool Valid => location != -1;
+    public bool IsInvalid => location == -1;
     internal readonly int Location => location;
 
     internal ShaderParameter(Shader shader, int location)
@@ -16,7 +16,7 @@ public readonly struct ShaderParameter : IEquatable<ShaderParameter>
     }
 
     public void Set<T>(ref T value) where T : unmanaged
-        => shader.SetParameter(in this, ref value);
+        => shader.SetParameter(this, ref value);
 
     public void Set<T>(T value) where T : unmanaged
     {

@@ -1,4 +1,4 @@
-﻿namespace Monosand.Win32;
+﻿namespace Monosand;
 
 public class OperationFailedException : Exception
 {

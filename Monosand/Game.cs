@@ -62,13 +62,12 @@ public class Game
 
     public int LastDrawCalls { get; private set; }
 
-    public Game(Platform platform)
+    public Game()
     {
-        ThrowHelper.ThrowIfNull(platform);
+        platform = new Platform();
         platform.Initialize();
-        RenderContext = platform.CreateRenderContext();
+        RenderContext = new RenderContext();
 
-        this.platform = platform;
         ExpectedFps = 60d;
         FrameTime = 1d / ExpectedFps;
         ticks = 0;

@@ -5,7 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <assert.h>
-#include "thirdparty/glad/glad.h"
-#include "thirdparty/glad/glad_wgl.h"
-#include "thirdparty/stb_image.h"
+#include "glad/glad.h"
+#include "glad/glad_wgl.h"
+#include "stb_image.h"
 #endif

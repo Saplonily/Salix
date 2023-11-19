@@ -20,16 +20,16 @@ public sealed class SpriteShader
         var pshader = shader.RenderContext.Shader;
         shader.Use();
         paramTex = shader.GetParameter("tex"u8);
-        if (!paramTex.Valid) throw SR.ShaderParamNotFound("tex");
+        if (paramTex.IsInvalid) throw SR.ShaderParamNotFound("tex");
 
         paramTrans2d = shader.GetParameter("trans2d"u8);
-        if (!paramTrans2d.Valid) throw SR.ShaderParamNotFound("trans2d");
+        if (paramTrans2d.IsInvalid) throw SR.ShaderParamNotFound("trans2d");
 
         paramProj2d = shader.GetParameter("proj2d"u8);
-        if (!paramProj2d.Valid) throw SR.ShaderParamNotFound("proj2d");
+        if (paramProj2d.IsInvalid) throw SR.ShaderParamNotFound("proj2d");
 
         paramIsDrawingText = shader.GetParameter("isDrawingText"u8);
-        if (!paramIsDrawingText.Valid) throw SR.ShaderParamNotFound("isDrawingText");
+        if (paramIsDrawingText.IsInvalid) throw SR.ShaderParamNotFound("isDrawingText");
         shader.RenderContext.Shader = pshader;
     }
 

@@ -5,29 +5,33 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AnalysisMode>default</AnalysisMode>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Monosand.Win32\Monosand.Win32.csproj" />
+    <ProjectReference Include="..\Monosand\Monosand.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="500x500.png">
+    <None Update="TestAssets\500x500.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="64x64.png">
+    <None Update="TestAssets\64x64.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="665x680.png">
+    <None Update="TestAssets\665x680.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="768x448.png">
+    <None Update="TestAssets\768x448.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="MyShader.frag">
+    <None Update="TestAssets\MyShader.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="MyShader.vert">
+    <None Update="TestAssets\MyShader.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestAssets\test_rock.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

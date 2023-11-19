@@ -1,27 +1,74 @@
 ﻿namespace Monosand;
 
-public abstract class Platform
+#pragma warning disable CA1822 // Mark members as static
+
+public unsafe class Platform
 {
-    /// <summary>Current platform.</summary>
-    public abstract MonosandPlatform Identifier { get; }
+    private GraphicsBackend graphicsBackend;
+    private MonosandPlatform identifier;
 
     /// <summary>The graphics backend currently using.</summary>
-    public abstract GraphicsBackend GraphicsBackend { get; }
+    public GraphicsBackend GraphicsBackend => graphicsBackend;
 
-    /// <summary>Initialize this platform.</summary>
-    internal abstract void Initialize();
+    /// <summary>Current platform.</summary>
+    public MonosandPlatform Identifier => identifier;
 
-    internal abstract WindowImpl CreateWindowImpl(int width, int height, string title, Window window);
+    public Platform() { }
 
-    internal abstract RenderContext CreateRenderContext();
+    internal void Initialize()
+    {
+        // TODO error handle
+        if (Interop.MsdInitialize() != 0)
+            throw new OperationFailedException("MsdInitialize returned non-zero value.");
+        graphicsBackend = Interop.MsdgGetGraphicsBackend();
+        identifier = MonosandPlatform.Win32;
+    }
 
-    internal abstract void AttachRenderContext(RenderContext context, Window window);
+    internal Stream OpenReadStream(string fileName)
+        => new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-    internal abstract Stream OpenReadStream(string fileName);
+    internal unsafe UnmanagedMemoryChunk LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
+    {
+        void* data;
+        fixed (void* ptr = source)
+        {
+            data = Interop.MsdLoadImage(ptr, source.Length, out width, out height, out int size, out format);
+            if (data is null)
+                throw new ResourceLoadFailedException(ResourceType.Image);
+            return new(data, size);
+        }
+    }
 
-    internal abstract Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format);
+    internal void FreeImage(UnmanagedMemoryChunk image)
+    {
+        ThrowHelper.ThrowIfArgInvalid(image.IsEmpty, nameof(image));
+        Interop.MsdFreeImage(image.Pointer);
+    }
 
-    internal abstract void FreeImage(Span<byte> image);
+    internal long GetUsecTimeline()
+        => Interop.MsdGetUsecTimeline();
 
-    internal abstract long GetUsecTimeline();
+    internal void AttachRenderContext(RenderContext context, Window window)
+    {
+        var wh = window.NativeHandle;
+        Interop.MsdAttachRenderContext(wh, context.NativeHandle);
+    }
+
+    internal UnmanagedMemoryChunk LoadAudio(ReadOnlySpan<byte> source, out int samples, out AudioFormat format)
+    {
+        void* data;
+        fixed (void* ptr = source)
+        {
+            data = Interop.MsdLoadAudio(ptr, out samples, out format);
+            if (data is null)
+                throw new ResourceLoadFailedException(ResourceType.Audio);
+            return new(data, format.BitDepth / 8 * format.SampleRate * format.ChannelsCount * samples);
+        }
+    }
+
+    internal void FreeAudio(UnmanagedMemoryChunk audio)
+    {
+        ThrowHelper.ThrowIfArgInvalid(audio.IsEmpty, nameof(audio));
+        Interop.MsdFreeAudio(audio.Pointer);
+    }
 }

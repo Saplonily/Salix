@@ -3,59 +3,127 @@
 namespace Monosand;
 
 // TODO dispose impl
-public abstract class RenderContext
+public sealed class RenderContext
 {
+    private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
     private readonly List<Action> queuedActions;
     private readonly int creationThreadId;
-    protected long drawcalls;
-    protected Size windowSize;
+    private readonly IntPtr nativeHandle;
+    private readonly double vSyncFrameTime = 0d;
+    private Shader? currentShader;
+    private RenderTarget? currentRenderTarget = null;
+    private Rectangle viewport;
+    private bool vSyncEnabled = false;
 
-    internal abstract event Action? ViewportChanged;
-    internal abstract event Action? PreviewViewportChanged;
-    internal abstract event Action? PreviewRenderTargetChanged;
+    private long drawcalls;
+    private Size windowSize;
 
-    public abstract Shader? Shader { get; set; }
-    public abstract RenderTarget? RenderTarget { get; set; }
-    public abstract Rectangle Viewport { get; set; }
+    internal IntPtr NativeHandle => nativeHandle;
+
+    public long TotalDrawCalls => drawcalls;
+
+    public Rectangle Viewport
+    {
+        get
+        {
+            EnsureState();
+            return viewport;
+        }
+        set
+        {
+            EnsureState();
+            PreviewViewportChanged?.Invoke();
+            Interop.MsdgViewport(value.X, value.Y, value.Width, value.Height);
+            viewport = value;
+            ViewportChanged?.Invoke();
+        }
+    }
 
     /// <summary>Indicates is this <see cref="RenderContext"/> enabled the Vertical Synchronization.</summary>
-    public abstract bool VSyncEnabled { get; set; }
+    public bool VSyncEnabled
+    {
+        get
+        {
+            EnsureState();
+            return vSyncEnabled;
+        }
+        set
+        {
+            EnsureState();
+            Interop.MsdgSetVSyncEnabled(value ? (byte)1 : (byte)0);
+            vSyncEnabled = value;
+        }
+    }
 
     /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
-    public abstract double VSyncFrameTime { get; }
-    public long TotalDrawCalls => drawcalls;
+    public double VSyncFrameTime
+    {
+        get
+        {
+            EnsureState();
+            return vSyncFrameTime;
+        }
+    }
+
+    public RenderTarget? RenderTarget
+    {
+        get
+        {
+            EnsureState();
+            return currentRenderTarget;
+        }
+        set
+        {
+            PreviewRenderTargetChanged?.Invoke();
+            if (value is null)
+            {
+                Interop.MsdgSetRenderTarget(IntPtr.Zero);
+                currentRenderTarget = value;
+                Viewport = new(0, 0, windowSize.Width, windowSize.Height);
+            }
+            else
+            {
+                Interop.MsdgSetRenderTarget(value.NativeHandle);
+                currentRenderTarget = value;
+                Viewport = new(0, 0, value.Width, value.Height);
+            }
+        }
+    }
+
+    public Shader? Shader
+    {
+        get
+        {
+            EnsureState();
+            return currentShader;
+        }
+        set
+        {
+            if (value == currentShader) return;
+            if (value is not null)
+            {
+                Interop.MsdgSetShader(value.NativeHandle);
+            }
+            else
+            {
+                Interop.MsdgSetShader(IntPtr.Zero);
+            }
+            currentShader = value;
+        }
+    }
+
+    internal event Action? ViewportChanged;
+    internal event Action? PreviewViewportChanged;
+    internal event Action? PreviewRenderTargetChanged;
 
     public RenderContext()
     {
+        vertexDeclarations = new();
         queuedActions = new(8);
         creationThreadId = Environment.CurrentManagedThreadId;
+        nativeHandle = Interop.MsdCreateRenderContext();
+        vSyncFrameTime = Interop.MsdgGetVSyncFrameTime();
     }
-
-    /// <summary>Clear this RenderContext in a color.</summary>
-    public abstract void Clear(Color color);
-
-    /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
-    public abstract void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration,
-        PrimitiveType primitiveType,
-        ReadOnlySpan<T> vertices
-        ) where T : unmanaged;
-
-    /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
-    public abstract void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
-
-    /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
-    public abstract void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged;
-
-    public abstract void SetTexture(int index, Texture2D texture2D);
-
-    internal abstract IVertexBufferImpl CreateVertexBufferImpl(VertexDeclaration vertexDeclaration, VertexBufferDataUsage dataUsage, bool indexed);
-
-    internal abstract ITexture2DImpl CreateTexture2DImpl(int width, int height);
-
-    internal abstract IShaderImpl CreateGlslShaderImpl(ReadOnlySpan<byte> vertSource, ReadOnlySpan<byte> fragSource);
-
-    internal abstract IRenderTargetImpl CreateRenderTargetImpl(Texture2D texture2D);
 
     internal void ProcessQueuedActions()
     {
@@ -84,4 +152,75 @@ public abstract class RenderContext
         else
             action();
     }
+
+    /// <summary>Clear this RenderContext in a color.</summary>
+    public void Clear(Color color)
+    {
+        EnsureState();
+        Interop.MsdgClear(color);
+    }
+
+    internal unsafe IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNull(vertexDeclaration);
+        if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
+        {
+            fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
+            {
+                vertexType = Interop.MsdgRegisterVertexType(ptr, vertexDeclaration.Count);
+                vertexDeclarations.Add(vertexDeclaration, vertexType);
+            }
+        }
+        return vertexType;
+    }
+
+    /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
+    public unsafe void DrawPrimitives<T>(
+        VertexDeclaration vertexDeclaration,
+        PrimitiveType primitiveType,
+        ReadOnlySpan<T> vertices
+        ) where T : unmanaged
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNull(vertexDeclaration);
+        drawcalls++;
+
+        IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
+        fixed (T* vptr = vertices)
+            Interop.MsdgDrawPrimitives(vertexType, primitiveType, vptr, vertices.Length * sizeof(T), vertices.Length);
+    }
+
+    /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
+    public void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
+        drawcalls++;
+
+        Interop.MsdgDrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
+    }
+
+    /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
+    public void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
+        drawcalls++;
+
+        Interop.MsdgDrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
+    }
+
+    public void SetTexture(int index, Texture2D texture)
+    {
+        EnsureState();
+        ThrowHelper.ThrowIfNegative(index);
+
+        Interop.MsdgSetTexture(index, texture.NativeHandle);
+    }
+
+    private void EnsureState()
+        => ThrowHelper.ThrowIfDisposed(nativeHandle == IntPtr.Zero, this);
 }

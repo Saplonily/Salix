@@ -10,3 +10,5 @@ dotnet_diagnostic.IDE0090.severity = silent
 dotnet_diagnostic.IDE0180.severity = silent
 # IDE0017: 可以简化对象初始化
 dotnet_diagnostic.IDE0017.severity = silent
+# IDE0028: 可以简化集合初始化
+dotnet_diagnostic.IDE0028.severity = silent

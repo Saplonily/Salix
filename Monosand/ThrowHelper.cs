@@ -36,4 +36,13 @@ public static class ThrowHelper
     {
         if (condition) throw new InvalidOperationException($"{msg} {conditionExpression}");
     }
+
+    public static void ThrowIfArgInvalid(
+        [DoesNotReturnIf(true)] bool condition,
+        string paramName,
+        [CallerArgumentExpression(nameof(condition))] string? conditionStr = null
+        )
+    {
+        if (condition) throw new ArgumentException(conditionStr, paramName);
+    }
 }

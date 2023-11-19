@@ -1,12 +1,36 @@
 ﻿namespace Monosand;
 
-
 public abstract class GraphicsResource : IDisposable
 {
-    public RenderContext RenderContext { get; private set; }
+    private RenderContext? renderContext;
+
+    public RenderContext RenderContext { get { EnsureState(); return renderContext!; } }
+
+    public bool IsDisposed => renderContext == null;
 
     public GraphicsResource(RenderContext renderContext)
-        => RenderContext = renderContext;
+    {
+        ThrowHelper.ThrowIfNull(renderContext);
+        this.renderContext = renderContext;
+    }
 
-    public abstract void Dispose();
+    protected virtual void Dispose(bool disposing)
+    {
+    }
+
+    public void Dispose()
+    {
+        if (renderContext != null)
+        {
+            Dispose(true);
+            renderContext = null;
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    protected void EnsureState()
+        => ThrowHelper.ThrowIfDisposed(renderContext is null, this);
+
+    ~GraphicsResource()
+        => renderContext!.Invoke(() => Dispose(false));
 }

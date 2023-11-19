@@ -1,15 +1,25 @@
-﻿using System.Reflection;
+﻿using System.Buffers;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+using ByteArrayPool = System.Buffers.ArrayPool<byte>;
+
+#pragma warning disable CA1822 // Mark members as static
 
 namespace Monosand;
 
 // TODO caching
-public class ResourceLoader
+public unsafe class ResourceLoader
 {
     private readonly Game game;
     private readonly Platform platform;
 
     internal ResourceLoader(Game game)
         => (this.game, platform) = (game, game.Platform);
+
+    private static int MakeItNotTooLong(long value)
+        => value is > int.MaxValue or < 0 ? throw new NotSupportedException("The stream is too long.") : (int)value;
 
     public Stream OpenReadStream(string fileName)
         => platform.OpenReadStream(fileName);
@@ -20,6 +30,8 @@ public class ResourceLoader
 
     public SpriteFont LoadSpriteFont(Stream streamTexture, Stream entriesBin)
     {
+        ThrowHelper.ThrowIfNull(streamTexture);
+        ThrowHelper.ThrowIfNull(entriesBin);
         Texture2D tex = LoadTexture2D(streamTexture);
         BinaryReader br = new(entriesBin);
         Dictionary<char, SpriteFont.CharEntry> dic = new();
@@ -41,47 +53,50 @@ public class ResourceLoader
         return new(tex, fontSize, dic);
     }
 
-    // TODO, use NativeMemory.Alloc to make GC more happy
     public Texture2D LoadTexture2D(Stream stream)
     {
-        unsafe
-        {
-            var fs = stream;
-            int length = fs.Length > int.MaxValue ?
-                throw new NotSupportedException("Stream is too long.")
-                : (int)fs.Length;
+        ThrowHelper.ThrowIfNull(stream);
+        int length = MakeItNotTooLong(stream.Length);
+        byte[] bytes = ByteArrayPool.Shared.Rent(length);
+        stream.Read(bytes, 0, length);
 
-            byte[] bytes = new byte[length];
-            fs.Read(bytes, 0, length);
+        var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
+        Texture2D texture = new(game.RenderContext, width, height, chunk.Pointer, format);
+        platform.FreeImage(chunk);
 
-            var img = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
-
-            Texture2D tex = new(game.RenderContext, width, height, img, format);
-            platform.FreeImage(img);
-            return tex;
-        }
+        ByteArrayPool.Shared.Return(bytes);
+        return texture;
     }
 
     public Shader LoadGlslShader(Stream vertStream, Stream fragStream)
     {
-        byte[] vsh = ReadAllBytes(vertStream);
-        byte[] fsh = ReadAllBytes(fragStream);
-        unsafe
-        {
-            var context = game.RenderContext;
-            var impl = context.CreateGlslShaderImpl(new(vsh), new(fsh));
-            return new(context, impl);
-        }
+        ThrowHelper.ThrowIfNull(vertStream);
+        ThrowHelper.ThrowIfNull(fragStream);
+        int vertLength = MakeItNotTooLong(vertStream.Length + 1);
+        int fragLength = MakeItNotTooLong(fragStream.Length + 1);
+        byte[] vertData = ByteArrayPool.Shared.Rent(vertLength);
+        byte[] fragData = ByteArrayPool.Shared.Rent(fragLength);
+        vertStream.Read(vertData, 0, vertLength - 1);
+        fragStream.Read(fragData, 0, fragLength - 1);
+        vertData[vertLength - 1] = 0;
+        fragData[fragLength - 1] = 0;
 
-        static byte[] ReadAllBytes(Stream stream)
-        {
-            long length = stream.Length;
-            if (length > int.MaxValue)
-                throw new NotSupportedException("The stream is too long.");
-            byte[] buffer = new byte[length];
-            stream.Read(buffer, 0, (int)length);
-            return buffer;
-        }
+        var context = game.RenderContext;
+        var shader = new Shader(context, new ReadOnlySpan<byte>(vertData, 0, vertLength), new(fragData, 0, fragLength));
+
+        ByteArrayPool.Shared.Return(vertData);
+        ByteArrayPool.Shared.Return(fragData);
+        return shader;
+    }
+
+    public AudioData LoadAudio(Stream stream)
+    {
+        int length = MakeItNotTooLong(stream.Length);
+        byte[] data = ByteArrayPool.Shared.Rent(length);
+        stream.Read(data, 0, length);
+        var audioData = new AudioData(platform, new(data, 0, length));
+        ByteArrayPool.Shared.Return(data);
+        return audioData;
     }
 
     public Texture2D LoadTexture2D(string fileName)
@@ -102,5 +117,11 @@ public class ResourceLoader
         using var ts = OpenReadStream(textureFileName);
         using var es = OpenReadStream(entriesBinFileName);
         return LoadSpriteFont(ts, es);
+    }
+
+    public AudioData LoadAudio(string audioFileName)
+    {
+        using var fs = OpenReadStream(audioFileName);
+        return LoadAudio(fs);
     }
 }

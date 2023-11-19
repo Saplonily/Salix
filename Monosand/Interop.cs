@@ -1,12 +1,12 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Monosand.Win32;
+namespace Monosand;
 
 #pragma warning disable SYSLIB1054
 
 internal unsafe class Interop
 {
-    private const string DllPath = "libmsd.dll";
+    private const string DllPath = "libmsd";
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct RECT { public int left, top, right, bottom; }
@@ -114,4 +114,6 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetTextureFilter(IntPtr texHandle, TextureFilterType min, TextureFilterType max);
     [DllImport(DllPath)] public static extern void MsdgSetTextureWrap(IntPtr texHandle, TextureWrapType wrap);
     [DllImport(DllPath)] public static extern void MsdgDeleteRenderTarget(IntPtr renderTargetHandle);
+    [DllImport(DllPath)] public static extern void* MsdLoadAudio(void* memory, out int samples, out AudioFormat format);
+    [DllImport(DllPath)] public static extern void MsdFreeAudio(void* memory);
 }

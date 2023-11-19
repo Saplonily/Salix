@@ -5,5 +5,6 @@ public enum ResourceType
     Unknown,
     Image,
     Texture,
+    Audio,
     Text,
 }

@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Runtime.Versioning;
 
 using Monosand;
-using Monosand.Win32;
 
 [assembly: SupportedOSPlatform("windows")]
 
@@ -12,14 +11,15 @@ namespace Test.Win32;
 
 public class MyMainWindow : Window
 {
-    [AllowNull] private Texture2D texture665x680;
-    [AllowNull] private Texture2D texture500x500;
-    [AllowNull] private Texture2D texture64x64;
-    [AllowNull] private Texture2D texture768x448;
-    [AllowNull] private SpriteFont sprFont;
-    [AllowNull] private SpriteBatch spriteBatch;
-    [AllowNull] private RenderTarget tempTarget;
-    [AllowNull] private SpriteShader spriteEffect;
+    private Texture2D texture665x680 = null!;
+    private Texture2D texture500x500 = null!;
+    private Texture2D texture64x64 = null!;
+    private Texture2D texture768x448 = null!;
+    private SpriteFont sprFont = null!;
+    private SpriteBatch spriteBatch = null!;
+    private RenderTarget tempTarget = null!;
+    private SpriteShader spriteEffect = null!;
+    private AudioData audioData = null!;
 
     Vector2 posBase;
     Vector2 position;
@@ -34,26 +34,24 @@ public class MyMainWindow : Window
 
     public override void OnInitialize()
     {
-        texture665x680 = Game.ResourceLoader.LoadTexture2D("665x680.png");
-        texture500x500 = Game.ResourceLoader.LoadTexture2D("500x500.png");
-        texture64x64 = Game.ResourceLoader.LoadTexture2D("64x64.png");
-        texture768x448 = Game.ResourceLoader.LoadTexture2D("768x448.png");
+        texture665x680 = Game.ResourceLoader.LoadTexture2D("TestAssets/665x680.png");
+        texture500x500 = Game.ResourceLoader.LoadTexture2D("TestAssets/500x500.png");
+        texture64x64 = Game.ResourceLoader.LoadTexture2D("TestAssets/64x64.png");
+        texture768x448 = Game.ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
+        //audioData = Game.ResourceLoader.LoadAudio("TestAssets/test_rock.wav");
+
         try
         {
-            sprFont = Game.ResourceLoader.LoadSpriteFont("atlas.png", "atlas_info.bin");
+            sprFont = Game.ResourceLoader.LoadSpriteFont("TestAssets/atlas.png", "TestAssets/atlas_info.bin");
         }
         catch (FileNotFoundException)
         {
-            throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the exe folder of Test.Win32!");
+            throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the TestAssets folder of Test.Win32!");
         }
-        for (int i = 0; i < 1; i++)
-        {
-            tempTarget = new(Game.RenderContext, 1200, 600);
-            spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("MyShader.vert", "MyShader.frag"));
-            //spriteBatch = new SpriteBatch(Game, spriteEffect);
-            spriteBatch = new(Game);
-            GC.Collect();
-        }
+        tempTarget = new(Game.RenderContext, 1200, 600);
+        spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("TestAssets/MyShader.vert", "TestAssets/MyShader.frag"));
+        //spriteBatch = new SpriteBatch(Game, spriteEffect);
+        spriteBatch = new(Game);
     }
 
     public override void Update()
@@ -89,7 +87,7 @@ public class MyMainWindow : Window
         Game.RenderContext.Clear(Color.Known.CornflowerBlue);
         Game.RenderContext.RenderTarget = tempTarget;
         {
-            Game.RenderContext.Clear(Color.Known.Black with { A = 0.2f});
+            Game.RenderContext.Clear(Color.Known.Black with { A = 0.2f });
             string str =
                 $"DrawCalls: {Game.LastDrawCalls}\n" +
                 $"FrameTime: {Game.FrameTime:F4}\n" +
@@ -106,7 +104,6 @@ public class MyMainWindow : Window
                 Matrix3x2.CreateTranslation(500f, 250f) *
                 Matrix3x2.CreateTranslation(position)
                 );
-
         }
         Game.RenderContext.RenderTarget = null;
         spriteBatch.DrawTexture(tempTarget.Texture, Vector2.One * 10.0f);
@@ -117,9 +114,8 @@ public class Program
 {
     public static void Main()
     {
-        Game game = new(new Win32Platform());
-        var win = new MyMainWindow(game);
-        game.Window = win;
+        Game game = new();
+        game.Window = new MyMainWindow(game);
         game.ExpectedFps = game.VSyncFps;
         //game.VSyncEnabled = true;
         game.Run();
