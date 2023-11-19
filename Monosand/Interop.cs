@@ -12,9 +12,9 @@ internal unsafe class Interop
     public struct RECT { public int left, top, right, bottom; }
 
     [DllImport(DllPath)] public static extern int MsdInitialize();
-    // returns HWND + HDC
+    // on windows, it returns a pointer point to { HWND, HDC }
     [DllImport(DllPath)] public static extern IntPtr MsdCreateWindow(int width, int height, char* title, IntPtr gcHandle);
-    // returns HGLRC
+    // when the graphics backend is opengl33, it returns HGLRC
     [DllImport(DllPath)] public static extern IntPtr MsdCreateRenderContext();
     [DllImport(DllPath)] public static extern IntPtr MsdAttachRenderContext(IntPtr winHandle, IntPtr hrc);
     [DllImport(DllPath)] public static extern void* MsdBeginPollEvents(IntPtr winHandle, out nint count, out int* events);

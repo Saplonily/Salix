@@ -16,7 +16,9 @@ public class Window
     private IntPtr nativeHandle;
 
     /// <summary>Native handle of this Window, on windows it's an HWND.</summary>
-    public IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
+    public unsafe IntPtr Handle => (IntPtr)(*(void**)NativeHandle);
+
+    internal IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
 
     /// <summary>Is this window closed, will be <see langword="true"/> when the window closed or disposed.</summary>
     public bool IsClosed => isClosed;
