@@ -112,9 +112,9 @@ public class Game
             // ----- tick ------
 
             RenderContext.ProcessQueuedActions();
+            window.PollEvents();
             foreach (var item in deferredActions) item();
             deferredActions.Clear();
-            window.PollEvents();
             if (window.IsClosed)
                 break;
 

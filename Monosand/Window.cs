@@ -141,7 +141,13 @@ public class Window
     public void Close()
     {
         EnsureState();
-        Game.DeferredInvoke(() => Interop.MsdDestroyWindow(nativeHandle));
+        Game.DeferredInvoke(() =>
+        {
+            Interop.MsdDestroyWindow(nativeHandle);
+            isClosed = true;
+            nativeHandle = IntPtr.Zero;
+            OnClosed();
+        });
     }
 
     internal void SwapBuffers()
@@ -149,13 +155,6 @@ public class Window
         EnsureState();
         PreviewSwapBuffer?.Invoke();
         Interop.MsdgSwapBuffers(nativeHandle);
-    }
-
-    internal void OnCallbackDestroy()
-    {
-        isClosed = true;
-        nativeHandle = IntPtr.Zero;
-        OnClosed();
     }
 
     internal void Tick()
@@ -191,7 +190,6 @@ public class Window
             switch (e[i])
             {
             case 1: if (win.OnClosing()) Close(); break;
-            case 2: win.OnCallbackDestroy(); break;
             case 3: win.OnMoved(e[i + 1], e[i + 2]); break;
             case 4: win.OnResized(e[i + 1], e[i + 2]); break;
             case 5: win.OnKeyPressed((Key)e[i + 1]); break;

@@ -7,8 +7,7 @@
 enum class event : int32_t
 {
     close = 1,
-    destroy,
-    move,
+    move = 3,
     resize,
     key_down,
     key_up,
@@ -69,12 +68,6 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     case WM_CLOSE:
     {
         we.type = event::close;
-        push_e(we);
-        return 0;
-    }
-    case WM_DESTROY:
-    {
-        we.type = event::destroy;
         push_e(we);
         return 0;
     }
