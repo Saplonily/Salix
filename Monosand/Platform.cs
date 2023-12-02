@@ -53,22 +53,4 @@ public unsafe class Platform
         var wh = window.NativeHandle;
         Interop.MsdAttachRenderContext(wh, context.NativeHandle);
     }
-
-    internal UnmanagedMemoryChunk LoadAudio(ReadOnlySpan<byte> source, out int samples, out AudioFormat format)
-    {
-        void* data;
-        fixed (void* ptr = source)
-        {
-            data = Interop.MsdLoadAudio(ptr, out samples, out format);
-            if (data is null)
-                throw new ResourceLoadFailedException(ResourceType.Audio);
-            return new(data, format.BitDepth / 8 * format.SampleRate * format.ChannelsCount * samples);
-        }
-    }
-
-    internal void FreeAudio(UnmanagedMemoryChunk audio)
-    {
-        ThrowHelper.ThrowIfArgInvalid(audio.IsEmpty, nameof(audio));
-        Interop.MsdFreeAudio(audio.Pointer);
-    }
 }

@@ -19,7 +19,6 @@ public class MyMainWindow : Window
     private SpriteBatch spriteBatch = null!;
     private RenderTarget tempTarget = null!;
     private SpriteShader spriteEffect = null!;
-    private AudioData audioData = null!;
 
     Vector2 posBase;
     Vector2 position;
@@ -38,7 +37,6 @@ public class MyMainWindow : Window
         texture500x500 = Game.ResourceLoader.LoadTexture2D("TestAssets/500x500.png");
         texture64x64 = Game.ResourceLoader.LoadTexture2D("TestAssets/64x64.png");
         texture768x448 = Game.ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
-        //audioData = Game.ResourceLoader.LoadAudio("TestAssets/test_rock.wav");
 
         try
         {
