@@ -39,11 +39,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes\win-x64\native</PackagePath>
       <Pack>true</Pack>
+      <Visible>false</Visible>
     </None>
 
     <None Include="..\libmsd\bin\win-x32\libmsd.dll" Condition="Exists('..\libmsd\bin\win-x32\libmsd.dll')">
       <PackagePath>runtimes\win-x32\native</PackagePath>
       <Pack>true</Pack>
+      <Visible>false</Visible>
     </None>
   </ItemGroup>
 

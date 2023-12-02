@@ -11,7 +11,7 @@ internal unsafe struct UnmanagedMemoryChunk
     public static UnmanagedMemoryChunk Empty => new(null, 0);
     public readonly bool IsEmpty => Pointer == null;
 
-    public UnmanagedMemoryChunk(void* pointer, nint size) 
+    public UnmanagedMemoryChunk(void* pointer, nint size)
         : this((byte*)pointer, size)
     { }
 

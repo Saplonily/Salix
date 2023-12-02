@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.Versioning;
 
 using Monosand;
@@ -47,7 +45,7 @@ public class MyMainWindow : Window
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the TestAssets folder of Test.Win32!");
         }
         tempTarget = new(Game.RenderContext, 1200, 600);
-        spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("TestAssets/MyShader.vert", "TestAssets/MyShader.frag"));
+        //spriteEffect = new SpriteShader(Game.ResourceLoader.LoadGlslShader("TestAssets/MyShader.vert", "TestAssets/MyShader.frag"));
         //spriteBatch = new SpriteBatch(Game, spriteEffect);
         spriteBatch = new(Game);
     }
