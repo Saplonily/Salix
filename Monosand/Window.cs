@@ -141,7 +141,7 @@ public class Window
     public void Close()
     {
         EnsureState();
-        Game.DeferredInvoke(() =>
+        Game.InvokeDeferred(() =>
         {
             Interop.MsdDestroyWindow(nativeHandle);
             isClosed = true;
@@ -157,18 +157,15 @@ public class Window
         Interop.MsdgSwapBuffers(nativeHandle);
     }
 
-    internal void Tick()
+    internal void Update()
     {
-        ThrowHelper.ThrowIfInvalid(Game.RenderContext is null, "No RenderContext attched to this window.");
-
-        Update();
-        Render();
-        SwapBuffers();
-        // I think someone might try handling input in Render()
-        // make them happy
+        EnsureState();
         keyboardState.Update();
         pointerState.Update();
     }
+
+    internal void AttachRenderContext(RenderContext context)
+        => Interop.MsdAttachRenderContext(NativeHandle, context.NativeHandle);
 
     internal unsafe void PollEvents()
     {
@@ -302,16 +299,6 @@ public class Window
     {
         PointerState.SetPosition(new(x, y));
         PointerState.AddWheelDelta(delta);
-    }
-
-    /// <summary>The update logic.</summary>
-    public virtual void Update()
-    {
-    }
-
-    /// <summary>The render logic.</summary>
-    public virtual void Render()
-    {
     }
 
     private void EnsureState()

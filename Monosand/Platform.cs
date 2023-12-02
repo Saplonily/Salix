@@ -44,13 +44,4 @@ public unsafe class Platform
         ThrowHelper.ThrowIfArgInvalid(image.IsEmpty, nameof(image));
         Interop.MsdFreeImage(image.Pointer);
     }
-
-    internal long GetUsecTimeline()
-        => Interop.MsdGetUsecTimeline();
-
-    internal void AttachRenderContext(RenderContext context, Window window)
-    {
-        var wh = window.NativeHandle;
-        Interop.MsdAttachRenderContext(wh, context.NativeHandle);
-    }
 }

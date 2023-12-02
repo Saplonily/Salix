@@ -2,5 +2,5 @@
 
 public enum MonosandPlatform
 {
-    Win32, Linux, Android
+    Unknown, Win32, Linux, Android
 }

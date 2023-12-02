@@ -6,29 +6,17 @@ public class Game
     public const int DefaultWindowHeight = 720;
 
     private readonly Platform platform;
-    private Window? window;
     private long ticks;
     private int laggedFrames;
     private List<Action> deferredActions;
 
     public RenderContext RenderContext { get; private set; }
-    public Window Window
-    {
-        get => window ?? throw SR.PropNotSet(nameof(Window));
-        set
-        {
-            if (window is not null)
-                throw SR.PropSet(nameof(Window));
-            window = value;
-            platform.AttachRenderContext(RenderContext, window);
-            window.OnInitialize();
-        }
-    }
-
+    public Window Window { get; private set; }
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
+
     /// <summary>Indicates whether the game is lagging
-    /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 5 frames.).</summary>
+    /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 16 frames).</summary>
     public bool IsRunningSlowly => laggedFrames > 5;
 
     /// <summary>Indicates how many frames have passed since the game started.</summary>
@@ -62,27 +50,35 @@ public class Game
     public double VSyncFps => 1d / RenderContext.VSyncFrameTime;
 
     public int LastDrawCalls { get; private set; }
+    public KeyboardState KeyboardState => Window.KeyboardState;
+    public PointerState PointerState => Window.PointerState;
 
     public Game()
     {
         deferredActions = new();
         platform = new Platform();
         platform.Initialize();
-        RenderContext = new RenderContext();
-
-        ExpectedFps = 60d;
-        FrameTime = 1d / ExpectedFps;
         ticks = 0;
+        ExpectedFps = 60d;
+        FrameTime = 1d / 60d;
+        Window = new Window(this);
+        RenderContext = new RenderContext();
+        Window.AttachRenderContext(RenderContext);
         ResourceLoader = new ResourceLoader(this);
     }
 
-    public void DeferredInvoke(Action action)
+    /// <summary>The update logic.</summary>
+    public virtual void Update() { }
+
+    /// <summary>The render logic.</summary>
+    public virtual void Render() { }
+
+    public void InvokeDeferred(Action action)
         => deferredActions.Add(action);
 
     public void Run()
     {
-        ThrowHelper.ThrowIfInvalid(window is null);
-        window.Show();
+        Window.Show();
         FrameTime = ExpectedFrameTime;
 
         // FIXME this is a silly method to sync with the display
@@ -95,7 +91,7 @@ public class Game
             VSyncEnabled = false;
         }
 
-        long currentTimeLine = platform.GetUsecTimeline();
+        long currentTimeLine = Interop.MsdGetUsecTimeline();
         long expectedTimeLine = currentTimeLine + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
         LastDrawCalls = 0;
         while (true)
@@ -112,14 +108,17 @@ public class Game
             // ----- tick ------
 
             RenderContext.ProcessQueuedActions();
-            window.PollEvents();
+            Window.PollEvents();
             foreach (var item in deferredActions) item();
             deferredActions.Clear();
-            if (window.IsClosed)
+            if (Window.IsClosed)
                 break;
 
             long pdrawcalls = RenderContext.TotalDrawCalls;
-            window.Tick();
+            Update();
+            Render();
+            Window.Update();
+            Window.SwapBuffers();
             LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
 
             ticks++;
@@ -127,7 +126,7 @@ public class Game
 
             long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
             long pCurrentTimeLine = currentTimeLine;
-            currentTimeLine = platform.GetUsecTimeline();
+            currentTimeLine = Interop.MsdGetUsecTimeline();
             int toSleepUsec = (int)(expectedTimeLine - currentTimeLine);
             if (!VSyncEnabled)
             {
@@ -148,8 +147,8 @@ public class Game
                 long times = (currentTimeLine - expectedTimeLine) / realFrameTimeUsec + 1;
                 expectedTimeLine += times * realFrameTimeUsec;
                 laggedFrames += 1;
-                if (laggedFrames > 10)
-                    laggedFrames = 10;
+                if (laggedFrames > 16)
+                    laggedFrames = 16;
             }
             else
             {
