@@ -107,7 +107,6 @@ public class Program
     public static void Main()
     {
         MyGame game = new();
-        //game.Window = new MyMainWindow(game);
         game.ExpectedFps = game.VSyncFps;
         //game.VSyncEnabled = true;
         game.Run();
