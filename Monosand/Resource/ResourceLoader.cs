@@ -58,7 +58,9 @@ public unsafe class ResourceLoader
         stream.Read(bytes, 0, length);
 
         var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
-        Texture2D texture = new(game.RenderContext, width, height, chunk.Pointer, format);
+        Texture2D texture;
+        fixed (byte* ptr = chunk)
+            texture = new(game.RenderContext, width, height, ptr, format);
         platform.FreeImage(chunk);
 
         ByteArrayPool.Shared.Return(bytes);

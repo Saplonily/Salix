@@ -14,6 +14,8 @@ public sealed class Texture2D : GraphicsResource
 
     public int Width { get { EnsureState(); return width; } }
     public int Height { get { EnsureState(); return height; } }
+    public Vector2 Size => new(Width, Height);
+    public Vector2 Center => Size / 2.0f;
 
     public TextureFilterType Filter
     {
@@ -27,14 +29,8 @@ public sealed class Texture2D : GraphicsResource
         set { EnsureState(); Interop.MsdgSetTextureWrap(nativeHandle, wrap); wrap = value; }
     }
 
-    public Vector2 Size => new(Width, Height);
-    public Vector2 Center => Size / 2.0f;
-
-    public Texture2D(RenderContext renderContext, int width, int height, ReadOnlySpan<byte> data, ImageFormat format)
-        : this(renderContext, width, height)
-        => SetData(width, height, data, format);
-
-    public Texture2D(RenderContext renderContext, int width, int height) : base(renderContext)
+    public Texture2D(RenderContext renderContext, int width, int height)
+        : base(renderContext)
     {
         (this.width, this.height) = (width, height);
         nativeHandle = Interop.MsdgCreateTexture(width, height);
@@ -42,15 +38,17 @@ public sealed class Texture2D : GraphicsResource
         Wrap = TextureWrapType.ClampToEdge;
     }
 
+    public Texture2D(RenderContext renderContext, int width, int height, ReadOnlySpan<byte> data, ImageFormat format)
+        : this(renderContext, width, height)
+        => SetData(width, height, data, format);
+
     [CLSCompliant(false)]
     public unsafe Texture2D(RenderContext renderContext, int width, int height, void* data, ImageFormat format)
         : this(renderContext, width, height)
     {
-        if (data != null)
-        {
-            (this.width, this.height) = (width, height);
-            SetData(width, height, data, format);
-        }
+        if (data == null) return;
+        (this.width, this.height) = (width, height);
+        SetData(width, height, data, format);
     }
 
     [CLSCompliant(false)]

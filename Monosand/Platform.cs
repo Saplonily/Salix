@@ -27,7 +27,7 @@ public unsafe class Platform
     internal Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-    internal unsafe UnmanagedMemoryChunk LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
+    internal unsafe Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
         void* data;
         fixed (void* ptr = source)
@@ -39,9 +39,10 @@ public unsafe class Platform
         }
     }
 
-    internal void FreeImage(UnmanagedMemoryChunk image)
+    internal void FreeImage(Span<byte> imageData)
     {
-        ThrowHelper.ThrowIfArgInvalid(image.IsEmpty, nameof(image));
-        Interop.MsdFreeImage(image.Pointer);
+        ThrowHelper.ThrowIfArgInvalid(imageData.IsEmpty, nameof(imageData));
+        fixed (byte* ptr = imageData)
+            Interop.MsdFreeImage(ptr);
     }
 }
