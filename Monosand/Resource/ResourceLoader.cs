@@ -58,9 +58,7 @@ public unsafe class ResourceLoader
         stream.Read(bytes, 0, length);
 
         var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
-        Texture2D texture;
-        fixed (byte* ptr = chunk)
-            texture = new(game.RenderContext, width, height, ptr, format);
+        Texture2D texture = new(game.RenderContext, width, height, chunk.Pointer, format);
         platform.FreeImage(chunk);
 
         ByteArrayPool.Shared.Return(bytes);
@@ -88,6 +86,16 @@ public unsafe class ResourceLoader
         return shader;
     }
 
+    public AudioData LoadAudio(Stream stream)
+    {
+        int length = MakeItNotTooLong(stream.Length);
+        byte[] data = ByteArrayPool.Shared.Rent(length);
+        stream.Read(data, 0, length);
+        var audioData = new AudioData(platform, new(data, 0, length));
+        ByteArrayPool.Shared.Return(data);
+        return audioData;
+    }
+
     public Texture2D LoadTexture2D(string fileName)
     {
         using var fs = OpenReadStream(fileName);
@@ -106,5 +114,11 @@ public unsafe class ResourceLoader
         using var ts = OpenReadStream(textureFileName);
         using var es = OpenReadStream(entriesBinFileName);
         return LoadSpriteFont(ts, es);
+    }
+
+    public AudioData LoadAudio(string audioFileName)
+    {
+        using var fs = OpenReadStream(audioFileName);
+        return LoadAudio(fs);
     }
 }

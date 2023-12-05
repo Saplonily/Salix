@@ -16,7 +16,7 @@ public class MyGame : Game
     private SpriteFont sprFont;
     private SpriteBatch spriteBatch;
     private RenderTarget tempTarget;
-    //private SpriteShader spriteEffect;
+    private AudioData audioData = null!;
 
     Vector2 posBase;
     Vector2 position;
@@ -31,6 +31,7 @@ public class MyGame : Game
         texture500x500 = ResourceLoader.LoadTexture2D("TestAssets/500x500.png");
         texture64x64 = ResourceLoader.LoadTexture2D("TestAssets/64x64.png");
         texture768x448 = ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
+        audioData = ResourceLoader.LoadAudio("TestAssets/test_rock.wav");
 
         try
         {

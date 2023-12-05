@@ -68,6 +68,7 @@ internal unsafe class Interop
         int verticesCount
     );
 
+    // TODO `length` is `int` here because stb_image require it
     [DllImport(DllPath)]
     public static extern void* MsdLoadImage(
         void* memory, int length, out int width,
@@ -114,4 +115,6 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetRenderTarget(IntPtr renderTargetHandle);
     [DllImport(DllPath)] public static extern void MsdgSetTextureFilter(IntPtr texHandle, TextureFilterType min, TextureFilterType max);
     [DllImport(DllPath)] public static extern void MsdgSetTextureWrap(IntPtr texHandle, TextureWrapType wrap);
+    [DllImport(DllPath)] public static extern void* MsdLoadAudio(void* memory, nint length, out int frames, out AudioFormat format);
+    [DllImport(DllPath)] public static extern void MsdFreeAudio(void* memory);
 }

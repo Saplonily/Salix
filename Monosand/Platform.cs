@@ -27,7 +27,7 @@ public unsafe class Platform
     internal Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
-    internal unsafe Span<byte> LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
+    internal unsafe UnmanagedMemory LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
         void* data;
         fixed (void* ptr = source)
@@ -39,10 +39,27 @@ public unsafe class Platform
         }
     }
 
-    internal void FreeImage(Span<byte> imageData)
+    internal void FreeImage(UnmanagedMemory imageData)
     {
         ThrowHelper.ThrowIfArgInvalid(imageData.IsEmpty, nameof(imageData));
-        fixed (byte* ptr = imageData)
-            Interop.MsdFreeImage(ptr);
+        Interop.MsdFreeImage(imageData.Pointer);
+    }
+
+    internal UnmanagedMemory LoadAudio(ReadOnlySpan<byte> source, out int frames, out AudioFormat format)
+    {
+        void* data;
+        fixed (void* ptr = source)
+        {
+            data = Interop.MsdLoadAudio(ptr, out frames, out format);
+            if (data is null)
+                throw new ResourceLoadFailedException(ResourceType.Audio);
+            return new(data, format.BitDepth / 8 * format.SampleRate * format.ChannelsCount * frames);
+        }
+    }
+
+    internal void FreeAudio(UnmanagedMemory audioData)
+    {
+        ThrowHelper.ThrowIfArgInvalid(audioData.IsEmpty, nameof(audioData));
+        Interop.MsdFreeAudio(audioData.Pointer);
     }
 }
