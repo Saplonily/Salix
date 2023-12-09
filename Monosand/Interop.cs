@@ -115,6 +115,11 @@ internal unsafe class Interop
     [DllImport(DllPath)] public static extern void MsdgSetRenderTarget(IntPtr renderTargetHandle);
     [DllImport(DllPath)] public static extern void MsdgSetTextureFilter(IntPtr texHandle, TextureFilterType min, TextureFilterType max);
     [DllImport(DllPath)] public static extern void MsdgSetTextureWrap(IntPtr texHandle, TextureWrapType wrap);
-    [DllImport(DllPath)] public static extern void* MsdLoadAudio(void* memory, nint length, out int frames, out AudioFormat format);
+
+    [DllImport(DllPath)]
+    public static extern void* MsdLoadAudio(
+        void* memory, nint dataSize,
+        out nint loadedDataSize, out long frames, out AudioFormat format
+        );
     [DllImport(DllPath)] public static extern void MsdFreeAudio(void* memory);
 }

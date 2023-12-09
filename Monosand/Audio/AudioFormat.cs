@@ -1,15 +1,17 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
 /// <summary>Represents a PCM audio format.</summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct AudioFormat : IEquatable<AudioFormat>
+[DebuggerDisplay("Channels = {ChannelsCount}, SampleRate = {SampleRate}Hz , BitDepth = {BitDepth}, IsFloatFormat = {IsFloatFormat}")]
+public readonly struct AudioFormat : IEquatable<AudioFormat>
 {
-    private int sampleRate;
-    private byte channelsCount;
-    private byte bitDepth;
-    private byte isFloat;
+    private readonly int sampleRate;
+    private readonly byte channelsCount;
+    private readonly byte bitDepth;
+    private readonly byte isFloat;
 
     public readonly int SampleRate => sampleRate;
     public readonly byte ChannelsCount => channelsCount;
@@ -36,7 +38,6 @@ public struct AudioFormat : IEquatable<AudioFormat>
         else if (
             typeof(T) == typeof(float) ||
             typeof(T) == typeof(double)
-
 #if NET5_0_OR_GREATER
             || typeof(T) == typeof(Half)
 #endif
