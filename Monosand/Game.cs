@@ -11,6 +11,7 @@ public class Game
     private List<Action> deferredActions;
 
     public RenderContext RenderContext { get; private set; }
+    public AudioContext AudioContext { get; private set; }
     public Window Window { get; private set; }
     public Platform Platform => platform;
     public ResourceLoader ResourceLoader { get; }
@@ -64,6 +65,8 @@ public class Game
         Window = new Window(this);
         RenderContext = new RenderContext();
         Window.AttachRenderContext(RenderContext);
+        AudioContext = new AudioContext();
+        AudioContext.MakeCurrent();
         ResourceLoader = new ResourceLoader(this);
     }
 

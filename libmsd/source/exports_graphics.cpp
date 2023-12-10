@@ -4,18 +4,16 @@
 #include "exports.h"
 #include "enums.h"
 
-class vertex_type_handle
+struct vertex_type_handle
 {
-public:
     VertexElementType* type_ptr;
     int length;
     // for the default 'DrawPrimitive' method
     GLuint default_vao_id;
 };
 
-class buffer_handle
+struct buffer_handle
 {
-public:
     GLuint vbo_id;
     GLuint vao_id;
     GLuint ibo_id;
@@ -90,7 +88,7 @@ EXPORT void* CALLCONV MsdgRegisterVertexType(VertexElementType* type, int len)
 {
     VertexElementType* tptr = new VertexElementType[len];
     memcpy(tptr, type, len * sizeof(VertexElementType));
-    vertex_type_handle* h = small_alloc<vertex_type_handle>();
+    vertex_type_handle* h = new vertex_type_handle;
     h->type_ptr = tptr;
     h->length = len;
     h->default_vao_id = 0;

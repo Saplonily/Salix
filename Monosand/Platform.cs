@@ -2,6 +2,7 @@
 
 #pragma warning disable CA1822 // Mark members as static
 
+// TODO maybe we can just remove this class
 public unsafe class Platform
 {
     private GraphicsBackend graphicsBackend;
@@ -27,6 +28,7 @@ public unsafe class Platform
     internal Stream OpenReadStream(string fileName)
         => new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
+    // TODO remove these resource loading methods
     internal unsafe UnmanagedMemory LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
         void* data;

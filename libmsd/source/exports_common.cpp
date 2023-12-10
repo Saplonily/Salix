@@ -130,7 +130,7 @@ EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* titl
 
     window_msg_loop_init(hwnd);
 
-    win_handle* wh = small_alloc<win_handle>();
+    win_handle* wh = new win_handle;
     wh->hwnd = hwnd;
     wh->hdc = hdc;
     return wh;
@@ -150,7 +150,7 @@ EXPORT void CALLCONV MsdDestroyWindow(win_handle* handle)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
-    small_free(handle);
+    delete handle;
     timeEndPeriod(1);
 }
 

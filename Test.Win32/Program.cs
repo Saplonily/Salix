@@ -11,11 +11,11 @@ public class MyGame : Game
 {
     private SpriteFont sprFont;
     private SpriteBatch spriteBatch;
-    private AudioData audioData = null!;
+    private Sound sound = null!;
 
     public MyGame()
     {
-        audioData = ResourceLoader.LoadAudio("TestAssets/test_rock.wav");
+        sound = new(ResourceLoader.LoadAudio("TestAssets/test_rock.wav"));
 
         try
         {
@@ -33,6 +33,9 @@ public class MyGame : Game
         base.Update();
         if (Ticks % 10 == 0)
             Window.Title = $"Monosand Test.Win32 | {DateTime.Now} | FPS: {Fps:F2} | FrameTime: {FrameTime:F4}";
+
+        if (KeyboardState.IsJustPressed(Key.A))
+            sound.Play();
     }
 
     public override void Render()
@@ -45,6 +48,7 @@ public class MyGame : Game
             Press <P> to pause the audio or resume.
             Press <J> to stop the audio.
             """;
+
         spriteBatch.DrawText(sprFont, text, Vector2.One * 50f);
     }
 }
