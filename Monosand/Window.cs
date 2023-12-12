@@ -174,7 +174,7 @@ public class Window
         Game.RenderContext.ProcessQueuedActions();
         int count;
         int* e;
-        void* handle = Interop.MsdBeginPollEvents(nativeHandle, out var ncount, out e);
+        void* handle = Interop.MsdBeginPullEvents(nativeHandle, out var ncount, out e);
         if (ncount > int.MaxValue)
             throw new OperationFailedException("Too many win events.(> int.MaxValue)");
         count = (int)ncount;
@@ -219,7 +219,7 @@ public class Window
             }
         }
 
-        Interop.MsdEndPollEvents(nativeHandle, handle);
+        Interop.MsdEndPullEvents(nativeHandle, handle);
 
         static Window HandleToWin(IntPtr handle)
             => (Window)GCHandle.FromIntPtr(handle).Target!;

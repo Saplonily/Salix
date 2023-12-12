@@ -16,9 +16,9 @@ internal unsafe partial class Interop
 
     [DllImport(DllPath)] public static extern IntPtr MsdAttachRenderContext(IntPtr winHandle, IntPtr hrc);
 
-    [DllImport(DllPath)] public static extern void* MsdBeginPollEvents(IntPtr winHandle, out nint count, out int* events);
+    [DllImport(DllPath)] public static extern void* MsdBeginPullEvents(IntPtr winHandle, out nint count, out int* events);
 
-    [DllImport(DllPath)] public static extern void MsdEndPollEvents(IntPtr winHandle, void* ehandle);
+    [DllImport(DllPath)] public static extern void MsdEndPullEvents(IntPtr winHandle, void* ehandle);
 
     [DllImport(DllPath)] public static extern void MsdShowWindow(IntPtr winHandle);
 

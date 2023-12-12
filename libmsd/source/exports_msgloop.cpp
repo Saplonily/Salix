@@ -246,7 +246,7 @@ void window_msg_loop_init(HWND)
     event_list_2->reserve(16);
 }
 
-EXPORT event_list_t* CALLCONV MsdBeginPollEvents(win_handle* whandle, size_t* count, win_event** events)
+EXPORT event_list_t* CALLCONV MsdBeginPullEvents(win_handle* whandle, size_t* count, win_event** events)
 {
     assert(began_polling == false);
 
@@ -270,7 +270,7 @@ EXPORT event_list_t* CALLCONV MsdBeginPollEvents(win_handle* whandle, size_t* co
     return event_list_2;
 }
 
-EXPORT void CALLCONV MsdEndPollEvents(win_handle* whandle, event_list_t* handle)
+EXPORT void CALLCONV MsdEndPullEvents(win_handle* whandle, event_list_t* handle)
 {
     assert(began_polling == true);
     handle->clear();
