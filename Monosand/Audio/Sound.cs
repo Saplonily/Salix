@@ -1,9 +1,12 @@
 ﻿namespace Monosand;
 
+// TODO dispose impl
 public sealed class Sound
 {
     private IntPtr nativeHandle;
     private AudioData audioData;
+
+    public AudioData AudioData => audioData;
 
     public unsafe Sound(AudioData audioData)
     {
@@ -13,9 +16,15 @@ public sealed class Sound
             throw new OperationFailedException("Sound creation failed.");
     }
 
-    public void Play()
+    public SoundInstance CreateInstance()
     {
-        IntPtr si = Interop.MsdaCreateSoundInstance(nativeHandle);
-        Interop.MsdaPlaySoundInstance(si);
+        return new(this, Interop.MsdaCreateSoundInstance(nativeHandle));
+    }
+
+    public SoundInstance Play()
+    {
+        SoundInstance si = CreateInstance();
+        Interop.MsdaPlaySoundInstance(si.NativeHandle);
+        return si;
     }
 }

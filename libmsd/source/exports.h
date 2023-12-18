@@ -3,7 +3,6 @@
 #define H_EXPORTS
 
 #include <Windows.h>
-#include "enums.h"
 #define EXPORT extern "C" __declspec(dllexport)
 #define CALLCONV __stdcall
 

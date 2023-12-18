@@ -11,11 +11,13 @@ public class MyGame : Game
 {
     private SpriteFont sprFont;
     private SpriteBatch spriteBatch;
-    private Sound sound = null!;
+    private Sound soundRock = null!;
+    private Sound soundPiano = null!;
 
     public MyGame()
     {
-        sound = new(ResourceLoader.LoadAudio("TestAssets/test_rock.wav"));
+        soundRock = new(ResourceLoader.LoadAudio("TestAssets/test_rock.wav"));
+        soundPiano = new(ResourceLoader.LoadAudio("TestAssets/test_piano.wav"));
 
         try
         {
@@ -27,7 +29,7 @@ public class MyGame : Game
         }
         spriteBatch = new(this);
     }
-
+    SoundInstance? si;
     public override void Update()
     {
         base.Update();
@@ -35,7 +37,24 @@ public class MyGame : Game
             Window.Title = $"Monosand Test.Win32 | {DateTime.Now} | FPS: {Fps:F2} | FrameTime: {FrameTime:F4}";
 
         if (KeyboardState.IsJustPressed(Key.A))
-            sound.Play();
+        {
+            si = soundPiano.Play();
+            si.PlaySpeed = 0.5f;
+            si.Next = soundPiano.CreateInstance();
+            si.Next.PlaySpeed = 2.0f;
+        }
+        if (KeyboardState.IsJustPressed(Key.E))
+        {
+            si = soundPiano.Play();
+        }
+        if (KeyboardState.IsJustPressed(Key.G))
+        {
+            GC.Collect();
+        }
+        if (KeyboardState.IsJustPressed(Key.N))
+        {
+            si = null;
+        }
     }
 
     public override void Render()
@@ -48,8 +67,12 @@ public class MyGame : Game
             Press <P> to pause the audio or resume.
             Press <J> to stop the audio.
             """;
+        if (si is not null)
+        {
+            text += $"\n{si.PlayedDuration} / {si.Sound.AudioData.Duration}";
+        }
 
-        spriteBatch.DrawText(sprFont, text, Vector2.One * 50f);
+        spriteBatch.DrawText(sprFont, text, Vector2.One * 100.0f, Vector2.One * 1f);
     }
 }
 

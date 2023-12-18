@@ -2,7 +2,7 @@
 #include <vector>
 #include <Dwmapi.h>
 #include "exports.h"
-#include "enums.h"
+#include "enums_graphics.h"
 
 struct vertex_type_handle
 {

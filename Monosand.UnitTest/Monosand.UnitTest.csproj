@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.SDK">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworks);net472</TargetFrameworks>
+    <TargetFrameworks>$(MsdTargetFrameworks);net472</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 

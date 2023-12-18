@@ -3,7 +3,9 @@
 #include <Audioclient.h>
 #include <mmdeviceapi.h>
 #include <vector>
+#include <assert.h>
 #include <algorithm>
+#include <samplerate.h>
 #include <mutex>
 #include "dr_wav.h"
 
@@ -22,14 +24,16 @@ struct AudioFormat
 
 struct AudioContext
 {
-    std::mutex* mutex;
     std::vector<SoundInstance*> instances;
+    std::mutex* mutex;
+    std::vector<SoundInstance*> toPlayInstances;
     IAudioClient* client;
     IAudioRenderClient* renderer;
     HANDLE fillEvent;
     UINT32 bufferFrameSize;
 } static* currentContext;
 
+// warning: layout sensitive
 struct Sound
 {
     AudioFormat format;
@@ -37,10 +41,15 @@ struct Sound
     int64_t framesCount;
 };
 
+// warning: layout sensitive
 struct SoundInstance
 {
     Sound* sound;
+    SoundInstance* next;
+    SRC_STATE* src_state;
     int64_t playedFrames;
+    float_t playSpeed;
+    int32_t refCount;
 };
 
 // TODO check_hr impl?
@@ -49,7 +58,12 @@ struct SoundInstance
 
 static DWORD audio_processing_thread(LPVOID param);
 
-EXPORT void* CALLCONV MsdLoadAudio(void* memory, size_t dataSize, size_t* loadedDataSize, int64_t* frames, AudioFormat* format)
+// TODO support other encode formats
+EXPORT void* CALLCONV MsdLoadAudio(
+    void* memory, size_t dataSize,
+    size_t* loadedDataSize, int64_t* frames,
+    AudioFormat* format
+)
 {
     drwav drwav;
     if (!drwav_init_memory(&drwav, memory, dataSize, nullptr))
@@ -140,8 +154,11 @@ EXPORT AudioContext* CALLCONV MsdaCreateAudioContext()
     ac->fillEvent = fillEvent;
     ac->bufferFrameSize = bufferFrameSize;
     ac->instances = std::vector<SoundInstance*>();
+    ac->toPlayInstances = std::vector<SoundInstance*>();
     ac->mutex = new std::mutex();
-    CreateThread(0, 0, audio_processing_thread, ac, 0, nullptr);
+    HANDLE thr = CreateThread(0, 0, audio_processing_thread, ac, 0, nullptr);
+    if (thr)
+        SetThreadPriority(thr, THREAD_PRIORITY_ABOVE_NORMAL);
 
     aclient->Start();
 
@@ -168,6 +185,11 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
     SoundInstance* si = new SoundInstance;
     si->sound = sound;
     si->playedFrames = 0;
+    si->next = nullptr;
+    si->playSpeed = 1.0f;
+    si->refCount = 0;
+    // need we able to control the quality?
+    si->src_state = src_new(SRC_LINEAR, sound->format.ChannelsCount, nullptr);
     return si;
 }
 
@@ -176,8 +198,17 @@ EXPORT void CALLCONV MsdaPlaySoundInstance(SoundInstance* si)
     AudioContext* ctx = currentContext;
     std::mutex* mutex = ctx->mutex;
     mutex->lock();
-    ctx->instances.push_back(si);
+    ctx->toPlayInstances.push_back(si);
+    si->refCount += 1;
     mutex->unlock();
+}
+
+EXPORT void CALLCONV MsdaDeleteSoundInstance(SoundInstance* si)
+{
+    assert(si->refCount == 0);
+    src_delete(si->src_state);
+    delete si;
+    //printf("deleted SoundInstance: %p\n", si);
 }
 
 static DWORD audio_processing_thread(LPVOID param)
@@ -186,41 +217,79 @@ static DWORD audio_processing_thread(LPVOID param)
     IAudioClient* client = ac->client;
     IAudioRenderClient* renderer = ac->renderer;
     UINT32 bufferFrameSize = ac->bufferFrameSize;
+    float_t* resampledBuffer = new float_t[(size_t)bufferFrameSize * mixfmt_sampleRate * mixfmt_channles];
+    std::vector<SoundInstance*>* instances = &ac->instances;
+    std::vector<SoundInstance*>* toPlayInstances = &ac->toPlayInstances;
+    std::mutex* mutex = ac->mutex;
     while (true)
     {
         WaitForSingleObject(ac->fillEvent, INFINITE);
+
+        if (toPlayInstances->size())
+        {
+            mutex->lock();
+            for (SoundInstance* si : *toPlayInstances)
+                ac->instances.push_back(si);
+            toPlayInstances->clear();
+            mutex->unlock();
+        }
 
         UINT32 paddingFrames;
         HRESULT hr = client->GetCurrentPadding(&paddingFrames);
         check_hr(hr);
         UINT32 todoFrames = bufferFrameSize - paddingFrames;
-        float_t* outputData;
+        float_t* outputData = nullptr;
         hr = renderer->GetBuffer(todoFrames, (BYTE**)&outputData);
         check_hr(hr);
 
-        memset(outputData, 0, (size_t)todoFrames * 2 * sizeof(float));
+        memset(outputData, 0, (size_t)todoFrames * mixfmt_channles * sizeof(float));
         for (SoundInstance* si : ac->instances)
         {
-            // TODO faster memadd
-            // TODO resample
             float_t* data = si->sound->audioData;
             int64_t playedFrames = si->playedFrames;
             int64_t siTodoFrames = min(si->sound->framesCount - playedFrames, todoFrames);
+            SRC_DATA src_data{};
+            src_data.data_in = data + playedFrames * mixfmt_channles;
+            src_data.data_out = resampledBuffer;
+            src_data.input_frames = si->sound->framesCount - playedFrames;
+            src_data.output_frames = todoFrames;
+            src_data.src_ratio = (double_t)mixfmt_sampleRate / si->sound->format.SampleRate / si->playSpeed;
+            src_data.end_of_input = 0; // TODO set it
+            src_process(si->src_state, &src_data);
+            // TODO faster memadd
             for (int64_t i = 0; i < siTodoFrames; i++)
             {
-                outputData[i * 2] += data[(playedFrames + i) * 2];
-                outputData[i * 2 + 1] += data[(playedFrames + i) * 2 + 1];
+                for (byte c = 0; c < mixfmt_channles; c++)
+                    outputData[i * mixfmt_channles + c] += resampledBuffer[i * mixfmt_channles + c];
             }
-            si->playedFrames += siTodoFrames;
+            si->playedFrames += src_data.input_frames_used;
+        }
+
+        using it_t = std::vector<SoundInstance*>::iterator;
+        for (it_t it = ac->instances.begin(); it != instances->end();)
+        {
+            SoundInstance* si = *it;
             if (si->playedFrames == si->sound->framesCount)
             {
-                ac->mutex->lock();
-                ac->instances.erase(std::find(ac->instances.cbegin(), ac->instances.cend(), si));
-                ac->mutex->unlock();
+                // TODO seamlessly?
+                it = instances->erase(it);
+                if (si->next && si->next->playedFrames < si->next->sound->framesCount)
+                {
+                    mutex->lock();
+                    toPlayInstances->push_back(si->next);
+                    mutex->unlock();
+                }
+                if (--si->refCount == 0)
+                    MsdaDeleteSoundInstance(si);
+            }
+            else
+            {
+                it++;
             }
         }
 
         hr = renderer->ReleaseBuffer(todoFrames, NULL);
         check_hr(hr);
     }
+    delete[] resampledBuffer;
 }

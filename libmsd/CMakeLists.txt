@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.25.0)
 include(CMakeDependentOption)
 
 project(libmsd)
+set(BUILD_TESTING false)
+add_subdirectory(thirdparty/libsamplerate)
 
 set(MSD_ARCH_NAME "")
 set(MSD_OS_NAME "")
@@ -33,11 +35,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY $<1:${CMAKE_SOURCE_DIR}/bin/${MSD_OS_NAME}-${
 add_library(libmsd SHARED)
 set_target_properties(libmsd PROPERTIES PREFIX "")
 set_target_properties(libmsd PROPERTIES IMPORT_PREFIX "")
-file(GLOB_RECURSE sources_files CONFIGURE_DEPENDS source/*.cpp source/*.c source/*.h thirdparty/*.cpp thirdparty/*.h thirdparty/*.c)
+file(GLOB_RECURSE sources_files CONFIGURE_DEPENDS source/*.cpp source/*.c source/*.h thirdparty/unpackaged/*.cpp thirdparty/unpackaged/*.h thirdparty/unpackaged/*.c)
 target_sources(libmsd PUBLIC ${sources_files})
 source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${sources_files})
 
-include_directories(thirdparty)
+include_directories(thirdparty/unpackaged)
+include_directories(thirdparty/libsamplerate/include)
 
 if(MSD_BUILD_WIN32)
     add_definitions("-DUNICODE" "-D_UNICODE")
@@ -45,3 +48,5 @@ if(MSD_BUILD_WIN32)
     target_link_libraries(libmsd winmm.lib)
     target_link_libraries(libmsd imm32.lib)
 endif()
+
+target_link_libraries(libmsd samplerate)

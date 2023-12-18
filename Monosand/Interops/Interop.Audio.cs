@@ -13,4 +13,6 @@ internal unsafe partial class Interop
     [DllImport(DllPath)] public static extern IntPtr MsdaCreateSoundInstance(IntPtr soundHandle);
 
     [DllImport(DllPath)] public static extern void MsdaPlaySoundInstance(IntPtr soundInstanceHandle);
+
+    [DllImport(DllPath)] public static extern void MsdaDeleteSoundInstance(IntPtr soundInstanceHandle);
 }
