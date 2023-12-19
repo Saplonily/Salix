@@ -1,23 +1,42 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Monosand;
 
 // TODO dispose impl
 public sealed unsafe class SoundInstance
 {
-    private IntPtr nativeHandle;
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SoundInstanceNative
+    {
+        public void* sound;
+        public void* next;
+        public void* src_state;
+        public long playedFrames;
+        public float playSpeed;
+        public int refCount;
+    }
+
+    private SoundInstanceNative* nativeHandle;
     private Sound sound;
     private SoundInstance? next;
 
-    internal IntPtr NativeHandle => nativeHandle;
-    private float* PlaySpeedPtr => (float*)(((long*)(((void**)nativeHandle.ToPointer()) + 3)) + 1);
-    private int* RefPtr => (int*)(PlaySpeedPtr + 1);
+    internal IntPtr NativeHandle => new IntPtr(nativeHandle);
 
     public Sound Sound => sound;
 
-    public float PlaySpeed { get => *PlaySpeedPtr; set { ThrowHelper.ThrowIfInvalid(PlaySpeed <= 0); *PlaySpeedPtr = value; } }
+    public float PlaySpeed
+    {
+        get => nativeHandle->playSpeed;
+        set
+        {
+            ThrowHelper.ThrowIfInvalid(PlaySpeed <= 0);
+            nativeHandle->playSpeed = value;
+        }
+    }
 
-    public long PlayedFramesCount => *(long*)(((void**)nativeHandle.ToPointer()) + 3);
+    public long PlayedFramesCount => nativeHandle->playedFrames;
 
     public float PlayedSeconds => (float)PlayedFramesCount / Sound.AudioData.SampleRate / Sound.AudioData.ChannelsCount;
 
@@ -30,16 +49,15 @@ public sealed unsafe class SoundInstance
         {
             var pnext = this.next;
             this.next = value;
-            IntPtr* p = ((IntPtr*)nativeHandle.ToPointer() + 1);
-            *p = value is null ? IntPtr.Zero : value.nativeHandle;
+            nativeHandle->next = value is null ? null : value.nativeHandle;
             SoundInstance? next = Next;
             if (next is not null)
-                *next.RefPtr += 1;
-            if(pnext != null)
+                next.nativeHandle->refCount += 1;
+            if (pnext != null)
             {
-                *pnext.RefPtr -= 1;
-                if (*pnext.RefPtr == 0)
-                    Interop.MsdaDeleteSoundInstance(pnext.nativeHandle);
+                pnext.nativeHandle->refCount -= 1;
+                if (pnext.nativeHandle->refCount == 0)
+                    Interop.MsdaDeleteSoundInstance(new IntPtr(pnext.nativeHandle));
             }
         }
     }
@@ -47,15 +65,15 @@ public sealed unsafe class SoundInstance
     internal SoundInstance(Sound sound, IntPtr nativeHandle)
     {
         this.sound = sound;
-        this.nativeHandle = nativeHandle;
-        *RefPtr += 1;
+        this.nativeHandle = (SoundInstanceNative*)nativeHandle;
+        this.nativeHandle->refCount += 1;
     }
 
     ~SoundInstance()
     {
         // decrease ref count
-        *RefPtr -= 1;
-        if (*RefPtr == 0)
-            Interop.MsdaDeleteSoundInstance(nativeHandle);
+        nativeHandle->refCount -= 1;
+        if (nativeHandle->refCount == 0)
+            Interop.MsdaDeleteSoundInstance(new IntPtr(nativeHandle));
     }
 }
