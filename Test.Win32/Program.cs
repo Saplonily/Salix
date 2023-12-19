@@ -38,10 +38,12 @@ public class MyGame : Game
 
         if (KeyboardState.IsJustPressed(Key.A))
         {
-            si = soundPiano.Play();
-            si.PlaySpeed = 0.5f;
+            si = soundPiano.CreateInstance();
             si.Next = soundPiano.CreateInstance();
-            si.Next.PlaySpeed = 2.0f;
+            si.Next.Next = soundPiano.CreateInstance();
+            si.Next.Next.Next = soundPiano.CreateInstance();
+            si.Next.Next.Next.Next = soundPiano.CreateInstance();
+            AudioContext.Play(si);
         }
         if (KeyboardState.IsJustPressed(Key.E))
         {

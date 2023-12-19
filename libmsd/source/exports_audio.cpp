@@ -193,43 +193,54 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
     return si;
 }
 
-EXPORT void CALLCONV MsdaPlaySoundInstance(SoundInstance* si)
-{
-    AudioContext* ctx = currentContext;
-    std::mutex* mutex = ctx->mutex;
-    mutex->lock();
-    ctx->toPlayInstances.push_back(si);
-    si->refCount += 1;
-    mutex->unlock();
-}
-
 EXPORT void CALLCONV MsdaDeleteSoundInstance(SoundInstance* si)
 {
     assert(si->refCount == 0);
+    if (si->next)
+    {
+        si->next->refCount--;
+        if (si->next->refCount == 0)
+            MsdaDeleteSoundInstance(si->next);
+    }
     src_delete(si->src_state);
     delete si;
     //printf("deleted SoundInstance: %p\n", si);
 }
 
+static void MsdaPlaySoundInstance(SoundInstance* si, AudioContext* ctx)
+{
+    std::mutex* mutex = ctx->mutex;
+    mutex->lock();
+    ctx->toPlayInstances.push_back(si);
+    si->refCount++;
+    mutex->unlock();
+}
+
+EXPORT void CALLCONV MsdaPlaySoundInstance(SoundInstance* si)
+{
+    AudioContext* ctx = currentContext;
+    MsdaPlaySoundInstance(si, ctx);
+}
+
 static DWORD audio_processing_thread(LPVOID param)
 {
-    AudioContext* ac = (AudioContext*)param;
-    IAudioClient* client = ac->client;
-    IAudioRenderClient* renderer = ac->renderer;
-    UINT32 bufferFrameSize = ac->bufferFrameSize;
+    AudioContext* ctx = (AudioContext*)param;
+    IAudioClient* client = ctx->client;
+    IAudioRenderClient* renderer = ctx->renderer;
+    UINT32 bufferFrameSize = ctx->bufferFrameSize;
     float_t* resampledBuffer = new float_t[(size_t)bufferFrameSize * mixfmt_sampleRate * mixfmt_channles];
-    std::vector<SoundInstance*>* instances = &ac->instances;
-    std::vector<SoundInstance*>* toPlayInstances = &ac->toPlayInstances;
-    std::mutex* mutex = ac->mutex;
+    std::vector<SoundInstance*>* instances = &ctx->instances;
+    std::vector<SoundInstance*>* toPlayInstances = &ctx->toPlayInstances;
+    std::mutex* mutex = ctx->mutex;
     while (true)
     {
-        WaitForSingleObject(ac->fillEvent, INFINITE);
+        WaitForSingleObject(ctx->fillEvent, INFINITE);
 
         if (toPlayInstances->size())
         {
             mutex->lock();
             for (SoundInstance* si : *toPlayInstances)
-                ac->instances.push_back(si);
+                ctx->instances.push_back(si);
             toPlayInstances->clear();
             mutex->unlock();
         }
@@ -243,7 +254,7 @@ static DWORD audio_processing_thread(LPVOID param)
         check_hr(hr);
 
         memset(outputData, 0, (size_t)todoFrames * mixfmt_channles * sizeof(float));
-        for (SoundInstance* si : ac->instances)
+        for (SoundInstance* si : ctx->instances)
         {
             float_t* data = si->sound->audioData;
             int64_t playedFrames = si->playedFrames;
@@ -266,21 +277,19 @@ static DWORD audio_processing_thread(LPVOID param)
         }
 
         using it_t = std::vector<SoundInstance*>::iterator;
-        for (it_t it = ac->instances.begin(); it != instances->end();)
+        for (it_t it = ctx->instances.begin(); it != instances->end();)
         {
             SoundInstance* si = *it;
             if (si->playedFrames == si->sound->framesCount)
             {
                 // TODO seamlessly?
                 it = instances->erase(it);
-                if (si->next && si->next->playedFrames < si->next->sound->framesCount)
-                {
-                    mutex->lock();
-                    toPlayInstances->push_back(si->next);
-                    mutex->unlock();
-                }
-                if (--si->refCount == 0)
+                if (si->next)
+                    MsdaPlaySoundInstance(si->next, ctx);
+                si->refCount--;
+                if (si->refCount == 0)
                     MsdaDeleteSoundInstance(si);
+
             }
             else
             {

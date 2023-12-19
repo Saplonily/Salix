@@ -12,6 +12,12 @@ public sealed class AudioContext
             throw new OperationFailedException("AudioContext creation failed.");
     }
 
+    public void Play(SoundInstance soundInstance)
+    {
+        EnsureState();
+        Interop.MsdaPlaySoundInstance(soundInstance.NativeHandle);
+    }
+
     public void MakeCurrent()
     {
         EnsureState();

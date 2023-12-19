@@ -28,10 +28,19 @@ public sealed unsafe class SoundInstance
         get => next;
         set
         {
-            next = value;
-            *((void**)nativeHandle.ToPointer() + 1) = value is null ? null : value.nativeHandle.ToPointer();
+            var pnext = this.next;
+            this.next = value;
+            IntPtr* p = ((IntPtr*)nativeHandle.ToPointer() + 1);
+            *p = value is null ? IntPtr.Zero : value.nativeHandle;
+            SoundInstance? next = Next;
             if (next is not null)
-                (*next.RefPtr)++;
+                *next.RefPtr += 1;
+            if(pnext != null)
+            {
+                *pnext.RefPtr -= 1;
+                if (*pnext.RefPtr == 0)
+                    Interop.MsdaDeleteSoundInstance(pnext.nativeHandle);
+            }
         }
     }
 
