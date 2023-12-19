@@ -24,13 +24,14 @@ struct AudioFormat
 
 struct AudioContext
 {
+    std::mutex* mutex; // for toPlayInstances
     std::vector<SoundInstance*> instances;
-    std::mutex* mutex;
     std::vector<SoundInstance*> toPlayInstances;
     IAudioClient* client;
     IAudioRenderClient* renderer;
     HANDLE fillEvent;
     UINT32 bufferFrameSize;
+    float_t masterVolume;
 } static* currentContext;
 
 // warning: layout sensitive
@@ -49,6 +50,7 @@ struct SoundInstance
     SRC_STATE* src_state;
     int64_t playedFrames;
     float_t playSpeed;
+    float_t volume;
     int32_t refCount;
 };
 
@@ -156,6 +158,7 @@ EXPORT AudioContext* CALLCONV MsdaCreateAudioContext()
     ac->instances = std::vector<SoundInstance*>();
     ac->toPlayInstances = std::vector<SoundInstance*>();
     ac->mutex = new std::mutex();
+    ac->masterVolume = 1.0f;
     HANDLE thr = CreateThread(0, 0, audio_processing_thread, ac, 0, nullptr);
     if (thr)
         SetThreadPriority(thr, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -180,6 +183,11 @@ EXPORT Sound* CALLCONV MsdaCreateSound(AudioFormat fmt, float_t* audioData, int6
     return snd;
 }
 
+EXPORT int CALLCONV MsdaGetAudioContextParamOffset()
+{
+    return (int)offsetof(AudioContext, masterVolume);
+}
+
 EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
 {
     SoundInstance* si = new SoundInstance;
@@ -187,6 +195,7 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
     si->playedFrames = 0;
     si->next = nullptr;
     si->playSpeed = 1.0f;
+    si->volume = 1.0f;
     si->refCount = 0;
     // FIXME using other quality will lead to be cut off because we need to fill in more frames
     si->src_state = src_new(SRC_LINEAR, sound->format.ChannelsCount, nullptr);
@@ -253,6 +262,8 @@ static DWORD audio_processing_thread(LPVOID param)
         hr = renderer->GetBuffer(todoFrames, (BYTE**)&outputData);
         check_hr(hr);
 
+        // FIXME seems like .net side would modify the params of SoundInstance at the same time it loops
+        // maybe it'll cause werid effects
         memset(outputData, 0, (size_t)todoFrames * mixfmt_channles * sizeof(float));
         for (SoundInstance* si : ctx->instances)
         {
@@ -268,10 +279,12 @@ static DWORD audio_processing_thread(LPVOID param)
             src_data.end_of_input = 0; // TODO set it
             int err = src_process(si->src_state, &src_data);
             // TODO faster memadd
+            float_t volume = si->volume;
+            float_t masterVolume = ctx->masterVolume;
             for (int64_t i = 0; i < siTodoFrames; i++)
             {
                 for (byte c = 0; c < mixfmt_channles; c++)
-                    outputData[i * mixfmt_channles + c] += resampledBuffer[i * mixfmt_channles + c];
+                    outputData[i * mixfmt_channles + c] += resampledBuffer[i * mixfmt_channles + c] * volume * masterVolume;
             }
             si->playedFrames += src_data.input_frames_used;
         }

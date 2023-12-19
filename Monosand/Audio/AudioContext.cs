@@ -1,9 +1,20 @@
 ﻿namespace Monosand;
 
 // TODO dispose impl
-public sealed class AudioContext
+public sealed unsafe class AudioContext
 {
+    private static readonly int ParamOffset = Interop.MsdaGetAudioContextParamOffset();
     private IntPtr nativeHandle;
+
+    public float MasterVolume
+    {
+        get => *(float*)((byte*)nativeHandle.ToPointer() + ParamOffset);
+        set
+        {
+            ThrowHelper.ThrowIfNegative(value);
+            *(float*)((byte*)nativeHandle.ToPointer() + ParamOffset) = value;
+        }
+    }
 
     public AudioContext()
     {

@@ -39,8 +39,8 @@ public class MyGame : Game
         if (KeyboardState.IsJustPressed(Key.A))
         {
             si = soundPiano.CreateInstance();
-            //si.PlaySpeed = 2.0f;
-            //si.Next.PlaySpeed = 2.0f;
+            si.Volume = 2.0f;
+            si.PlaySpeed = 2.0f;
             AudioContext.Play(si);
         }
         if (KeyboardState.IsJustPressed(Key.E))
@@ -54,6 +54,14 @@ public class MyGame : Game
         if (KeyboardState.IsJustPressed(Key.N))
         {
             si = null;
+        }
+        if (KeyboardState.IsJustPressed(Key.P))
+        {
+            AudioContext.MasterVolume += 0.1f;
+        }
+        if (KeyboardState.IsJustPressed(Key.L))
+        {
+            AudioContext.MasterVolume -= 0.1f;
         }
     }
 

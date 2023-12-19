@@ -15,6 +15,7 @@ public sealed unsafe class SoundInstance
         public void* src_state;
         public long playedFrames;
         public float playSpeed;
+        public float volume;
         public int refCount;
     }
 
@@ -33,6 +34,16 @@ public sealed unsafe class SoundInstance
         {
             ThrowHelper.ThrowIfInvalid(PlaySpeed <= 0);
             nativeHandle->playSpeed = value;
+        }
+    }
+
+    public float Volume
+    {
+        get => nativeHandle->volume;
+        set
+        {
+            ThrowHelper.ThrowIfNegative(value);
+            nativeHandle->volume = value;
         }
     }
 

@@ -27,6 +27,12 @@ public static class ThrowHelper
         if (argument < 0) throw new ArgumentOutOfRangeException(paramName, "Can't be negative.");
     }
 
+    /// <summary>Throws <see cref="ArgumentOutOfRangeException"/> when <paramref name="argument"/> is negative.</summary>
+    public static void ThrowIfNegative(float argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    {
+        if (argument < 0) throw new ArgumentOutOfRangeException(paramName, "Can't be negative.");
+    }
+
     /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="condition"/> is true.</summary>
     public static void ThrowIfInvalid(
         [DoesNotReturnIf(true)] bool condition,
