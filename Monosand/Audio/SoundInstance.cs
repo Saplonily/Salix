@@ -38,7 +38,7 @@ public sealed unsafe class SoundInstance
 
     public long PlayedFramesCount => nativeHandle->playedFrames;
 
-    public float PlayedSeconds => (float)PlayedFramesCount / Sound.AudioData.SampleRate / Sound.AudioData.ChannelsCount;
+    public float PlayedSeconds => (float)PlayedFramesCount / Sound.AudioData.SampleRate;
 
     public TimeSpan PlayedDuration => TimeSpan.FromSeconds(PlayedSeconds);
 

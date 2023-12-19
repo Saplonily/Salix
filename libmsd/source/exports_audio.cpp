@@ -188,7 +188,7 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
     si->next = nullptr;
     si->playSpeed = 1.0f;
     si->refCount = 0;
-    // need we able to control the quality?
+    // FIXME using other quality will lead to be cut off because we need to fill in more frames
     si->src_state = src_new(SRC_LINEAR, sound->format.ChannelsCount, nullptr);
     return si;
 }
@@ -266,7 +266,7 @@ static DWORD audio_processing_thread(LPVOID param)
             src_data.output_frames = todoFrames;
             src_data.src_ratio = (double_t)mixfmt_sampleRate / si->sound->format.SampleRate / si->playSpeed;
             src_data.end_of_input = 0; // TODO set it
-            src_process(si->src_state, &src_data);
+            int err = src_process(si->src_state, &src_data);
             // TODO faster memadd
             for (int64_t i = 0; i < siTodoFrames; i++)
             {

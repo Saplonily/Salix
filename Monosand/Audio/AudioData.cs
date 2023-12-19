@@ -15,7 +15,7 @@ public sealed unsafe class AudioData : IDisposable
 
     public int SampleRate => Format.SampleRate;
 
-    public double DurationSeconds => (double)FramesCount / Format.SampleRate / Format.ChannelsCount;
+    public double DurationSeconds => (double)FramesCount / Format.SampleRate;
 
     public TimeSpan Duration => TimeSpan.FromSeconds(DurationSeconds);
 

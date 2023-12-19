@@ -17,7 +17,7 @@ public class MyGame : Game
     public MyGame()
     {
         soundRock = new(ResourceLoader.LoadAudio("TestAssets/test_rock.wav"));
-        soundPiano = new(ResourceLoader.LoadAudio("TestAssets/test_piano.wav"));
+        soundPiano = new(ResourceLoader.LoadAudio("TestAssets/test_piano32000.wav"));
 
         try
         {
@@ -39,11 +39,8 @@ public class MyGame : Game
         if (KeyboardState.IsJustPressed(Key.A))
         {
             si = soundPiano.CreateInstance();
-            si.Next = soundRock.CreateInstance();
-            si.Next.Next = soundPiano.CreateInstance();
-            si.Next.Next.Next = soundRock.CreateInstance();
-            si.PlaySpeed = 2.0f;
-            si.Next.PlaySpeed = 2.0f;
+            //si.PlaySpeed = 2.0f;
+            //si.Next.PlaySpeed = 2.0f;
             AudioContext.Play(si);
         }
         if (KeyboardState.IsJustPressed(Key.E))
