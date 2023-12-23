@@ -11,7 +11,6 @@ public sealed unsafe class SoundInstance
     private struct SoundInstanceNative
     {
         public void* sound;
-        public void* next;
         public void* src_state;
         public long playedFrames;
         public float playSpeed;
@@ -21,7 +20,6 @@ public sealed unsafe class SoundInstance
 
     private SoundInstanceNative* nativeHandle;
     private Sound sound;
-    private SoundInstance? next;
 
     internal IntPtr NativeHandle => new IntPtr(nativeHandle);
 
@@ -52,26 +50,6 @@ public sealed unsafe class SoundInstance
     public float PlayedSeconds => (float)PlayedFramesCount / Sound.AudioData.SampleRate;
 
     public TimeSpan PlayedDuration => TimeSpan.FromSeconds(PlayedSeconds);
-
-    public SoundInstance? Next
-    {
-        get => next;
-        set
-        {
-            var pnext = this.next;
-            this.next = value;
-            nativeHandle->next = value is null ? null : value.nativeHandle;
-            SoundInstance? next = Next;
-            if (next is not null)
-                next.nativeHandle->refCount += 1;
-            if (pnext != null)
-            {
-                pnext.nativeHandle->refCount -= 1;
-                if (pnext.nativeHandle->refCount == 0)
-                    Interop.MsdaDeleteSoundInstance(new IntPtr(pnext.nativeHandle));
-            }
-        }
-    }
 
     internal SoundInstance(Sound sound, IntPtr nativeHandle)
     {

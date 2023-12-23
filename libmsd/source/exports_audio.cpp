@@ -46,7 +46,6 @@ struct Sound
 struct SoundInstance
 {
     Sound* sound;
-    SoundInstance* next;
     SRC_STATE* src_state;
     int64_t playedFrames;
     float_t playSpeed;
@@ -193,11 +192,10 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
     SoundInstance* si = new SoundInstance;
     si->sound = sound;
     si->playedFrames = 0;
-    si->next = nullptr;
     si->playSpeed = 1.0f;
     si->volume = 1.0f;
     si->refCount = 0;
-    // FIXME using other quality will lead to be cut off because we need to fill in more frames
+    // FIXME other quality will cause werid behaviour
     si->src_state = src_new(SRC_LINEAR, sound->format.ChannelsCount, nullptr);
     return si;
 }
@@ -205,15 +203,8 @@ EXPORT SoundInstance* CALLCONV MsdaCreateSoundInstance(Sound* sound)
 EXPORT void CALLCONV MsdaDeleteSoundInstance(SoundInstance* si)
 {
     assert(si->refCount == 0);
-    if (si->next)
-    {
-        si->next->refCount--;
-        if (si->next->refCount == 0)
-            MsdaDeleteSoundInstance(si->next);
-    }
     src_delete(si->src_state);
     delete si;
-    //printf("deleted SoundInstance: %p\n", si);
 }
 
 static void MsdaPlaySoundInstance(SoundInstance* si, AudioContext* ctx)
@@ -276,7 +267,7 @@ static DWORD audio_processing_thread(LPVOID param)
             src_data.input_frames = si->sound->framesCount - playedFrames;
             src_data.output_frames = todoFrames;
             src_data.src_ratio = (double_t)mixfmt_sampleRate / si->sound->format.SampleRate / si->playSpeed;
-            src_data.end_of_input = 0; // TODO set it
+            src_data.end_of_input = 0;
             int err = src_process(si->src_state, &src_data);
             // TODO faster memadd
             float_t volume = si->volume;
@@ -295,14 +286,10 @@ static DWORD audio_processing_thread(LPVOID param)
             SoundInstance* si = *it;
             if (si->playedFrames == si->sound->framesCount)
             {
-                // TODO seamlessly?
                 it = instances->erase(it);
-                if (si->next)
-                    MsdaPlaySoundInstance(si->next, ctx);
                 si->refCount--;
                 if (si->refCount == 0)
                     MsdaDeleteSoundInstance(si);
-
             }
             else
             {
