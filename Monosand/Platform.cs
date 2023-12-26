@@ -46,24 +46,4 @@ public unsafe class Platform
         ThrowHelper.ThrowIfArgInvalid(imageData.IsEmpty, nameof(imageData));
         Interop.MsdFreeImage(imageData.Pointer);
     }
-
-    internal UnmanagedMemory LoadAudio(ReadOnlySpan<byte> source, out long frames, out AudioFormat format)
-    {
-        void* data;
-        fixed (void* ptr = source)
-        {
-            data = Interop.MsdLoadAudio(ptr, source.Length, out nint loadedSize, out frames, out format);
-            if (data is null)
-                throw new ResourceLoadFailedException(ResourceType.Audio);
-            if (frames * (format.BitDepth / 8) * format.ChannelsCount != loadedSize)
-                throw new ResourceLoadFailedException("PCM buffer size not match.", ResourceType.Audio);
-            return new(data, loadedSize);
-        }
-    }
-
-    internal void FreeAudio(UnmanagedMemory audioData)
-    {
-        ThrowHelper.ThrowIfArgInvalid(audioData.IsEmpty, nameof(audioData));
-        Interop.MsdFreeAudio(audioData.Pointer);
-    }
 }

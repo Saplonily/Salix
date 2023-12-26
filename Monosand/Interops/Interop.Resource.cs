@@ -14,12 +14,4 @@ internal unsafe partial class Interop
         );
 
     [DllImport(DllPath)] public static extern void MsdFreeImage(void* texData);
-
-    [DllImport(DllPath)]
-    public static extern void* MsdLoadAudio(
-        void* memory, nint dataSize,
-        out nint loadedDataSize, out long frames, out AudioFormat format
-        );
-
-    [DllImport(DllPath)] public static extern void MsdFreeAudio(void* memory);
 }
