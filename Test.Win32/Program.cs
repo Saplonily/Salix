@@ -1,4 +1,5 @@
-﻿using System.Runtime.Versioning;
+﻿using System.Numerics;
+using System.Runtime.Versioning;
 using Monosand;
 
 [assembly: SupportedOSPlatform("windows")]
@@ -34,6 +35,8 @@ public class MyGame : Game
     {
         base.Render();
         RenderContext.Clear(Color.Known.CornflowerBlue);
+
+        spriteBatch.DrawText(sprFont, "Here is the text.", Vector2.Zero);
     }
 }
 

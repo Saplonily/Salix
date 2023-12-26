@@ -1,4 +1,6 @@
-﻿#if NETSTANDARD2_0
+﻿// .net std2.0 hasn't MathF
+
+#if NETSTANDARD2_0
 
 namespace System
 {

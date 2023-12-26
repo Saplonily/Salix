@@ -20,16 +20,16 @@ public sealed class SpriteShader
         var pshader = shader.RenderContext.Shader;
         shader.Use();
         paramTex = shader.GetParameter("tex"u8);
-        if (paramTex.IsInvalid) throw SR.ShaderParamNotFound("tex");
+        if (paramTex.IsInvalid) throw ShaderParamNotFound("tex");
 
         paramTrans2d = shader.GetParameter("trans2d"u8);
-        if (paramTrans2d.IsInvalid) throw SR.ShaderParamNotFound("trans2d");
+        if (paramTrans2d.IsInvalid) throw ShaderParamNotFound("trans2d");
 
         paramProj2d = shader.GetParameter("proj2d"u8);
-        if (paramProj2d.IsInvalid) throw SR.ShaderParamNotFound("proj2d");
+        if (paramProj2d.IsInvalid) throw ShaderParamNotFound("proj2d");
 
         paramIsDrawingText = shader.GetParameter("isDrawingText"u8);
-        if (paramIsDrawingText.IsInvalid) throw SR.ShaderParamNotFound("isDrawingText");
+        if (paramIsDrawingText.IsInvalid) throw ShaderParamNotFound("isDrawingText");
         shader.RenderContext.Shader = pshader;
     }
 
@@ -47,4 +47,7 @@ public sealed class SpriteShader
 
     public void Use()
         => shader.Use();
+
+    internal static ArgumentException ShaderParamNotFound(string paramName)
+        => new ArgumentException($"Shader parameter '{paramName}' does not exist.");
 }
