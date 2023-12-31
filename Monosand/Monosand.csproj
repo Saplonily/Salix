@@ -30,8 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Embedded\SpriteShader.frag" />
-    <EmbeddedResource Include="Embedded\SpriteShader.vert" />
+    <EmbeddedResource Include="Embedded\**" />
   </ItemGroup>
 
   <!--Any other way to simplify these?-->

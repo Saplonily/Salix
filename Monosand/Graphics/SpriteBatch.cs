@@ -13,7 +13,6 @@ public sealed partial class SpriteBatch
     private readonly RenderContext context;
 
     private SpriteShader shader = null!;
-    private bool isDrawingText;
     private Matrix3x2 transform2d;
     private Matrix3x2 projection2d;
     private bool projection2dDirty = true;
@@ -47,7 +46,10 @@ public sealed partial class SpriteBatch
     public Texture2D Texture1x1White { get; }
     public ref Matrix3x2 Transform2D => ref transform2d;
 
-    public SpriteShader Shader
+    public SpriteShader SpriteShader { get; set; }
+    public SpriteShader TextShader { get; set; }
+
+    private SpriteShader Shader
     {
         get => shader;
         set
@@ -67,17 +69,6 @@ public sealed partial class SpriteBatch
     /// </summary>
     /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
     public SpriteBatch(Game game)
-        : this(game, null)
-    {
-    }
-
-    /// <summary>
-    /// Construct a <see cref="SpriteBatch"/>.
-    /// </summary>
-    /// <param name="game">The <see cref="Game"/> that this <see cref="SpriteBatch"/> belongs to.</param>
-    /// <param name="spriteEffect">The default <see cref="SpriteBatch.Shader"/> will be used.
-    /// If's set to <see langword="null"/>, then glsl shader "SpriteShader.frag" "SpriteShader.vert" will be loaded and used.</param>
-    public SpriteBatch(Game game, SpriteShader? spriteEffect)
     {
         context = game.RenderContext;
         vertices = new vpct[4 * 16];
@@ -87,27 +78,26 @@ public sealed partial class SpriteBatch
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
         circleBuffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.DynamicDraw, false);
         PrepareCircleVertices();
-        ReadOnlySpan<byte> imgData = stackalloc byte[4] { 255, 255, 255, 255 };
+        ReadOnlySpan<byte> imgData = [255, 255, 255, 255];
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
 
-        if (spriteEffect is null)
         {
             var rl = game.ResourceLoader;
             using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
             using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            Shader = new(rl.LoadGlslShader(vert, frag));
-        }
-        else
-        {
-            Shader = spriteEffect;
-        }
+            SpriteShader = new(rl.LoadGlslShader(vert, frag));
 
+            using var vertText = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
+            using var fragText = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
+            TextShader = new(rl.LoadGlslShader(vertText, fragText));
+        }
 
         game.Window.PreviewSwapBuffer += Flush;
         context.PreviewViewportChanged += Flush;
         context.PreviewRenderTargetChanged += Flush;
         context.ViewportChanged += () => projection2dDirty = true;
+        Shader = SpriteShader;
     }
 
     // TODO a more elegant way to replace these methods?
@@ -167,7 +157,7 @@ public sealed partial class SpriteBatch
         => DrawText(spriteFont, text, position, origin, Vector2.One, radians, color);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale)
+    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale = default)
         where T : IEnumerable<char>
         => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Known.Black);
 
@@ -200,11 +190,38 @@ public sealed partial class SpriteBatch
         ) where T : IEnumerable<char>
     {
         ThrowHelper.ThrowIfNull(spriteFont);
-        Flush();
-        isDrawingText = true;
+        Shader = TextShader; // TODO shader flush optimization?
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 
+        Vector2 rawSize = MeasureText(spriteFont, text);
+
+        float x = 0f;
+        float y = 0f;
+        foreach (var chr in text)
+        {
+            if (chr == '\n')
+            {
+                x = 0f;
+                // TODO custom line-height
+                y += spriteFont.Size * 1.2f;
+            }
+            if (!spriteFont.Entries.TryGetValue(chr, out var entry))
+                continue;
+            Vector2 tl = new(entry.X / texWidth, entry.Y / texHeight);
+            Vector2 br = new(tl.X + entry.Width / texWidth, tl.Y + entry.Height / texHeight);
+            Vector2 realOrigin =
+                (origin * new Vector2(rawSize.X, rawSize.Y) - new Vector2(x + entry.BearingX, y + spriteFont.Size - entry.BearingY))
+                / new Vector2(entry.Width, entry.Height);
+
+            DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radians, color, tl, br);
+            x += entry.Advance / 64f;
+        }
+        Shader = SpriteShader;
+    }
+
+    public Vector2 MeasureText<T>(SpriteFont spriteFont, in T text) where T : IEnumerable<char>
+    {
         // measure the string
         float totalWidth = 0;
         float totalHeight = 0;
@@ -224,30 +241,7 @@ public sealed partial class SpriteBatch
             if (curWidth > totalWidth)
                 totalWidth = curWidth;
         }
-
-        float x = 0f;
-        float y = 0f;
-        foreach (var chr in text)
-        {
-            if (chr == '\n')
-            {
-                x = 0f;
-                // TODO custom line-height
-                y += spriteFont.Size * 1.2f;
-            }
-            if (!spriteFont.Entries.TryGetValue(chr, out var entry))
-                continue;
-            Vector2 tl = new(entry.X / texWidth, entry.Y / texHeight);
-            Vector2 br = new(tl.X + entry.Width / texWidth, tl.Y + entry.Height / texHeight);
-            Vector2 realOrigin =
-                (origin * new Vector2(totalWidth, totalHeight) - new Vector2(x + entry.BearingX, y + spriteFont.Size - entry.BearingY))
-                / new Vector2(entry.Width, entry.Height);
-
-            DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radians, color, tl, br);
-            x += entry.Advance / 64f;
-        }
-        Flush();
-        isDrawingText = false;
+        return new(totalWidth, totalHeight);
     }
 
     public void DrawTexture(
@@ -269,14 +263,8 @@ public sealed partial class SpriteBatch
         br *= scale;
         bl *= scale;
 
-        // why there isn't MathF in .net std 2.0?
-#if NETSTANDARD2_0
-        float sin = (float)Math.Sin(radians);
-        float cos = (float)Math.Cos(radians);
-#else
         float sin = MathF.Sin(radians);
         float cos = MathF.Cos(radians);
-#endif
 
         // [ cos  -sin ]     [ x ]     [ x * cos - y * sin ]
         // [           ]  *  [   ]  =  [                   ]
@@ -363,8 +351,9 @@ public sealed partial class SpriteBatch
         Shader.Use();
         Shader.SetTransform2D(transform2d * matrix);
         Shader.SetProjection2D(CleanedProjection2D);
-        Shader.SetIsDrawingText(false);
+
         context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
+
         Shader.SetTransform2D(transform2d);
     }
 
@@ -376,7 +365,6 @@ public sealed partial class SpriteBatch
         Shader.Use();
         Shader.SetTransform2D(transform2d);
         Shader.SetProjection2D(CleanedProjection2D);
-        Shader.SetIsDrawingText(isDrawingText);
 
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));

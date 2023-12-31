@@ -15,12 +15,12 @@ public sealed class RenderContext
     private Rectangle viewport;
     private bool vSyncEnabled = false;
 
-    private long drawcalls;
+    private long totalDrawCalls;
     private Size windowSize;
 
     internal IntPtr NativeHandle => nativeHandle;
 
-    public long TotalDrawCalls => drawcalls;
+    public long TotalDrawCalls => totalDrawCalls;
 
     public Rectangle Viewport
     {
@@ -78,15 +78,14 @@ public sealed class RenderContext
             if (value is null)
             {
                 Interop.MsdgSetRenderTarget(IntPtr.Zero);
-                currentRenderTarget = value;
                 Viewport = new(0, 0, windowSize.Width, windowSize.Height);
             }
             else
             {
                 Interop.MsdgSetRenderTarget(value.NativeHandle);
-                currentRenderTarget = value;
                 Viewport = new(0, 0, value.Width, value.Height);
             }
+            currentRenderTarget = value;
         }
     }
 
@@ -101,13 +100,9 @@ public sealed class RenderContext
         {
             if (value == currentShader) return;
             if (value is not null)
-            {
                 Interop.MsdgSetShader(value.NativeHandle);
-            }
             else
-            {
                 Interop.MsdgSetShader(IntPtr.Zero);
-            }
             currentShader = value;
         }
     }
@@ -186,7 +181,7 @@ public sealed class RenderContext
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(vertexDeclaration);
-        drawcalls++;
+        totalDrawCalls++;
 
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
         fixed (T* vptr = vertices)
@@ -199,7 +194,7 @@ public sealed class RenderContext
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
-        drawcalls++;
+        totalDrawCalls++;
 
         Interop.MsdgDrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
     }
@@ -210,7 +205,7 @@ public sealed class RenderContext
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
         ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
-        drawcalls++;
+        totalDrawCalls++;
 
         Interop.MsdgDrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
     }

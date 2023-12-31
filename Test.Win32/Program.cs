@@ -8,6 +8,7 @@ namespace Test.Win32;
 
 public class MyGame : Game
 {
+    private Texture2D tex1;
     private SpriteFont sprFont;
     private SpriteBatch spriteBatch;
 
@@ -21,6 +22,7 @@ public class MyGame : Game
         {
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the TestAssets folder of Test.Win32!");
         }
+        tex1 = ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
         spriteBatch = new(this);
     }
 
@@ -36,7 +38,11 @@ public class MyGame : Game
         base.Render();
         RenderContext.Clear(Color.Known.CornflowerBlue);
 
-        spriteBatch.DrawText(sprFont, "Here is the text.", Vector2.Zero);
+        Vector2 pos = PointerState.Position;
+        spriteBatch.DrawTexture(tex1, pos);
+        spriteBatch.DrawText(sprFont, "Here is some texts.\nWith NewLines\nMore NewLines.", pos, Vector2.Zero, -0.1f);
+        spriteBatch.DrawText(sprFont, "Here is some texts.\nWith NewLines.", pos * 1.5f, Vector2.Zero, -0.1f);
+        spriteBatch.Flush();
     }
 }
 

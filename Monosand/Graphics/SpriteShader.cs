@@ -9,7 +9,6 @@ public sealed class SpriteShader
     private readonly ShaderParameter paramTrans2d;
     private readonly ShaderParameter paramProj2d;
     private readonly ShaderParameter paramTex;
-    private readonly ShaderParameter paramIsDrawingText;
 
     public Shader Shader => shader;
 
@@ -28,8 +27,6 @@ public sealed class SpriteShader
         paramProj2d = shader.GetParameter("proj2d"u8);
         if (paramProj2d.IsInvalid) throw ShaderParamNotFound("proj2d");
 
-        paramIsDrawingText = shader.GetParameter("isDrawingText"u8);
-        if (paramIsDrawingText.IsInvalid) throw ShaderParamNotFound("isDrawingText");
         shader.RenderContext.Shader = pshader;
     }
 
@@ -38,9 +35,6 @@ public sealed class SpriteShader
 
     public void SetProjection2D(Matrix3x2 projection2d)
         => paramProj2d.Set(projection2d);
-
-    public void SetIsDrawingText(bool value)
-        => paramIsDrawingText.Set(value);
 
     public void SetTextureIndex(int value)
         => paramTex.Set(value);
