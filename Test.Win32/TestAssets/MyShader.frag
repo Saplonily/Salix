@@ -4,7 +4,6 @@ in vec4 vColor;
 in vec2 vTex;
 
 uniform sampler2D tex;
-uniform bool isDrawingText;
 
 const float offset = 1.0 / 300.0;
 
@@ -30,9 +29,7 @@ void main()
 
     vec4 sampleTex[9];
     for (int i = 0; i < 9; i++)
-        sampleTex[i] = isDrawingText ?
-          (vec4(1.0, 1.0, 1.0, texture(tex, vTex + offsets[i]).g) * vColor) 
-        : (texture(tex, vTex + offsets[i]) * vColor);
+        sampleTex[i] = texture(tex, vTex + offsets[i]) * vColor;
 
     vec4 col = vec4(0.0);
     for (int i = 0; i < 9; i++)

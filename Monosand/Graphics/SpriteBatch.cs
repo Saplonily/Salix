@@ -106,35 +106,35 @@ public sealed partial class SpriteBatch
     public void DrawTexture(Texture2D texture, Vector2 position)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.Known.White);
 
-    public void DrawTexture(Texture2D texture, Vector2 position, in RectangleProp<Color> color)
+    public void DrawTexture(Texture2D texture, Vector2 position, in RectangleProperty<Color> color)
         => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian)
         => DrawTexture(texture, position, origin, Vector2.One, radian, Color.Known.White);
 
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian, in RectangleProp<Color> color)
+    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian, in RectangleProperty<Color> color)
         => DrawTexture(texture, position, origin, Vector2.One, radian, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale)
         => DrawTexture(texture, position, Vector2.Zero, scale, 0f, Color.Known.White);
 
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale, in RectangleProp<Color> color)
+    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale, in RectangleProperty<Color> color)
         => DrawTexture(texture, position, Vector2.Zero, scale, 0f, color);
 
     public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian)
         => DrawTexture(texture, position, origin, scale, radian, Color.Known.White);
 
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, in RectangleProp<Color> color)
+    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, in RectangleProperty<Color> color)
         => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
 
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix)
-        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
+        => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
 
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color)
-        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(color), Vector2.Zero, Vector2.One);
+        => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(color), Vector2.Zero, Vector2.One);
 
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
-        => DrawTextureMatrix(texture, matrix, new RectangleProp<Color>(color), textureTopLeft, textureBottomRight);
+        => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(color), textureTopLeft, textureBottomRight);
 
     /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
@@ -247,7 +247,7 @@ public sealed partial class SpriteBatch
     public void DrawTexture(
         Texture2D texture,
         Vector2 position, Vector2 origin,
-        Vector2 scale, float radians, in RectangleProp<Color> color,
+        Vector2 scale, float radians, in RectangleProperty<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -285,7 +285,7 @@ public sealed partial class SpriteBatch
 
     public void DrawTextureMatrix(
         Texture2D texture, Matrix3x2 matrix,
-        in RectangleProp<Color> color,
+        in RectangleProperty<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -301,8 +301,8 @@ public sealed partial class SpriteBatch
 
     public unsafe void DrawTextureRectangle(
         Texture2D texture,
-        in RectangleProp<Color> color,
-        in RectangleProp<Vector2> position,
+        in RectangleProperty<Color> color,
+        in RectangleProperty<Vector2> position,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
