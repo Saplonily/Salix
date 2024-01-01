@@ -42,6 +42,9 @@ public class MyGame : Game
         spriteBatch.DrawTexture(tex1, pos);
         spriteBatch.DrawText(sprFont, "Here is some texts.\nWith NewLines\nMore NewLines.", pos, Vector2.Zero, -0.1f);
         spriteBatch.DrawText(sprFont, "Here is some texts.\nWith NewLines.", pos * 1.5f, Vector2.Zero, -0.1f);
+        var texCoord = new TriangleProperty<Vector2>(Vector2.Zero, new(0.4f, 0.0f), new(0.2f, 1f));
+        var trianglePos = new TriangleProperty<Vector2>(Vector2.Zero, new Vector2(0.4f, 0.0f) * 400f, new Vector2(0.2f, 1f) * 400f);
+        spriteBatch.DrawTriangle(tex1, trianglePos, Matrix3x2.CreateTranslation(100f, 100f), texCoord, Color.Known.Red);
         spriteBatch.Flush();
     }
 }

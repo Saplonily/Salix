@@ -343,18 +343,67 @@ public sealed partial class SpriteBatch
         indicesIndex += 6;
     }
 
-    public void DrawCircle(Texture2D texture, Matrix3x2 matrix)
+    private void BeginStuffDrawing(Texture2D texture, Matrix3x2 matrix)
     {
-        ThrowHelper.ThrowIfNull(texture);
         Flush();
         context.SetTexture(0, texture);
         Shader.Use();
         Shader.SetTransform2D(transform2d * matrix);
         Shader.SetProjection2D(CleanedProjection2D);
+    }
 
-        context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
-
+    private void EndStuffDrawing()
+    {
         Shader.SetTransform2D(transform2d);
+    }
+
+    // TODO color parameter
+    public void DrawCircle(Texture2D texture, Matrix3x2 matrix)
+    {
+        ThrowHelper.ThrowIfNull(texture);
+        BeginStuffDrawing(texture, matrix);
+        context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
+        EndStuffDrawing();
+    }
+
+    public unsafe void DrawTriangle(
+        Texture2D texture,
+        TriangleProperty<Vector2> position,
+        Matrix3x2 matrix,
+        TriangleProperty<Vector2> textureCoord,
+        TriangleProperty<Color> color
+        )
+    {
+        ThrowHelper.ThrowIfNull(texture);
+        if (lastTexture != texture) Flush();
+        if (verticesIndex >= ushort.MaxValue - 6) Flush();
+        int vind = verticesIndex;
+        int iind = indicesIndex;
+
+        lastTexture = texture;
+
+        if (vertices.Length <= vind)
+            Array.Resize(ref vertices, Math.Max(vind + 6, vertices.Length * 2));
+        if (indices.Length <= iind)
+            Array.Resize(ref indices, Math.Max(iind + 6, indices.Length * 2));
+
+        fixed (vpct* vptr = vertices)
+        fixed (ushort* iptr = indices)
+        {
+            vptr[vind + 0] =
+                new(Vector2.Transform(position.First, matrix), color.First.ToVector4(), textureCoord.First);
+            vptr[vind + 1] =
+                new(Vector2.Transform(position.Second, matrix), color.Second.ToVector4(), textureCoord.Second);
+            vptr[vind + 2] =
+                new(Vector2.Transform(position.Third, matrix), color.Third.ToVector4(), textureCoord.Third);
+
+            iptr[indicesIndex + 0] = (ushort)(vind + 0);
+            iptr[indicesIndex + 1] = (ushort)(vind + 1);
+            iptr[indicesIndex + 2] = (ushort)(vind + 2);
+        }
+
+        verticesIndex += 3;
+        indicesIndex += 3;
     }
 
     /// <summary>Flush the batched draw actions.</summary>
