@@ -63,7 +63,6 @@ public sealed class PointerState
     {
         state = statePrevious = 0;
         wheelOffset = wheelOffsetPrevious = 0f;
-        position = positionPrevious = Vector2.Zero;
     }
 
     public bool IsPressing(PointerButton button)

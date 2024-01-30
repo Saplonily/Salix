@@ -282,13 +282,11 @@ public class Window
     public virtual void OnPointerPressed(int x, int y, PointerButton button)
     {
         PointerState.SetTrue(1 << (int)button);
-        PointerState.SetPosition(new(x, y));
     }
 
     public virtual void OnPointerReleased(int x, int y, PointerButton button)
     {
         PointerState.SetFalse(1 << (int)button);
-        PointerState.SetPosition(new(x, y));
     }
 
     public virtual void OnPointerMoved(int x, int y)
@@ -298,7 +296,6 @@ public class Window
 
     public virtual void OnPointerWheelMoved(int x, int y, float delta)
     {
-        PointerState.SetPosition(new(x, y));
         PointerState.AddWheelDelta(delta);
     }
 

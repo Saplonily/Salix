@@ -12,6 +12,8 @@ public class MyGame : Game
     private SpriteFont sprFont;
     private SpriteBatch spriteBatch;
 
+    private Vector2 pos;
+
     public MyGame()
     {
         try
@@ -37,12 +39,14 @@ public class MyGame : Game
     {
         base.Render();
         RenderContext.Clear(Color.Known.CornflowerBlue);
-        Vector2 pos = PointerState.Position;
-        Matrix3x2 mat = Matrix3x2.Identity * Matrix3x2.CreateScale(100f) * Matrix3x2.CreateTranslation(350f, 100f);
+        pos += (PointerState.Position - pos) / 8f;
+        Matrix3x2 mat = Matrix3x2.Identity * Matrix3x2.CreateScale(100f) * Matrix3x2.CreateTranslation(pos);
         spriteBatch.DrawCircle(spriteBatch.Texture1x1White, mat, Color.Known.Black, 32);
 
         mat = Matrix3x2.Identity * Matrix3x2.CreateScale(100f) * Matrix3x2.CreateTranslation(130f, 100f);
         spriteBatch.DrawCircle(tex1, mat, Color.Known.White, 32);
+
+        spriteBatch.DrawText(sprFont, $"PointerState: {PointerState.IsRightButtonPressing}", Vector2.Zero);
         spriteBatch.Flush();
     }
 }
