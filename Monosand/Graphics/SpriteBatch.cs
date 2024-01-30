@@ -9,7 +9,6 @@ namespace Monosand;
 public sealed partial class SpriteBatch
 {
     private readonly VertexBuffer<vpct> buffer;
-    private readonly VertexBuffer<vpct> circleBuffer;
     private readonly RenderContext context;
 
     private SpriteShader shader = null!;
@@ -63,7 +62,6 @@ public sealed partial class SpriteBatch
         }
     }
 
-
     /// <summary>
     /// Construct a <see cref="SpriteBatch"/>.
     /// </summary>
@@ -76,8 +74,6 @@ public sealed partial class SpriteBatch
         transform2d = Matrix3x2.Identity;
         projection2d = Matrix3x2.Identity;
         buffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
-        circleBuffer = new(context, vpct.VertexDeclaration, VertexBufferDataUsage.DynamicDraw, false);
-        PrepareCircleVertices();
         ReadOnlySpan<byte> imgData = [255, 255, 255, 255];
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
@@ -309,14 +305,15 @@ public sealed partial class SpriteBatch
         ThrowHelper.ThrowIfNull(texture);
         if (lastTexture != texture) Flush();
         if (verticesIndex >= ushort.MaxValue - 8) Flush();
+        if (indicesIndex >= ushort.MaxValue - 12) Flush();
         int vind = verticesIndex;
         int iind = indicesIndex;
 
         lastTexture = texture;
 
-        if (vertices.Length <= vind)
+        if (vertices.Length <= vind + 8)
             Array.Resize(ref vertices, Math.Max(vind + 8, vertices.Length * 2));
-        if (indices.Length <= iind)
+        if (indices.Length <= iind + 12)
             Array.Resize(ref indices, Math.Max(iind + 12, indices.Length * 2));
 
         fixed (vpct* vptr = vertices)
@@ -331,39 +328,54 @@ public sealed partial class SpriteBatch
             vptr[vind + 3] =
                 new(position.BottomRight, color.BottomRight.ToVector4(), new(textureBottomRight.X, textureBottomRight.Y));
 
-            iptr[indicesIndex + 0] = (ushort)(vind + 0);
-            iptr[indicesIndex + 1] = (ushort)(vind + 1);
-            iptr[indicesIndex + 2] = (ushort)(vind + 2);
-            iptr[indicesIndex + 3] = (ushort)(vind + 1);
-            iptr[indicesIndex + 4] = (ushort)(vind + 2);
-            iptr[indicesIndex + 5] = (ushort)(vind + 3);
+            iptr[iind + 0] = (ushort)(vind + 0);
+            iptr[iind + 1] = (ushort)(vind + 1);
+            iptr[iind + 2] = (ushort)(vind + 2);
+            iptr[iind + 3] = (ushort)(vind + 1);
+            iptr[iind + 4] = (ushort)(vind + 2);
+            iptr[iind + 5] = (ushort)(vind + 3);
         }
 
         verticesIndex += 4;
         indicesIndex += 6;
     }
 
-    private void BeginStuffDrawing(Texture2D texture, Matrix3x2 matrix)
-    {
-        Flush();
-        context.SetTexture(0, texture);
-        Shader.Use();
-        Shader.SetTransform2D(transform2d * matrix);
-        Shader.SetProjection2D(CleanedProjection2D);
-    }
-
-    private void EndStuffDrawing()
-    {
-        Shader.SetTransform2D(transform2d);
-    }
-
     // TODO color parameter
-    public void DrawCircle(Texture2D texture, Matrix3x2 matrix)
+    public unsafe void DrawCircle(Texture2D texture, Matrix3x2 matrix, Color color, int precise = 24)
     {
         ThrowHelper.ThrowIfNull(texture);
-        BeginStuffDrawing(texture, matrix);
-        context.DrawPrimitives(circleBuffer, PrimitiveType.TriangleFan);
-        EndStuffDrawing();
+        if (lastTexture != texture) Flush();
+        if (verticesIndex >= ushort.MaxValue - precise * 2) Flush();
+        if (indicesIndex >= ushort.MaxValue - precise * 6 + 12) Flush();
+        int vind = verticesIndex;
+        int iind = indicesIndex;
+
+        lastTexture = texture;
+
+        if (vertices.Length <= vind + precise * 2)
+            Array.Resize(ref vertices, Math.Max(vind + precise * 2, vertices.Length * 2));
+        if (indices.Length <= iind + precise * 6 - 12)
+            Array.Resize(ref indices, Math.Max(iind + precise * 6 - 12, indices.Length * 2));
+
+        float radianPerSide = MathF.PI * 2f / precise;
+
+        for (int i = 0; i < precise; i++)
+        {
+            Vector2 pos = new(MathF.Cos(radianPerSide * i), MathF.Sin(radianPerSide * i));
+            vertices[vind + i] = new(Vector2.Transform(pos, matrix), color.ToVector4(), new(pos.X / 2f + 0.5f, pos.Y / 2f + 0.5f));
+        }
+        // precise = 4: 0 1 2 / 0 2 3
+        // precise = 6: 0 1 2 / 0 2 3 / 0 3 4 / 0 4 5
+        // precise = 8: 0 1 2 / 0 2 3 / 0 3 4 / 0 4 5 / 0 5 6 / 0 6 7
+        for (int i = 0; i < precise - 2; i++)
+        {
+            indices[iind + i * 3 + 0] = (ushort)(vind + 0 + 0);
+            indices[iind + i * 3 + 1] = (ushort)(vind + i + 1);
+            indices[iind + i * 3 + 2] = (ushort)(vind + i + 2);
+        }
+
+        verticesIndex += precise;
+        indicesIndex += (precise - 2) * 3;
     }
 
     public unsafe void DrawTriangle(
@@ -377,14 +389,16 @@ public sealed partial class SpriteBatch
         ThrowHelper.ThrowIfNull(texture);
         if (lastTexture != texture) Flush();
         if (verticesIndex >= ushort.MaxValue - 6) Flush();
+        if (indicesIndex >= ushort.MaxValue - 6) Flush();
         int vind = verticesIndex;
         int iind = indicesIndex;
 
+
         lastTexture = texture;
 
-        if (vertices.Length <= vind)
+        if (vertices.Length <= vind + 6)
             Array.Resize(ref vertices, Math.Max(vind + 6, vertices.Length * 2));
-        if (indices.Length <= iind)
+        if (indices.Length <= iind + 6)
             Array.Resize(ref indices, Math.Max(iind + 6, indices.Length * 2));
 
         fixed (vpct* vptr = vertices)
@@ -419,20 +433,5 @@ public sealed partial class SpriteBatch
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
         verticesIndex = indicesIndex = 0;
-    }
-
-    private unsafe void PrepareCircleVertices()
-    {
-        int sides = 24;
-        float radianPerSide = MathF.PI * 2f / sides;
-
-        var vertices = stackalloc vpct[sides];
-        for (int i = 0; i < sides; i++)
-        {
-            Vector2 pos = new(MathF.Cos(radianPerSide * i), MathF.Sin(radianPerSide * i));
-            vertices[i] = new(pos, Vector4.One, new(pos.X / 2f + 0.5f, pos.Y / 2f + 0.5f));
-        }
-
-        circleBuffer.SetData(vertices, sides);
     }
 }
