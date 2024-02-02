@@ -1,37 +1,32 @@
-#include "pch.h"
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #include <timeapi.h>
 #include <cstdint>
-#include "exports.h"
-
-const wchar_t* Monosand = L"Monosand";
+#include <assert.h>
+#include <glad/glad.h>
+#include <glad/glad_wgl.h>
+#include "common.h"
+#include "initializations.h"
 
 #if _DEBUG
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
 #endif
-void render_context_graphics_init(HGLRC);
-void window_msg_loop_init(HWND);
+
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
-
-// WndExtra:
-// GCHandle of the managed Monosand.Window
-
-// ticks per second
-static int64_t performanceFrequency = 0;
-static HWND main_window;
 
 static PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
 
-EXPORT int CALLCONV MsdInitialize()
+void windowing_initialize()
 {
     WNDCLASSW wc{};
     wc.lpfnWndProc = WindowProc;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
     wc.lpszClassName = Monosand;
+    // GCHandle of the managed Monosand.Window
     wc.cbWndExtra = sizeof(void*) * 1;
     RegisterClassW(&wc);
 
-    QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
     pixelFormatDescriptor = {
         sizeof(PIXELFORMATDESCRIPTOR),
         1,                     // version number  
@@ -54,8 +49,6 @@ EXPORT int CALLCONV MsdInitialize()
     };
 
     timeBeginPeriod(1);
-
-    return 0;
 }
 
 EXPORT HGLRC MsdCreateRenderContext()
@@ -100,7 +93,7 @@ EXPORT HGLRC MsdCreateRenderContext()
 #if _DEBUG
     glDebugMessageCallbackARB(gl_debug_callback, hglrc);
 #endif
-    render_context_graphics_init(hglrc);
+    render_context_graphics_init();
     ReleaseDC(dummyHwnd, hdc);
     DestroyWindow(dummyHwnd);
     wglMakeCurrent(nullptr, nullptr);
@@ -127,8 +120,6 @@ EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* titl
     HDC hdc = GetDC(hwnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
     SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
-
-    window_msg_loop_init(hwnd);
 
     win_handle* wh = new win_handle;
     wh->hwnd = hwnd;
@@ -169,18 +160,6 @@ EXPORT void CALLCONV MsdSetWindowSize(win_handle* handle, int width, int height)
 EXPORT void CALLCONV MsdSetWindowPos(win_handle* handle, int x, int y)
 {
     SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
-}
-
-EXPORT int64_t CALLCONV MsdGetUsecTimeline()
-{
-    int64_t ticks = 0;
-    QueryPerformanceCounter((LARGE_INTEGER*)&ticks);
-
-    uint64_t seconds = ticks / performanceFrequency;
-    uint64_t leftover = ticks % performanceFrequency;
-    uint64_t time = (leftover * 1000000L) / performanceFrequency;
-    time += seconds * 1000000L;
-    return time;
 }
 
 EXPORT void CALLCONV MsdSetWindowTitle(win_handle* handle, wchar_t* title)

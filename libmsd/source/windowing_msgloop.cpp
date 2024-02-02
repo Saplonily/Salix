@@ -1,8 +1,9 @@
-#include "pch.h"
-#include <vector>
+#include <Windows.h>
 #include <windowsx.h>
-#include "exports.h"
-#include "key_map.h"
+#include <vector>
+#include <assert.h>
+#include "common.h"
+#include "keyboard.h"
 
 enum class event : int32_t
 {
@@ -238,7 +239,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 #undef push_e
 }
 
-void window_msg_loop_init(HWND)
+void windowing_msgloop_initialize()
 {
     event_list = new event_list_t;
     event_list->reserve(16);

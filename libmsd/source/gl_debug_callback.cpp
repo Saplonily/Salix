@@ -1,5 +1,7 @@
-#include "pch.h"
-#include "exports.h"
+#include <stdio.h>
+#include <string.h>
+#include <glad/glad.h>
+
 #if _DEBUG
 
 static const char* message_source_to_string(GLenum source)
@@ -32,7 +34,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum se
     const char* sourceStr = message_source_to_string(source);
     if (!length)
         length = (GLsizei)strlen(msg);
-    
+
     putc('[', stderr);
     fputs(sourceStr, stderr);
     putc(']', stderr);
@@ -40,7 +42,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum se
     fwrite(msg, sizeof(GLchar), length, stderr);
     if (length && msg[length - 1] != '\n')
         putc('\n', stderr);
-    DebugBreak();
+    __debugbreak();
 }
 
 #endif

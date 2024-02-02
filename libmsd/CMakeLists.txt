@@ -36,6 +36,7 @@ set_target_properties(libmsd PROPERTIES IMPORT_PREFIX "")
 file(GLOB_RECURSE sources_files CONFIGURE_DEPENDS source/*.cpp source/*.c source/*.h thirdparty/unpackaged/*.cpp thirdparty/unpackaged/*.h thirdparty/unpackaged/*.c)
 target_sources(libmsd PUBLIC ${sources_files})
 source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${sources_files})
+set_source_files_properties(${sources_files} PROPERTIES FOLDER "source")
 
 include_directories(thirdparty/unpackaged)
 

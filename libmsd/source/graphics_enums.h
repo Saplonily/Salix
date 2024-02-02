@@ -1,7 +1,9 @@
 #pragma once
 #ifndef H_ENUMS_GRAPHICS
 #define H_ENUMS_GRAPHICS
-#include "pch.h"
+
+#include <assert.h>
+#include <glad/glad.h>
 
 // ../Monosand/Graphics/Vertex/VertexElementType.cs
 enum class VertexElementType
@@ -64,15 +66,6 @@ enum class TextureWrapType
     ClampToEdge,
     Repeat,
     MirroredRepeat
-};
-
-enum class AudioEncodeFormat
-{
-    Unknown,
-    Pcm,
-    Ogg,
-    Flac,
-    Mp3
 };
 
 struct vertex_element_glinfo { int count; GLenum type; GLsizei componentSize; };

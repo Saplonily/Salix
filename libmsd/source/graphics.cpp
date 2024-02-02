@@ -1,8 +1,13 @@
-#include "pch.h"
-#include <vector>
 #include <Dwmapi.h>
-#include "exports.h"
-#include "enums_graphics.h"
+#include <glad/glad.h>
+#include <glad/glad_wgl.h>
+#include <assert.h>
+#include <vector>
+#include "common.h"
+#include "graphics_enums.h"
+
+// see more at MsdgSwapBuffers
+//#define MSDG_COMPATIBILITY_GL
 
 struct vertex_type_handle
 {
@@ -32,11 +37,7 @@ static GLuint cur_fbo = 0;
 static GLuint default_vbo = 0;
 static void ensure_vao(GLuint vao);
 static void ensure_vbo(GLuint vbo);
-
-// make a vao
 static GLuint make_vao(VertexElementType* type, int len);
-static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format);
-static void free_image(void* data);
 
 
 EXPORT GraphicsBackend CALLCONV MsdgGetGraphicsBackend()
@@ -211,16 +212,6 @@ EXPORT void CALLCONV MsdgDeleteTexture(void* tex_handle)
     glDeleteTextures(1, &tex); GL_CHECK_ERROR;
 }
 
-EXPORT void* CALLCONV MsdLoadImage(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
-{
-    return load_image(mem, length, x, y, data_length, format);
-}
-
-EXPORT void CALLCONV MsdFreeImage(void* texData)
-{
-    free_image(texData);
-}
-
 EXPORT void CALLCONV MsdgSetTexture(int index, void* tex_handle)
 {
     glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
@@ -322,32 +313,6 @@ EXPORT void CALLCONV MsdgDeleteRenderTarget(void* fbo_handle)
     glDeleteFramebuffers(1, &fbo);
 }
 
-// just temporarily use stb_image as it's head-only
-// you can always switch to other libraries you like easily here
-static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
-{
-    int channels;
-    byte* data = stbi_load_from_memory((stbi_uc*)mem, length, x, y, &channels, 0);
-    switch (channels)
-    {
-    case 1: *format = ImageFormat::R8; break;
-    case 2: *format = ImageFormat::Rg16; break;
-    case 3: *format = ImageFormat::Rgb24; break;
-    case 4: *format = ImageFormat::Rgba32; break;
-    default:
-        *format = (ImageFormat)-1;
-        stbi_image_free(data);
-        return nullptr;
-    }
-    *data_length = *x * *y * channels;
-    return data;
-}
-
-static void free_image(void* data)
-{
-    stbi_image_free(data);
-}
-
 static void ensure_vao(GLuint vao)
 {
     if (cur_vao != vao)
@@ -393,7 +358,7 @@ static GLuint make_vao(VertexElementType* type, int len)
     return vao;
 }
 
-void render_context_graphics_init(HGLRC)
+void render_context_graphics_init()
 {
     glGenBuffers(1, &default_vbo); GL_CHECK_ERROR;
     glEnable(GL_BLEND); GL_CHECK_ERROR;
