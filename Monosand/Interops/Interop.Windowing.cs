@@ -36,5 +36,5 @@ internal unsafe partial class Interop
 
     [DllImport(DllPath)] public static extern void MsdSetWindowTitle(IntPtr winHandle, char* title);
 
-    [DllImport(DllPath)] public static extern void MsdGetWindowTitle(IntPtr winHandle, char* title);
+    [DllImport(DllPath)] public static extern int MsdGetWindowTitle(IntPtr winHandle, char* title);
 }

@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-// ../Monosand.Win32.Native/exports_graphics.cpp
+// ../libmsd/exports_graphics.cpp
 public enum PrimitiveType
 {
     TriangleList,

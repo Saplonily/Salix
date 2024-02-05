@@ -104,15 +104,8 @@ public class Game
             // e - | : sleeping
             // | - | : one frame
 
-
             // ----- tick ------
-
-            RenderContext.ProcessQueuedActions();
             Window.PollEvents();
-            foreach (var item in deferredActions) item();
-            deferredActions.Clear();
-            if (Window.IsClosed)
-                break;
 
             long pdrawcalls = RenderContext.TotalDrawCalls;
             Update();
@@ -120,10 +113,15 @@ public class Game
             Window.Update();
             Window.SwapBuffers();
             LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
-
+            foreach (var item in deferredActions) item();
+            deferredActions.Clear();
+            RenderContext.ProcessQueuedActions();
             ticks++;
+            if (Window.IsClosed)
+                break;
             // -----------------
 
+            // now do sleep
             long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
             long pCurrentTimeLine = currentTimeLine;
             currentTimeLine = Interop.MsdGetUsecTimeline();
@@ -158,6 +156,7 @@ public class Game
                     laggedFrames = 0;
             }
         }
+        // usally graphics resource deletions
         RenderContext.ProcessQueuedActions();
     }
 }

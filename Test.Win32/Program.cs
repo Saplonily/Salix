@@ -25,15 +25,23 @@ public class MyGame : Game
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas_info.bin' to the TestAssets folder of Test.Win32!");
         }
         tex1 = ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
-        spriteBatch = new(this);
         tex1.Filter = TextureFilterType.Nearest;
+        spriteBatch = new(this);
     }
 
     public override void Update()
     {
         base.Update();
         if (Ticks % 10 == 0)
-            Window.Title = $"Monosand Test.Win32 | {DateTime.Now} | FPS: {Fps:F2} | FrameTime: {FrameTime:F4}";
+            Window.Title = $"Monosand Test.Win32 | {DateTime.Now} | FPS: {Fps:F2} | FrameTime: {FrameTime:F4} | DrawCall: {LastDrawCalls}";
+        if (KeyboardState.IsPressing(Key.Esc))
+        {
+            Window.Close();
+        }
+        if (KeyboardState.IsJustPressed(Key.T))
+        {
+            Console.WriteLine($"Title of window is: {Window.Title}");
+        }
     }
 
     public override void Render()
@@ -42,7 +50,7 @@ public class MyGame : Game
         RenderContext.Clear(Color.Known.CornflowerBlue);
         pos += (PointerState.Position - pos) / 8f;
 
-        spriteBatch.DrawCircle(tex1, new DrawTransform(pos), Color.Known.White, 32);
+        //spriteBatch.DrawCircle(tex1, new DrawTransform(pos), Color.Known.White, 32);
         spriteBatch.DrawCircle(tex1, new(pos, Vector2.Zero, new Vector2(100f / tex1.Width, 100f / tex1.Height), Ticks / 100f));
         string str = $"""
             LeftButton: {PointerState.IsLeftButtonPressing}

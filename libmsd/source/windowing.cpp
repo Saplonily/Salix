@@ -56,7 +56,8 @@ EXPORT HGLRC MsdCreateRenderContext()
     // this function can only be called once
     assert(glViewport == 0);
 
-    HWND dummyHwnd = CreateWindowExW(0, L"", L"", 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    wchar_t chr = L'\0';
+    HWND dummyHwnd = CreateWindowExW(0, &chr, &chr, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     HDC hdc = GetDC(dummyHwnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
     SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
@@ -134,15 +135,7 @@ EXPORT void CALLCONV MsdHideWindow(win_handle* handle) { ShowWindow(handle->hwnd
 EXPORT void CALLCONV MsdDestroyWindow(win_handle* handle)
 {
     DestroyWindow(handle->hwnd);
-    // make sure our window has received and handled WM_DESTORY
-    MSG msg{};
-    while (PeekMessageW(&msg, handle->hwnd, WM_DESTROY, WM_DESTROY, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
     delete handle;
-    timeEndPeriod(1);
 }
 
 EXPORT RECT CALLCONV MsdGetWindowRect(win_handle* handle)
@@ -167,8 +160,10 @@ EXPORT void CALLCONV MsdSetWindowTitle(win_handle* handle, wchar_t* title)
     SetWindowTextW(handle->hwnd, title);
 }
 
-EXPORT void CALLCONV MsdGetWindowTitle(win_handle* handle, wchar_t* title)
+EXPORT int CALLCONV MsdGetWindowTitle(win_handle* handle, wchar_t* title)
 {
     int len = GetWindowTextLengthW(handle->hwnd);
-    GetWindowTextW(handle->hwnd, title, 256);
+    if (title != nullptr)
+        GetWindowTextW(handle->hwnd, title, len + 1);
+    return len;
 }

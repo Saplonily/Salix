@@ -250,7 +250,6 @@ void windowing_msgloop_initialize()
 EXPORT event_list_t* CALLCONV MsdBeginPullEvents(win_handle* whandle, size_t* count, win_event** events)
 {
     assert(began_polling == false);
-
     // TODO message merging
     MSG msg{};
     while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))

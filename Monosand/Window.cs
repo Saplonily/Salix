@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Monosand;
 
@@ -32,9 +33,12 @@ public class Window
         get
         {
             EnsureState();
-            char* str = stackalloc char[256];
-            Interop.MsdGetWindowTitle(nativeHandle, str);
-            return new string(str);
+            int len = Interop.MsdGetWindowTitle(nativeHandle, null);
+            char* pchar = (char*)Marshal.AllocHGlobal(len * sizeof(char));
+            _ = Interop.MsdGetWindowTitle(nativeHandle, pchar);
+            string str = new string(pchar);
+            Marshal.FreeHGlobal((nint)pchar);
+            return str;
         }
         set
         {
@@ -180,7 +184,7 @@ public class Window
         count = (int)ncount;
         int sizeInInt = 4 + sizeof(IntPtr) / 4;
 
-        // magic number at ../Monosand.Win32.Native/win32_msg_loop.cpp :: event
+        // magic number at ../libmsd/windowing_msgloop.cpp :: event
         for (int i = 0; i < count * sizeInInt; i += sizeInInt)
         {
             IntPtr v = ((IntPtr*)(e + i + 4))[0];
