@@ -42,7 +42,7 @@ public class MyGame : Game
         RenderContext.Clear(Color.Known.CornflowerBlue);
         pos += (PointerState.Position - pos) / 8f;
 
-        //spriteBatch.DrawCircle(tex1, new DrawTransform(pos), Color.Known.White, 32);
+        spriteBatch.DrawCircle(tex1, new DrawTransform(pos), Color.Known.White, 32);
         spriteBatch.DrawCircle(tex1, new(pos, Vector2.Zero, new Vector2(100f / tex1.Width, 100f / tex1.Height), Ticks / 100f));
         string str = $"""
             LeftButton: {PointerState.IsLeftButtonPressing}
@@ -50,7 +50,7 @@ public class MyGame : Game
             RightButton: {PointerState.IsRightButtonPressing}
             Wheel: {PointerState.WheelOffset}
             """;
-        spriteBatch.DrawText(sprFont, str, new());
+        spriteBatch.DrawText(sprFont, str, DrawTransform.None);
         spriteBatch.Flush();
     }
 }

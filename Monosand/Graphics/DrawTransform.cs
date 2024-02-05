@@ -9,6 +9,8 @@ public struct DrawTransform
     public Vector2 Scale = Vector2.One;
     public float Radians;
 
+    public static DrawTransform None => new();
+
     public DrawTransform()
     { }
 
