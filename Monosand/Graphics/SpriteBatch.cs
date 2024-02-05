@@ -96,32 +96,26 @@ public sealed partial class SpriteBatch
         Shader = SpriteShader;
     }
 
-    // TODO a more elegant way to replace these methods?
-    #region tons of Drawxxx methods
+    public void DrawTexture(Texture2D texture, DrawTransform drawTransform)
+        => DrawTexture(texture, drawTransform, Color.Known.White, Vector2.Zero, Vector2.One);
 
-    public void DrawTexture(Texture2D texture, Vector2 position)
-        => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, Color.Known.White);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, in RectangleProperty<Color> color)
-        => DrawTexture(texture, position, Vector2.Zero, Vector2.One, 0f, color);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian)
-        => DrawTexture(texture, position, origin, Vector2.One, radian, Color.Known.White);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, float radian, in RectangleProperty<Color> color)
-        => DrawTexture(texture, position, origin, Vector2.One, radian, color);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale)
-        => DrawTexture(texture, position, Vector2.Zero, scale, 0f, Color.Known.White);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 scale, in RectangleProperty<Color> color)
-        => DrawTexture(texture, position, Vector2.Zero, scale, 0f, color);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian)
-        => DrawTexture(texture, position, origin, scale, radian, Color.Known.White);
-
-    public void DrawTexture(Texture2D texture, Vector2 position, Vector2 origin, Vector2 scale, float radian, in RectangleProperty<Color> color)
-        => DrawTexture(texture, position, origin, scale, radian, color, Vector2.Zero, Vector2.One);
+    public void DrawTexture(
+        Texture2D texture,
+        DrawTransform drawTransform,
+        RectangleProperty<Color> color,
+        Vector2 textureTopLeft,
+        Vector2 textureBottomRight
+        )
+        => DrawTexture(
+            texture,
+            drawTransform.Position,
+            drawTransform.Origin,
+            drawTransform.Scale,
+            drawTransform.Radians,
+            color,
+            textureTopLeft,
+            textureBottomRight
+            );
 
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix)
         => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(Color.Known.White), Vector2.Zero, Vector2.One);
@@ -129,46 +123,17 @@ public sealed partial class SpriteBatch
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color)
         => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(color), Vector2.Zero, Vector2.One);
 
-    public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color, Vector2 textureTopLeft, Vector2 textureBottomRight)
-        => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(color), textureTopLeft, textureBottomRight);
+    public void DrawText<T>(SpriteFont spriteFont, T text, DrawTransform drawTransform) where T : IEnumerable<char>
+        => DrawText(spriteFont, text, drawTransform.Position, drawTransform.Origin, drawTransform.Scale, drawTransform.Radians, Color.Known.Black);
 
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, Color.Known.Black);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, Vector2.One, 0f, color);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radians)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radians, Color.Known.Black);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, float radians, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, Vector2.One, radians, color);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale = default)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, Color.Known.Black);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 scale, Color color)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, Vector2.Zero, scale, 0f, color);
-
-    /// <inheritdoc cref="DrawText{T}(SpriteFont, in T, Vector2, Vector2, Vector2, float, Color)"/>
-    public void DrawText<T>(SpriteFont spriteFont, in T text, Vector2 position, Vector2 origin, Vector2 scale, float radians)
-        where T : IEnumerable<char>
-        => DrawText(spriteFont, text, position, origin, scale, radians, Color.Known.Black);
-
-    #endregion
-
+    /// <summary>Draw lines of text to the <see cref="Monosand.RenderContext"/>.</summary>
+    /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
+    /// <param name="spriteFont">The <see cref="SpriteFont"/> will be used to draw.</param>
+    /// <param name="text">Text to draw, allowing '\n' for newlines.</param>
+    /// <param name="drawTransform"><see cref="DrawTransform"/> that applys to this draw.</param>
+    /// <param name="color">Color, usually and defaulted <see cref="Color.Known.Black"/>.</param>
+    public void DrawText<T>(SpriteFont spriteFont, T text, DrawTransform drawTransform, Color color) where T : IEnumerable<char>
+        => DrawText(spriteFont, text, drawTransform.Position, drawTransform.Origin, drawTransform.Scale, drawTransform.Radians, color);
 
     /// <summary>Draw lines of text to the <see cref="Monosand.RenderContext"/>.</summary>
     /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
@@ -178,8 +143,8 @@ public sealed partial class SpriteBatch
     /// <param name="origin">Origin, as percentage.</param>
     /// <param name="scale">Scaling factor</param>
     /// <param name="radians">Rotation radians.</param>
-    /// <param name="color">Color, usually <see cref="Color.Black"/>.</param>
-    public void DrawText<T>(SpriteFont spriteFont, in T text,
+    /// <param name="color">Color, usually and defaulted <see cref="Color.Known.Black"/>.</param>
+    public void DrawText<T>(SpriteFont spriteFont, T text,
         Vector2 position, Vector2 origin,
         Vector2 scale, float radians,
         Color color
@@ -216,7 +181,7 @@ public sealed partial class SpriteBatch
         Shader = SpriteShader;
     }
 
-    public Vector2 MeasureText<T>(SpriteFont spriteFont, in T text) where T : IEnumerable<char>
+    public Vector2 MeasureText<T>(SpriteFont spriteFont, T text) where T : IEnumerable<char>
     {
         // measure the string
         float totalWidth = 0;
@@ -243,7 +208,7 @@ public sealed partial class SpriteBatch
     public void DrawTexture(
         Texture2D texture,
         Vector2 position, Vector2 origin,
-        Vector2 scale, float radians, in RectangleProperty<Color> color,
+        Vector2 scale, float radians, RectangleProperty<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -281,7 +246,7 @@ public sealed partial class SpriteBatch
 
     public void DrawTextureMatrix(
         Texture2D texture, Matrix3x2 matrix,
-        in RectangleProperty<Color> color,
+        RectangleProperty<Color> color,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -297,8 +262,8 @@ public sealed partial class SpriteBatch
 
     public unsafe void DrawTextureRectangle(
         Texture2D texture,
-        in RectangleProperty<Color> color,
-        in RectangleProperty<Vector2> position,
+        RectangleProperty<Color> color,
+        RectangleProperty<Vector2> position,
         Vector2 textureTopLeft, Vector2 textureBottomRight
         )
     {
@@ -340,7 +305,6 @@ public sealed partial class SpriteBatch
         indicesIndex += 6;
     }
 
-    // TODO color parameter
     public unsafe void DrawCircle(Texture2D texture, Matrix3x2 matrix, Color color, int precise = 24)
     {
         ThrowHelper.ThrowIfNull(texture);
@@ -378,12 +342,29 @@ public sealed partial class SpriteBatch
         indicesIndex += (precise - 2) * 3;
     }
 
+    public void DrawCircle(Texture2D texture, DrawTransform drawTransform, Color color, int precise = 24)
+    {
+        DrawTransform dt = drawTransform;
+        dt.Scale *= texture.Size;
+        DrawCircle(texture, dt.BuildMatrix(texture.Size), color, precise);
+    }
+
+    public void DrawCircle(Texture2D texture, DrawTransform drawTransform, int precise = 24)
+        => DrawCircle(texture, drawTransform, Color.Known.White, precise);
+
+    public void DrawCircle(Color color, float size, DrawTransform drawTransform, int precise = 24)
+    {
+        DrawTransform dt = drawTransform;
+        dt.Scale *= new Vector2(size);
+        DrawCircle(Texture1x1White, dt.BuildMatrix(new(size)), color, precise);
+    }
+
     public unsafe void DrawTriangle(
         Texture2D texture,
-        TriangleProperty<Vector2> position,
-        Matrix3x2 matrix,
+        TriangleProperty<Vector2> pointPositions,
         TriangleProperty<Vector2> textureCoord,
-        TriangleProperty<Color> color
+        TriangleProperty<Color> color,
+        Matrix3x2 matrix
         )
     {
         ThrowHelper.ThrowIfNull(texture);
@@ -405,11 +386,11 @@ public sealed partial class SpriteBatch
         fixed (ushort* iptr = indices)
         {
             vptr[vind + 0] =
-                new(Vector2.Transform(position.First, matrix), color.First.ToVector4(), textureCoord.First);
+                new(Vector2.Transform(pointPositions.First, matrix), color.First.ToVector4(), textureCoord.First);
             vptr[vind + 1] =
-                new(Vector2.Transform(position.Second, matrix), color.Second.ToVector4(), textureCoord.Second);
+                new(Vector2.Transform(pointPositions.Second, matrix), color.Second.ToVector4(), textureCoord.Second);
             vptr[vind + 2] =
-                new(Vector2.Transform(position.Third, matrix), color.Third.ToVector4(), textureCoord.Third);
+                new(Vector2.Transform(pointPositions.Third, matrix), color.Third.ToVector4(), textureCoord.Third);
 
             iptr[indicesIndex + 0] = (ushort)(vind + 0);
             iptr[indicesIndex + 1] = (ushort)(vind + 1);
@@ -419,6 +400,14 @@ public sealed partial class SpriteBatch
         verticesIndex += 3;
         indicesIndex += 3;
     }
+
+    public void DrawTriangle(Texture2D texture,
+        TriangleProperty<Vector2> pointPositions,
+        TriangleProperty<Vector2> textureCoord,
+        TriangleProperty<Color> color,
+        DrawTransform drawTransform)
+        => DrawTriangle(texture, pointPositions, textureCoord, color, drawTransform.BuildMatrix(texture.Size));
+
 
     /// <summary>Flush the batched draw actions.</summary>
     public void Flush()

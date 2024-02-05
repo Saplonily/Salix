@@ -20,13 +20,13 @@ public sealed class Texture2D : GraphicsResource
     public TextureFilterType Filter
     {
         get { EnsureState(); return filter; }
-        set { EnsureState(); Interop.MsdgSetTextureFilter(nativeHandle, filter, filter); filter = value; }
+        set { EnsureState(); filter = value; Interop.MsdgSetTextureFilter(nativeHandle, filter, filter); }
     }
 
     public TextureWrapType Wrap
     {
         get { EnsureState(); return wrap; }
-        set { EnsureState(); Interop.MsdgSetTextureWrap(nativeHandle, wrap); wrap = value; }
+        set { EnsureState(); wrap = value; Interop.MsdgSetTextureWrap(nativeHandle, wrap); }
     }
 
     public Texture2D(RenderContext renderContext, int width, int height)

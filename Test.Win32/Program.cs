@@ -26,6 +26,7 @@ public class MyGame : Game
         }
         tex1 = ResourceLoader.LoadTexture2D("TestAssets/768x448.png");
         spriteBatch = new(this);
+        tex1.Filter = TextureFilterType.Nearest;
     }
 
     public override void Update()
@@ -40,13 +41,16 @@ public class MyGame : Game
         base.Render();
         RenderContext.Clear(Color.Known.CornflowerBlue);
         pos += (PointerState.Position - pos) / 8f;
-        Matrix3x2 mat = Matrix3x2.Identity * Matrix3x2.CreateScale(100f) * Matrix3x2.CreateTranslation(pos);
-        spriteBatch.DrawCircle(spriteBatch.Texture1x1White, mat, Color.Known.Black, 32);
 
-        mat = Matrix3x2.Identity * Matrix3x2.CreateScale(100f) * Matrix3x2.CreateTranslation(130f, 100f);
-        spriteBatch.DrawCircle(tex1, mat, Color.Known.White, 32);
-
-        spriteBatch.DrawText(sprFont, $"PointerState: {PointerState.IsRightButtonPressing}", Vector2.Zero);
+        //spriteBatch.DrawCircle(tex1, new DrawTransform(pos), Color.Known.White, 32);
+        spriteBatch.DrawCircle(tex1, new(pos, Vector2.Zero, new Vector2(100f / tex1.Width, 100f / tex1.Height), Ticks / 100f));
+        string str = $"""
+            LeftButton: {PointerState.IsLeftButtonPressing}
+            MiddleButton: {PointerState.IsMiddleButtonPressing}
+            RightButton: {PointerState.IsRightButtonPressing}
+            Wheel: {PointerState.WheelOffset}
+            """;
+        spriteBatch.DrawText(sprFont, str, new());
         spriteBatch.Flush();
     }
 }
