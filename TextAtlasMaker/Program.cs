@@ -6,6 +6,7 @@ namespace TextAtlasMaker;
 
 internal class Program
 {
+    // TODO: better packing methods
     // TODO: This tool currently needs to be manually modified source code instead of being a command line tool
     public static void Main()
     {
@@ -17,7 +18,7 @@ internal class Program
         atlasImage.SaveAsPng(@"atlas.png");
         atlasImage.Dispose();
 
-        using FileStream fs = new(@"atlas_info.bin", FileMode.Create, FileAccess.Write);
+        using FileStream fs = new(@"atlas.bin", FileMode.Create, FileAccess.Write);
         using BinaryWriter bw = new(fs);
         bw.Write((short)fontSize);
         foreach (var pair in dic)

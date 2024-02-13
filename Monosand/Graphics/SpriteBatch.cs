@@ -78,16 +78,14 @@ public sealed partial class SpriteBatch
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
 
-        {
-            var rl = game.ResourceLoader;
-            using var vert = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.vert");
-            using var frag = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.SpriteShader.frag");
-            SpriteShader = new(rl.LoadGlslShader(vert, frag));
+        using var vert = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.SpriteShader.vert");
+        using var frag = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.SpriteShader.frag");
+        using var vertText = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.TextShader.vert");
+        using var fragText = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.TextShader.frag");
 
-            using var vertText = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.vert");
-            using var fragText = rl.OpenEmbeddedStream($"{nameof(Monosand)}.Embedded.TextShader.frag");
-            TextShader = new(rl.LoadGlslShader(vertText, fragText));
-        }
+        var loader = game.ResourceLoader;
+        SpriteShader = new(loader.LoadGlslShader(vert, frag));
+        TextShader = new(loader.LoadGlslShader(vertText, fragText));
 
         game.Window.PreviewSwapBuffer += Flush;
         context.PreviewViewportChanged += Flush;
@@ -305,9 +303,12 @@ public sealed partial class SpriteBatch
         indicesIndex += 6;
     }
 
+    // TODO now we have circle drawing, then we'll need arc drawing
     public unsafe void DrawCircle(Texture2D texture, Matrix3x2 matrix, Color color, int precise = 24)
     {
         ThrowHelper.ThrowIfNull(texture);
+        if (precise < 3)
+            throw new ArgumentOutOfRangeException(nameof(precise), precise, "Precise is less than 3.");
         if (lastTexture != texture) Flush();
         if (verticesIndex >= ushort.MaxValue - precise * 2) Flush();
         if (indicesIndex >= ushort.MaxValue - precise * 6 + 12) Flush();

@@ -8,12 +8,13 @@ public class Game
     private readonly Platform platform;
     private long ticks;
     private int laggedFrames;
+    private bool requestedExit;
     private List<Action> deferredActions;
 
     public RenderContext RenderContext { get; private set; }
     public Window Window { get; private set; }
     public Platform Platform => platform;
-    public ResourceLoader ResourceLoader { get; }
+    public ResourceLoader ResourceLoader { get; private set; }
 
     /// <summary>Indicates whether the game is lagging
     /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 16 frames).</summary>
@@ -29,7 +30,15 @@ public class Game
     public float ExpectedFrameTimeF => (float)ExpectedFrameTime;
 
     /// <summary>Expected Fps of the game. This is just a shortcut to access '1.0 / <see cref="ExpectedFrameTime"/>'.</summary>
-    public double ExpectedFps { get => 1.0 / ExpectedFrameTime; set => ExpectedFrameTime = 1.0 / value; }
+    public double ExpectedFps
+    {
+        get => 1.0 / ExpectedFrameTime;
+        set
+        {
+            ThrowHelper.ThrowIfArgInvalid(value <= 0, nameof(value));
+            ExpectedFrameTime = 1.0 / value;
+        }
+    }
 
     /// <summary>Actual frame time of the game.</summary>
     public double FrameTime { get; private set; }
@@ -64,7 +73,7 @@ public class Game
         Window = new Window(this);
         RenderContext = new RenderContext();
         Window.AttachRenderContext(RenderContext);
-        ResourceLoader = new ResourceLoader(this);
+        ResourceLoader = new(this);
     }
 
     /// <summary>The update logic.</summary>
@@ -75,6 +84,10 @@ public class Game
 
     public void InvokeDeferred(Action action)
         => deferredActions.Add(action);
+
+    public void RequestExit()
+        => requestedExit = true;
+
 
     public void Run()
     {
@@ -104,9 +117,10 @@ public class Game
             // e - | : sleeping
             // | - | : one frame
 
+            if (requestedExit)
+                break;
             // ----- tick ------
             Window.PollEvents();
-
             long pdrawcalls = RenderContext.TotalDrawCalls;
             Update();
             Render();

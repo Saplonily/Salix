@@ -25,9 +25,6 @@ public unsafe class Platform
         identifier = MonosandPlatform.Win32;
     }
 
-    internal Stream OpenReadStream(string fileName)
-        => new FileStream(fileName, FileMode.Open, FileAccess.Read);
-
     // TODO remove these resource loading methods
     internal unsafe UnmanagedMemory LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
@@ -35,8 +32,7 @@ public unsafe class Platform
         fixed (void* ptr = source)
         {
             data = Interop.MsdLoadImage(ptr, source.Length, out width, out height, out int size, out format);
-            if (data is null)
-                throw new ResourceLoadFailedException(ResourceType.Image);
+            if (data is null) return UnmanagedMemory.Empty;
             return new(data, size);
         }
     }
