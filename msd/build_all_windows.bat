@@ -2,11 +2,11 @@
 
 if not exist "build_winx32" (
     echo script: build_winx32 not exists, building...
-    cmake -B build_winx32 -G "Visual Studio 17 2022" -A Win32
+    cmake -B build_winx32 -G "Visual Studio 17 2022" -A Win32 -DMSD_TARGET_OS="win" -DMSD_TARGET_ARCH="x32"
 )
 if not exist "build_winx64" (
     echo script: build_winx64 not exists, building...
-    cmake -B build_winx64 -G "Visual Studio 17 2022" -A x64
+    cmake -B build_winx64 -G "Visual Studio 17 2022" -A x64 -DMSD_TARGET_OS="win" -DMSD_TARGET_ARCH="x64"
 )
 
 echo script: compiling win-x32...

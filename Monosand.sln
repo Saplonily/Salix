@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monosand", "Monosand\Monosa
 		{63369D8C-27BC-31F0-BA95-5D9AEA795CAF} = {63369D8C-27BC-31F0-BA95-5D9AEA795CAF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmsd", "libmsd\build\libmsd.vcxproj", "{63369D8C-27BC-31F0-BA95-5D9AEA795CAF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmsd", "msd\build\msd.vcxproj", "{63369D8C-27BC-31F0-BA95-5D9AEA795CAF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Win32", "Test.Win32\Test.Win32.csproj", "{E07D9D86-52E8-466F-9020-B6FFBBBD446E}"
 EndProject
@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
+		D_5_4Projects_4Monosand_4global_1json__JsonSchema = https://json.schemastore.org/global.json
 		C_5_4Users_4Saplonily_4source_4repos_4Monosand_4global_1json__JsonSchema = https://json.schemastore.org/global.json
 	EndProjectSection
 EndProject

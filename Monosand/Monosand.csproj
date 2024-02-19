@@ -35,14 +35,14 @@
 
   <!--Any other way to simplify these?-->
   <ItemGroup>
-    <None Include="..\libmsd\bin\win-x64\libmsd.dll" Condition="Exists('..\libmsd\bin\win-x64\libmsd.dll')">
+    <None Include="..\msd\bin\win-x64\msd.dll" Condition="Exists('..\msd\bin\win-x64\msd.dll')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes\win-x64\native</PackagePath>
       <Pack>true</Pack>
       <Visible>false</Visible>
     </None>
 
-    <None Include="..\libmsd\bin\win-x32\libmsd.dll" Condition="Exists('..\libmsd\bin\win-x32\libmsd.dll')">
+    <None Include="..\msd\bin\win-x32\msd.dll" Condition="Exists('..\msd\bin\win-x32\msd.dll')">
       <PackagePath>runtimes\win-x32\native</PackagePath>
       <Pack>true</Pack>
       <Visible>false</Visible>

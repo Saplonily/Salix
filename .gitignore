@@ -7,5 +7,5 @@
 **/obj/**
 **/*.pubxml
 **/*.pubxml.user
-libmsd/build*/**
+msd/build*/**
 TestResults/**

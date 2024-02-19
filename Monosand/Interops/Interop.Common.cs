@@ -6,7 +6,7 @@ namespace Monosand;
 
 internal unsafe partial class Interop
 {
-    private const string DllPath = "libmsd";
+    private const string DllPath = "msd";
 
     [DllImport(DllPath)] public static extern int MsdInitialize();
 

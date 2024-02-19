@@ -1,8 +1,9 @@
 #include <Dwmapi.h>
-#include <glad/glad.h>
-#include <glad/glad_wgl.h>
+#include <cstdio>
 #include <assert.h>
 #include <vector>
+#include <glad/glad.h>
+#include <glad/glad_wgl.h>
 #include "common.h"
 #include "graphics_enums.h"
 

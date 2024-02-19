@@ -8,7 +8,7 @@
 #define EXPORT extern "C" __declspec(dllexport)
 #define CALLCONV __stdcall
 
-constexpr wchar_t* Monosand = L"Monosand";
+constexpr const wchar_t* Monosand = L"Monosand";
 
 using byte = unsigned char;
 
