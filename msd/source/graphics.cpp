@@ -25,6 +25,7 @@ struct buffer_handle
     GLuint ibo_id;
 };
 
+// TODO better error checking (report to managed code)
 #define GL_CHECK_ERROR {\
 GLenum err = glGetError();\
 if (err != 0)\
