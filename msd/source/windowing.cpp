@@ -106,11 +106,14 @@ EXPORT void MsdAttachRenderContext(win_handle* wh, HGLRC hglrc)
     wglMakeCurrent(wh->hdc, hglrc);
 }
 
+// TODO: initial position
 EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
 {
+    RECT rect{ 0, 0, width, height };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowExW(0L, Monosand, title, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        width, height,
+        rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, NULL, NULL
     );
     SetWindowLongPtrW(hwnd, 0, (LONG_PTR)gc_handle);
@@ -147,7 +150,9 @@ EXPORT RECT CALLCONV MsdGetWindowRect(win_handle* handle)
 
 EXPORT void CALLCONV MsdSetWindowSize(win_handle* handle, int width, int height)
 {
-    SetWindowPos(handle->hwnd, NULL, 0, 0, width, height, SWP_NOMOVE);
+    RECT rect{ 0, 0, width, height };
+    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+    SetWindowPos(handle->hwnd, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE);
 }
 
 EXPORT void CALLCONV MsdSetWindowPos(win_handle* handle, int x, int y)
