@@ -2,7 +2,6 @@
 using System.Runtime.Versioning;
 using Monosand;
 using Monosand.EC;
-using static Test.Win32.MyGame;
 
 [assembly: SupportedOSPlatform("windows")]
 
