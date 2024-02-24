@@ -23,8 +23,8 @@ void windowing_initialize()
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
     wc.lpszClassName = Monosand;
-    // GCHandle of the managed Monosand.Window
-    wc.cbWndExtra = sizeof(void*) * 1;
+    // | GCHandle of the managed Monosand.Window | HDC |
+    wc.cbWndExtra = sizeof(void*) * 2;
     RegisterClassW(&wc);
 
     pixelFormatDescriptor = {
@@ -101,13 +101,14 @@ EXPORT HGLRC MsdCreateRenderContext()
     return hglrc;
 }
 
-EXPORT void MsdAttachRenderContext(win_handle* wh, HGLRC hglrc)
+EXPORT void MsdAttachRenderContext(HWND hwnd, HGLRC hglrc)
 {
-    wglMakeCurrent(wh->hdc, hglrc);
+    wglMakeCurrent((HDC)GetWindowLongPtrW(hwnd, sizeof(void*)), hglrc);
 }
 
 // TODO: initial position
-EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
+// TODO: window style
+EXPORT HWND CALLCONV MsdCreateWindow(int width, int height, wchar_t* title, void* gc_handle)
 {
     RECT rect{ 0, 0, width, height };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
@@ -124,51 +125,50 @@ EXPORT win_handle* CALLCONV MsdCreateWindow(int width, int height, wchar_t* titl
     HDC hdc = GetDC(hwnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
     SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
+    SetWindowLongPtrW(hwnd, sizeof(void*), (LONG_PTR)hdc);
 
-    win_handle* wh = new win_handle;
-    wh->hwnd = hwnd;
-    wh->hdc = hdc;
-    return wh;
+    return hwnd;
 }
 
-EXPORT void CALLCONV MsdShowWindow(win_handle* handle) { ShowWindow(handle->hwnd, SW_NORMAL); }
+EXPORT void CALLCONV MsdShowWindow(HWND hwnd) { ShowWindow(hwnd, SW_NORMAL); }
 
-EXPORT void CALLCONV MsdHideWindow(win_handle* handle) { ShowWindow(handle->hwnd, SW_HIDE); }
+EXPORT void CALLCONV MsdHideWindow(HWND hwnd) { ShowWindow(hwnd, SW_HIDE); }
 
-EXPORT void CALLCONV MsdDestroyWindow(win_handle* handle)
+EXPORT void CALLCONV MsdDestroyWindow(HWND hwnd)
 {
-    DestroyWindow(handle->hwnd);
-    delete handle;
+    DestroyWindow(hwnd);
 }
 
-EXPORT RECT CALLCONV MsdGetWindowRect(win_handle* handle)
+EXPORT RECT CALLCONV MsdGetWindowRect(HWND hwnd)
 {
     RECT rect{};
-    GetClientRect(handle->hwnd, &rect);
+    GetClientRect(hwnd, &rect);
     return rect;
 }
 
-EXPORT void CALLCONV MsdSetWindowSize(win_handle* handle, int width, int height)
+EXPORT void CALLCONV MsdSetWindowSize(HWND hwnd, int width, int height)
 {
     RECT rect{ 0, 0, width, height };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-    SetWindowPos(handle->hwnd, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE);
+    AdjustWindowRect(&rect, GetWindowLongPtrW(hwnd, GWL_STYLE), FALSE);
+    SetWindowPos(hwnd, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOMOVE);
 }
 
-EXPORT void CALLCONV MsdSetWindowPos(win_handle* handle, int x, int y)
+EXPORT void CALLCONV MsdSetWindowPos(HWND hwnd, int x, int y)
 {
-    SetWindowPos(handle->hwnd, NULL, x, y, 0, 0, SWP_NOSIZE);
+    RECT rect{ x, y, 0, 0 };
+    AdjustWindowRect(&rect, GetWindowLongPtrW(hwnd, GWL_STYLE), FALSE);
+    SetWindowPos(hwnd, NULL, rect.left, rect.top, 0, 0, SWP_NOSIZE);
 }
 
-EXPORT void CALLCONV MsdSetWindowTitle(win_handle* handle, wchar_t* title)
+EXPORT void CALLCONV MsdSetWindowTitle(HWND hwnd, wchar_t* title)
 {
-    SetWindowTextW(handle->hwnd, title);
+    SetWindowTextW(hwnd, title);
 }
 
-EXPORT int CALLCONV MsdGetWindowTitle(win_handle* handle, wchar_t* title)
+EXPORT int CALLCONV MsdGetWindowTitle(HWND hwnd, wchar_t* title)
 {
-    int len = GetWindowTextLengthW(handle->hwnd);
+    int len = GetWindowTextLengthW(hwnd);
     if (title != nullptr)
-        GetWindowTextW(handle->hwnd, title, len + 1);
+        GetWindowTextW(hwnd, title, len + 1);
     return len;
 }

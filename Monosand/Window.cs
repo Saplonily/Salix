@@ -16,9 +16,8 @@ public class Window
 
     private IntPtr nativeHandle;
 
-    // TODO changes to libmsd will break this
     /// <summary>Native handle of this Window, on windows it's an HWND.</summary>
-    public unsafe IntPtr Handle => (IntPtr)(*(void**)NativeHandle);
+    public unsafe IntPtr Handle => NativeHandle;
 
     internal IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
 

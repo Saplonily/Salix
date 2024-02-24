@@ -1,3 +1,4 @@
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <windowsx.h>
 #include <vector>
@@ -247,12 +248,12 @@ void windowing_msgloop_initialize()
     event_list_2->reserve(16);
 }
 
-EXPORT event_list_t* CALLCONV MsdBeginPullEvents(win_handle* whandle, size_t* count, win_event** events)
+EXPORT event_list_t* CALLCONV MsdBeginPullEvents(HWND hwnd, size_t* count, win_event** events)
 {
     assert(began_polling == false);
     // TODO message merging
     MSG msg{};
-    while (PeekMessageW(&msg, whandle->hwnd, 0, 0, PM_REMOVE))
+    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
     {
         if (msg.message == WM_KEYDOWN && msg.wParam == VK_PROCESSKEY)
             msg.wParam = ImmGetVirtualKey(msg.hwnd);
@@ -270,7 +271,7 @@ EXPORT event_list_t* CALLCONV MsdBeginPullEvents(win_handle* whandle, size_t* co
     return event_list_2;
 }
 
-EXPORT void CALLCONV MsdEndPullEvents(win_handle* whandle, event_list_t* handle)
+EXPORT void CALLCONV MsdEndPullEvents(HWND hwnd, event_list_t* handle)
 {
     assert(began_polling == true);
     handle->clear();

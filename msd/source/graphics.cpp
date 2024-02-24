@@ -47,7 +47,7 @@ EXPORT GraphicsBackend CALLCONV MsdgGetGraphicsBackend()
     return GraphicsBackend::Opengl33;
 }
 
-EXPORT void CALLCONV MsdgSwapBuffers(win_handle* handle)
+EXPORT void CALLCONV MsdgSwapBuffers(HWND hwnd)
 {
     // FIXME some screen recorders may break our program here
     // for example, OCam and Bandicam
@@ -57,7 +57,7 @@ EXPORT void CALLCONV MsdgSwapBuffers(win_handle* handle)
     // WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB to the WGL_CONTEXT_PROFILE_MASK_ARB,
     // for now it can be enabled by uncommenting the MSDG_COMPATIBILITY_GL macro definition in the exports.h.
     // If you have a better solution, welcome your contributions!
-    SwapBuffers(handle->hdc);
+    SwapBuffers((HDC)GetWindowLongPtrW(hwnd, sizeof(void*)));
 }
 
 EXPORT double CALLCONV MsdgGetVSyncFrameTime()

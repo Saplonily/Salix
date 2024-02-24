@@ -1,5 +1,7 @@
-﻿using Monosand;
+﻿using System.Drawing;
+using Monosand;
 using Monosand.EC;
+using Color = Monosand.Color;
 
 namespace Test.Win32;
 
@@ -29,6 +31,18 @@ public class MyGame : ECGame
         scene.AddEntity(new TestEntity());
         scene.AddEntity(new TestEntity());
         GotoScene(scene);
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        if (KeyboardState.IsJustPressed(Key.Esc))
+            RequestExit();
+        if (KeyboardState.IsPressing(Key.S))
+        {
+            Window.Width -= 2;
+            Window.X += 1;
+        }
     }
 
     public override void Render()
