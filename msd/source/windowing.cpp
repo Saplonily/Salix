@@ -51,19 +51,20 @@ void windowing_initialize()
     timeBeginPeriod(1);
 }
 
+
+// TODO: error handle
 EXPORT HGLRC MsdCreateRenderContext()
 {
     // this function can only be called once
     assert(glViewport == 0);
 
     wchar_t chr = L'\0';
-    HWND dummyHwnd = CreateWindowExW(0, &chr, &chr, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    HWND dummyHwnd = CreateWindowExW(0, Monosand, &chr, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     HDC hdc = GetDC(dummyHwnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
     SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
 
     HGLRC hglrc = wglCreateContext(hdc);
-    int lastError = GetLastError();
     wglMakeCurrent(hdc, hglrc);
     gladLoadGL();
     gladLoadWGL(hdc);
@@ -86,7 +87,6 @@ EXPORT HGLRC MsdCreateRenderContext()
         0
     };
     hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
-
     wglMakeCurrent(hdc, hglrc);
     // TODO error handling
     assert(hglrc != nullptr);
