@@ -121,7 +121,7 @@ public class Window
             winHandle = Interop.MsdCreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
 
         if (winHandle == IntPtr.Zero)
-            throw new OperationFailedException("Can't create window.");
+            throw new OperationFailedException(SR.FailedToCreateWindow);
 
         nativeHandle = winHandle;
     }
@@ -178,7 +178,7 @@ public class Window
         int* e;
         void* handle = Interop.MsdBeginPullEvents(nativeHandle, out var ncount, out e);
         if (ncount > int.MaxValue)
-            throw new OperationFailedException("Too many win events.(> int.MaxValue)");
+            throw new OperationFailedException(SR.TooManyWindowEvents);
         count = (int)ncount;
         int sizeInInt = 4 + sizeof(IntPtr) / 4;
 

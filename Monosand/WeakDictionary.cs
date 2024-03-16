@@ -59,11 +59,11 @@ internal sealed class WeakDictionary<TKey, TValue>
         get
         {
             bool r = dictionary.TryGetValue(key, out var wref);
-            if (!r) throw new KeyNotFoundException($"The given key '{key}' was not present in the dictionary.");
+            if (!r) throw new KeyNotFoundException(string.Format(SR.KeyNotPresent, key));
             if (wref!.TryGetTarget(out var target))
                 return target;
             else
-                throw new KeyNotFoundException($"The given key '{key}' was present in the dictionary but it was not alive.");
+                throw new KeyNotFoundException(string.Format(SR.KeyNotPresentButAlive, key));
         }
         set
         {

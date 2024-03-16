@@ -119,9 +119,9 @@ public sealed class Shader : GraphicsResource
             return;
         }
 
-        throw new NotSupportedException($"Type of {typeof(T)} is not supported in shader parameter.");
+        throw new NotSupportedException(string.Format(SR.TypeNotSupportedInShader, typeof(T)));
     }
 
     private void EnsureCurrentState()
-        => ThrowHelper.ThrowIfInvalid(RenderContext.Shader != this, "This operation required this shader to be current.");
+        => ThrowHelper.ThrowIfInvalid(RenderContext.Shader != this, SR.ShaderRequiredCurrent);
 }

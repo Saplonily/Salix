@@ -31,6 +31,6 @@ public unsafe class FileSystemResourceManager : ResourceManager<string>
             using Stream f = OpenReadStream(path + ".frag");
             return (T)(object)loader.LoadGlslShader(v, f);
         }
-        throw new NotSupportedException($"Resoure type {typeof(T)} is not supported.");
+        throw new NotSupportedException(string.Format(SR.ResourceTypeNotSupported,typeof(T)));
     }
 }

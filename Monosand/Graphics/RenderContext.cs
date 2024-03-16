@@ -119,7 +119,7 @@ public sealed class RenderContext
         vSyncFrameTime = Interop.MsdgGetVSyncFrameTime();
         nativeHandle = Interop.MsdCreateRenderContext();
         if (nativeHandle == IntPtr.Zero)
-            throw new OperationFailedException("RenderContext creation failed.");
+            throw new OperationFailedException(SR.FailedToCreateRenderContext);
     }
 
     internal void ProcessQueuedActions()

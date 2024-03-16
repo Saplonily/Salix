@@ -20,7 +20,7 @@ public unsafe class Platform
     {
         // TODO error handle
         if (Interop.MsdInitialize() != 0)
-            throw new OperationFailedException("MsdInitialize returned non-zero value.");
+            throw new OperationFailedException(SR.PlatformInitializeFailed);
         graphicsBackend = Interop.MsdgGetGraphicsBackend();
         identifier = MonosandPlatform.Win32;
     }

@@ -94,6 +94,9 @@ public sealed partial class SpriteBatch
         Shader = SpriteShader;
     }
 
+    public void DrawTexture(Texture2D texture, DrawTransform drawTransform, RectangleProperty<Color> color)
+        => DrawTexture(texture, drawTransform, color, Vector2.Zero, Vector2.One);
+
     public void DrawTexture(Texture2D texture, DrawTransform drawTransform)
         => DrawTexture(texture, drawTransform, Color.Known.White, Vector2.Zero, Vector2.One);
 
@@ -308,7 +311,7 @@ public sealed partial class SpriteBatch
     {
         ThrowHelper.ThrowIfNull(texture);
         if (precise < 3)
-            throw new ArgumentOutOfRangeException(nameof(precise), precise, "Precise is less than 3.");
+            throw new ArgumentOutOfRangeException(nameof(precise), precise, SR.PreciseTooSmall);
         if (lastTexture != texture) Flush();
         if (verticesIndex >= ushort.MaxValue - precise * 2) Flush();
         if (indicesIndex >= ushort.MaxValue - precise * 6 + 12) Flush();

@@ -17,9 +17,9 @@ public sealed class ResourceLoader
     private static int VerifyLongValue(long value)
     {
         if (value is >= int.MaxValue)
-            throw new NotSupportedException("The stream is too long.");
+            throw new NotSupportedException(SR.StreamIsTooLong);
         if (value is < 0)
-            throw new ArgumentException("Invalid stream length.", nameof(value));
+            throw new ArgumentException(SR.InvalidStreamLength, nameof(value));
         return (int)value;
     }
 
@@ -58,7 +58,7 @@ public sealed class ResourceLoader
 
         var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
         if (chunk.IsEmpty)
-            throw new ArgumentException("Invalid image format.", nameof(stream));
+            throw new ArgumentException(SR.InvalidImageData, nameof(stream));
         Texture2D texture = new(game.RenderContext, width, height, chunk.Pointer, format);
         platform.FreeImage(chunk);
 
