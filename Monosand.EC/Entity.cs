@@ -24,6 +24,7 @@ public class Entity
 
     public virtual void Awake(Scene scene)
     {
+
     }
 
     public virtual void Update()

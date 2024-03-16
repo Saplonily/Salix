@@ -409,7 +409,6 @@ public sealed partial class SpriteBatch
         DrawTransform drawTransform)
         => DrawTriangle(texture, pointPositions, textureCoord, color, drawTransform.BuildMatrix(texture.Size));
 
-
     /// <summary>Flush the batched draw actions.</summary>
     public void Flush()
     {

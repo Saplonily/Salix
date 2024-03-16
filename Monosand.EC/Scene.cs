@@ -2,6 +2,9 @@
 
 public class Scene
 {
+    private ECGame? game;
+    private bool updating;
+    private bool rendering;
     private readonly List<Entity> entities;
     private readonly List<Entity> toAdds;
     private readonly List<Entity> toRemoves;
@@ -9,6 +12,9 @@ public class Scene
     public IReadOnlyList<Entity> Entities => entities;
     public IReadOnlyList<Entity> ToAddEntities => toAdds;
     public IReadOnlyList<Entity> ToRemoveEntities => toRemoves;
+
+    public ECGame Game => game!;
+    public bool RunningOnGame => game is not null;
 
     public Scene()
     {
@@ -19,16 +25,51 @@ public class Scene
 
     public void AddEntity(Entity entity)
     {
-        toAdds.Add(entity);
+        if (updating)
+        {
+            toAdds.Add(entity);
+        }
+        else if (!rendering)
+        {
+            entities.Add(entity);
+            entity.OnAdded(this);
+        }
+        else
+        {
+            throw new InvalidOperationException("Attempt to add entity while rendering.");
+        }
     }
 
     public void RemoveEntity(Entity entity)
     {
-        toRemoves.Remove(entity);
+        if (updating)
+        {
+            toRemoves.Add(entity);
+        }
+        else if (!rendering)
+        {
+            entities.Add(entity);
+            entity.OnRemoved(this);
+        }
+        else
+        {
+            throw new InvalidOperationException("Attempt to remove entity while rendering.");
+        }
+    }
+
+    public virtual void SceneBegin(ECGame game, Scene? previousScene)
+    {
+        this.game = game;
+    }
+
+    public virtual void SceneEnd(ECGame game, Scene toScene)
+    {
+        this.game = null;
     }
 
     public virtual void Update()
     {
+        updating = true;
         foreach (var entity in entities)
             entity.Update();
         if (toRemoves.Count != 0)
@@ -49,11 +90,14 @@ public class Scene
                 e.Awake(this);
             toAdds.Clear();
         }
+        updating = false;
     }
 
     public virtual void Render()
     {
+        rendering = true;
         foreach (var entity in entities)
             entity.Render();
+        rendering = false;
     }
 }

@@ -2,6 +2,8 @@
 
 public class ECGame : Game
 {
+    private static ECGame? current;
+
     private Scene? scene;
     private Scene? nextScene;
     private readonly SpriteBatch spriteBatch;
@@ -18,8 +20,11 @@ public class ECGame : Game
         set => nextScene = value;
     }
 
+    public static ECGame Current => current!;
+
     public ECGame()
     {
+        current = this;
         spriteBatch = new(this);
     }
 
@@ -33,8 +38,12 @@ public class ECGame : Game
     {
         if (nextScene is not null)
         {
+            var from = scene;
+            var to = nextScene;
+            from?.SceneEnd(this, nextScene);
             scene = nextScene;
             nextScene = null;
+            to.SceneBegin(this, from);
         }
         scene?.Update();
     }
