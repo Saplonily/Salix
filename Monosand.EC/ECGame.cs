@@ -45,11 +45,11 @@ public class ECGame : Game
             nextScene = null;
             to.SceneBegin(this, from);
         }
-        scene?.Update();
+        scene?.UpdateInternal();
     }
 
     public override void Render()
     {
-        scene?.Render();
+        scene?.RenderInternal();
     }
 }

@@ -2,9 +2,10 @@
 
 public class Scene
 {
+    enum SceneState : byte { Idle, Update, Render }
+
+    private SceneState state;
     private ECGame? game;
-    private bool updating;
-    private bool rendering;
     private readonly List<Entity> entities;
     private readonly List<Entity> toAdds;
     private readonly List<Entity> toRemoves;
@@ -23,37 +24,43 @@ public class Scene
         toRemoves = new(4);
     }
 
+    public Scene(IEnumerable<Entity> entities)
+        : this()
+    {
+        this.entities.AddRange(entities);
+    }
+
     public void AddEntity(Entity entity)
     {
-        if (updating)
+        if (state is SceneState.Update)
         {
             toAdds.Add(entity);
         }
-        else if (!rendering)
+        else if (state is not SceneState.Render)
         {
             entities.Add(entity);
             entity.OnAdded(this);
         }
         else
         {
-            throw new InvalidOperationException("Attempt to add entity while rendering.");
+            throw new InvalidOperationException(SR.AddEntityWhileRendering);
         }
     }
 
     public void RemoveEntity(Entity entity)
     {
-        if (updating)
+        if (state is SceneState.Update)
         {
             toRemoves.Add(entity);
         }
-        else if (!rendering)
+        else if (state is not SceneState.Render)
         {
             entities.Add(entity);
             entity.OnRemoved(this);
         }
         else
         {
-            throw new InvalidOperationException("Attempt to remove entity while rendering.");
+            throw new InvalidOperationException(SR.RemoveEntityWhileRendering);
         }
     }
 
@@ -67,9 +74,22 @@ public class Scene
         this.game = null;
     }
 
+    internal void UpdateInternal()
+    {
+        state = SceneState.Update;
+        Update();
+        state = SceneState.Idle;
+    }
+
+    internal void RenderInternal()
+    {
+        state = SceneState.Render;
+        Render();
+        state = SceneState.Idle;
+    }
+
     public virtual void Update()
     {
-        updating = true;
         foreach (var entity in entities)
             entity.Update();
         if (toRemoves.Count != 0)
@@ -90,14 +110,11 @@ public class Scene
                 e.Awake(this);
             toAdds.Clear();
         }
-        updating = false;
     }
 
     public virtual void Render()
     {
-        rendering = true;
         foreach (var entity in entities)
             entity.Render();
-        rendering = false;
     }
 }
