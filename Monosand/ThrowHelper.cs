@@ -1,22 +1,22 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-#if NET6_0_OR_GREATER
-#pragma warning disable CA1513
-#endif
-
 namespace Monosand;
 
-public static class ThrowHelper
+internal static class ThrowHelper
 {
     /// <summary>Throws <see cref="ObjectDisposedException"/> when <paramref name="condition"/> is true.</summary>
-    public static void ThrowIfDisposed([DoesNotReturnIf(true)] bool condition, object? instance)
+    public static void ThrowIfDisposed([DoesNotReturnIf(true)] bool condition, object instance)
     {
-        if (condition) throw new ObjectDisposedException(instance?.GetType().FullName);
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(condition, instance);
+#else
+        if (condition) throw new ObjectDisposedException(instance.GetType().FullName);
+#endif
     }
 
     /// <summary>Throws <see cref="ArgumentNullException"/> when <paramref name="argument"/> is null.</summary>
-    public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    public static void ThrowIfNull(object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
         if (argument is null) throw new ArgumentNullException(paramName);
     }
