@@ -6,6 +6,32 @@
 #include "common.h"
 #include "keyboard.h"
 
+#define make_check_button_down_case(wm, btn) \
+    case wm:                                 \
+    {                                        \
+        we.type = event::pointer;            \
+        we.arg1 = GET_X_LPARAM(lParam);      \
+        we.arg2 = GET_Y_LPARAM(lParam);      \
+        we.arg3.int16_left = btn;            \
+        we.arg3.int16_right = 0;             \
+        push_event(we);                      \
+        SetCapture(hwnd);                    \
+        return 0;                            \
+    }                                        \
+
+#define make_check_button_up_case(wm, btn)   \
+    case wm:                                 \
+    {                                        \
+        we.type = event::pointer;            \
+        we.arg1 = GET_X_LPARAM(lParam);      \
+        we.arg2 = GET_Y_LPARAM(lParam);      \
+        we.arg3.int16_left = btn;            \
+        we.arg3.int16_right = 1;             \
+        push_event(we);                      \
+        ReleaseCapture();                    \
+        return 0;                            \
+    }                                        \
+
 enum class event : int32_t
 {
     close = 1,
@@ -49,15 +75,45 @@ static bool began_polling = false;
 static event_list_t* event_list;
 static event_list_t* event_list_2;
 
+void windowing_msgloop_initialize()
+{
+    event_list = new event_list_t;
+    event_list->reserve(16);
+    event_list_2 = new event_list_t;
+    event_list_2->reserve(16);
+}
+
+EXPORT event_list_t* CALLCONV MsdBeginPullEvents(HWND hwnd, size_t* count, win_event** events)
+{
+    assert(began_polling == false);
+    // TODO message merging
+    MSG msg{};
+    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    event_list_t* temp = event_list;
+    event_list = event_list_2;
+    event_list_2 = temp;
+
+    *count = event_list_2->size();
+    *events = event_list_2->data();
+    began_polling = true;
+    return event_list_2;
+}
+
+EXPORT void CALLCONV MsdEndPullEvents(HWND hwnd, event_list_t* handle)
+{
+    assert(began_polling == true);
+    handle->clear();
+    began_polling = false;
+}
+
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-#define push_e(e) \
-    {\
-    if(gc_handle != nullptr) \
-        event_list->push_back(e); \
-    else \
-        assert(false); \
-    }\
+#define push_event(e) { event_list->push_back(e); }
 
     void* gc_handle = (void*)GetWindowLongPtrW(hwnd, 0);
     win_event we{};
@@ -70,7 +126,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     case WM_CLOSE:
     {
         we.type = event::close;
-        push_e(we);
+        push_event(we);
         return 0;
     }
     case WM_MOVE:
@@ -80,7 +136,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.type = event::move;
         we.arg1 = x;
         we.arg2 = y;
-        push_e(we);
+        push_event(we);
         return 0;
     }
     case WM_SIZE:
@@ -90,7 +146,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.type = event::resize;
         we.arg1 = width;
         we.arg2 = height;
-        push_e(we);
+        push_event(we);
         return 0;
     }
     case WM_SYSKEYUP:
@@ -115,9 +171,9 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
             Key key = vkCode_to_Key(vkCode);
             we.type = event::key_down;
             we.arg1 = (int32_t)key;
-            push_e(we);
+            push_event(we);
             we.type = event::key_up;
-            push_e(we);
+            push_event(we);
             break;
         }
 
@@ -134,88 +190,30 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         Key key = vkCode_to_Key(vkCode);
         we.type = !isKeyReleased ? event::key_down : event::key_up;
         we.arg1 = (int32_t)key;
-        push_e(we);
+        push_event(we);
 
-        break;
+        return 0;
     }
     case WM_SETFOCUS:
     {
         we.type = event::got_focus;
-        push_e(we);
+        push_event(we);
         return 0;
     }
     case WM_KILLFOCUS:
     {
         we.type = event::lost_focus;
-        push_e(we);
+        push_event(we);
         return 0;
     }
-    case WM_LBUTTONDOWN:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 1;
-        we.arg3.int16_right = 0;
-        push_e(we);
-        SetCapture(hwnd);
-        return 0;
-    }
-    case WM_LBUTTONUP:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 1;
-        we.arg3.int16_right = 1;
-        push_e(we);
-        ReleaseCapture();
-        return 0;
-    }
-    case WM_RBUTTONDOWN:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 2;
-        we.arg3.int16_right = 0;
-        push_e(we);
-        SetCapture(hwnd);
-        return 0;
-    }
-    case WM_RBUTTONUP:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 2;
-        we.arg3.int16_right = 1;
-        push_e(we);
-        ReleaseCapture();
-        return 0;
-    }
-    case WM_MBUTTONDOWN:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 3;
-        we.arg3.int16_right = 0;
-        push_e(we);
-        SetCapture(hwnd);
-        return 0;
-    }
-    case WM_MBUTTONUP:
-    {
-        we.type = event::pointer;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3.int16_left = 3;
-        we.arg3.int16_right = 1;
-        push_e(we);
-        ReleaseCapture();
-        return 0;
-    }
+
+    make_check_button_down_case(WM_LBUTTONDOWN, 1);
+    make_check_button_down_case(WM_RBUTTONDOWN, 2);
+    make_check_button_down_case(WM_MBUTTONDOWN, 3);
+    make_check_button_up_case(WM_LBUTTONUP, 1);
+    make_check_button_up_case(WM_RBUTTONUP, 2);
+    make_check_button_up_case(WM_MBUTTONUP, 3);
+
     case WM_MOUSEMOVE:
     {
         we.type = event::pointer;
@@ -223,7 +221,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 0;
         we.arg3.int16_right = 2;
-        push_e(we);
+        push_event(we);
         return 0;
     }
     case WM_MOUSEWHEEL:
@@ -232,48 +230,10 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3 = (int)GET_WHEEL_DELTA_WPARAM(wParam);
-        push_e(we);
+        push_event(we);
         return 0;
     }
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 #undef push_e
-}
-
-void windowing_msgloop_initialize()
-{
-    event_list = new event_list_t;
-    event_list->reserve(16);
-    event_list_2 = new event_list_t;
-    event_list_2->reserve(16);
-}
-
-EXPORT event_list_t* CALLCONV MsdBeginPullEvents(HWND hwnd, size_t* count, win_event** events)
-{
-    assert(began_polling == false);
-    // TODO message merging
-    MSG msg{};
-    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
-    {
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_PROCESSKEY)
-            msg.wParam = ImmGetVirtualKey(msg.hwnd);
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-
-    event_list_t* temp = event_list;
-    event_list = event_list_2;
-    event_list_2 = temp;
-    
-    *count = event_list_2->size();
-    *events = event_list_2->data();
-    began_polling = true;
-    return event_list_2;
-}
-
-EXPORT void CALLCONV MsdEndPullEvents(HWND hwnd, event_list_t* handle)
-{
-    assert(began_polling == true);
-    handle->clear();
-    began_polling = false;
 }

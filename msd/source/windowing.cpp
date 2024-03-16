@@ -3,6 +3,7 @@
 #include <timeapi.h>
 #include <cstdint>
 #include <assert.h>
+#include <stdio.h>
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
 #include "common.h"
@@ -49,8 +50,8 @@ void windowing_initialize()
     };
 
     timeBeginPeriod(1);
+    ImmDisableIME(NULL); // TODO: imm support
 }
-
 
 // TODO: error handle
 EXPORT HGLRC MsdCreateRenderContext()
