@@ -193,7 +193,8 @@ public sealed class RenderContext
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
-        ThrowHelper.ThrowIfInvalid(buffer.Indexed, "This buffer is indexed.");
+        if (buffer.Indexed)
+            throw new InvalidOperationException(SR.BufferIsIndexed);
         totalDrawCalls++;
 
         Interop.MsdgDrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
@@ -204,7 +205,8 @@ public sealed class RenderContext
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
-        ThrowHelper.ThrowIfInvalid(!buffer.Indexed, "This buffer isn't indexed.");
+        if (!buffer.Indexed)
+            throw new InvalidOperationException(SR.BufferIsNotIndexed);
         totalDrawCalls++;
 
         Interop.MsdgDrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
@@ -213,7 +215,8 @@ public sealed class RenderContext
     public void SetTexture(int index, Texture2D texture)
     {
         EnsureState();
-        ThrowHelper.ThrowIfNegative(index);
+        if (index < 0)
+            throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
 
         Interop.MsdgSetTexture(index, texture.NativeHandle);
     }

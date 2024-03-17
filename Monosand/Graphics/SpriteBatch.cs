@@ -78,10 +78,10 @@ public sealed partial class SpriteBatch
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
 
-        using var vert = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.SpriteShader.vert");
-        using var frag = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.SpriteShader.frag");
-        using var vertText = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.TextShader.vert");
-        using var fragText = ResourceLoader.OpenEmbeddedFileStream($"Monosand.Embedded.TextShader.frag");
+        using var vert = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.SpriteShader.vert");
+        using var frag = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.SpriteShader.frag");
+        using var vertText = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.TextShader.vert");
+        using var fragText = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.TextShader.frag");
 
         var loader = game.ResourceLoader;
         SpriteShader = new(loader.LoadGlslShader(vert, frag));
@@ -124,6 +124,7 @@ public sealed partial class SpriteBatch
     public void DrawTextureMatrix(Texture2D texture, Matrix3x2 matrix, Color color)
         => DrawTextureMatrix(texture, matrix, new RectangleProperty<Color>(color), Vector2.Zero, Vector2.One);
 
+    /// <inheritdoc cref="DrawText{T}(SpriteFont, T, DrawTransform, Color)"/>
     public void DrawText<T>(SpriteFont spriteFont, T text, DrawTransform drawTransform) where T : IEnumerable<char>
         => DrawText(spriteFont, text, drawTransform.Position, drawTransform.Origin, drawTransform.Scale, drawTransform.Radians, Color.Known.Black);
 
@@ -270,17 +271,11 @@ public sealed partial class SpriteBatch
     {
         ThrowHelper.ThrowIfNull(texture);
         if (lastTexture != texture) Flush();
-        if (verticesIndex >= ushort.MaxValue - 8) Flush();
-        if (indicesIndex >= ushort.MaxValue - 12) Flush();
+        lastTexture = texture;
+        EnsureVerticesAndIndices(4, 6);
+
         int vind = verticesIndex;
         int iind = indicesIndex;
-
-        lastTexture = texture;
-
-        if (vertices.Length <= vind + 8)
-            Array.Resize(ref vertices, Math.Max(vind + 8, vertices.Length * 2));
-        if (indices.Length <= iind + 12)
-            Array.Resize(ref indices, Math.Max(iind + 12, indices.Length * 2));
 
         fixed (vpct* vptr = vertices)
         fixed (ushort* iptr = indices)
@@ -310,21 +305,17 @@ public sealed partial class SpriteBatch
     public unsafe void DrawCircle(Texture2D texture, Matrix3x2 matrix, Color color, int precise = 24)
     {
         ThrowHelper.ThrowIfNull(texture);
+        if (precise > 8192)
+            throw new ArgumentOutOfRangeException(nameof(precise), precise, SR.PreciseTooBig);
         if (precise < 3)
             throw new ArgumentOutOfRangeException(nameof(precise), precise, SR.PreciseTooSmall);
+
         if (lastTexture != texture) Flush();
-        if (verticesIndex >= ushort.MaxValue - precise * 2) Flush();
-        if (indicesIndex >= ushort.MaxValue - precise * 6 + 12) Flush();
+        lastTexture = texture;
+        EnsureVerticesAndIndices(precise, (precise - 2) * 3);
+
         int vind = verticesIndex;
         int iind = indicesIndex;
-
-        lastTexture = texture;
-
-        if (vertices.Length <= vind + precise * 2)
-            Array.Resize(ref vertices, Math.Max(vind + precise * 2, vertices.Length * 2));
-        if (indices.Length <= iind + precise * 6 - 12)
-            Array.Resize(ref indices, Math.Max(iind + precise * 6 - 12, indices.Length * 2));
-
         float radianPerSide = MathF.PI * 2f / precise;
 
         for (int i = 0; i < precise; i++)
@@ -373,18 +364,10 @@ public sealed partial class SpriteBatch
     {
         ThrowHelper.ThrowIfNull(texture);
         if (lastTexture != texture) Flush();
-        if (verticesIndex >= ushort.MaxValue - 6) Flush();
-        if (indicesIndex >= ushort.MaxValue - 6) Flush();
+        lastTexture = texture;
+        EnsureVerticesAndIndices(3, 3);
         int vind = verticesIndex;
         int iind = indicesIndex;
-
-
-        lastTexture = texture;
-
-        if (vertices.Length <= vind + 6)
-            Array.Resize(ref vertices, Math.Max(vind + 6, vertices.Length * 2));
-        if (indices.Length <= iind + 6)
-            Array.Resize(ref indices, Math.Max(iind + 6, indices.Length * 2));
 
         fixed (vpct* vptr = vertices)
         fixed (ushort* iptr = indices)
@@ -411,6 +394,18 @@ public sealed partial class SpriteBatch
         TriangleProperty<Color> color,
         DrawTransform drawTransform)
         => DrawTriangle(texture, pointPositions, textureCoord, color, drawTransform.BuildMatrix(texture.Size));
+
+    private void EnsureVerticesAndIndices(int newVerticesCount, int newIndicesCount)
+    {
+        if (verticesIndex >= ushort.MaxValue - newVerticesCount) Flush();
+        if (indicesIndex >= ushort.MaxValue - newIndicesCount) Flush();
+        int vind = verticesIndex;
+        int iind = indicesIndex;
+        if (vertices.Length <= vind + newVerticesCount)
+            Array.Resize(ref vertices, Math.Max(vind + newVerticesCount, vertices.Length * 2));
+        if (indices.Length <= iind + newIndicesCount)
+            Array.Resize(ref indices, Math.Max(iind + newIndicesCount, indices.Length * 2));
+    }
 
     /// <summary>Flush the batched draw actions.</summary>
     public void Flush()

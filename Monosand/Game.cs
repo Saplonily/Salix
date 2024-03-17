@@ -35,7 +35,8 @@ public class Game
         get => 1.0 / ExpectedFrameTime;
         set
         {
-            ThrowHelper.ThrowIfArgInvalid(value <= 0, nameof(value));
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value), SR.ValueMustBePositive);
             ExpectedFrameTime = 1.0 / value;
         }
     }

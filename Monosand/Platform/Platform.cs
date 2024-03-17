@@ -39,7 +39,8 @@ public unsafe class Platform
 
     internal void FreeImage(UnmanagedMemory imageData)
     {
-        ThrowHelper.ThrowIfArgInvalid(imageData.IsEmpty, nameof(imageData));
+        if (imageData.IsEmpty)
+            throw new ArgumentException(SR.ImageDataIsNull, nameof(imageData));
         Interop.MsdFreeImage(imageData.Pointer);
     }
 }

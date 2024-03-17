@@ -73,7 +73,8 @@ public sealed class Shader : GraphicsResource
 
     public unsafe void SetParameter<T>(ShaderParameter param, ref T value) where T : unmanaged
     {
-        ThrowHelper.ThrowIfArgInvalid(param.Shader != this, nameof(param));
+        if (!ReferenceEquals(param.Shader, this))
+            throw new ArgumentException(SR.UnmatchedShaderParamOwner, nameof(param));
         EnsureState();
         EnsureCurrentState();
         int location = param.Location;
