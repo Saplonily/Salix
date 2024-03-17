@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-// ../libmsd/graphics_enums.h
+// ../msd/graphics_enums.h
 public enum VertexElementType
 {
     Single,

@@ -32,6 +32,8 @@
         return 0;                            \
     }                                        \
 
+#define push_event(e) { event_list->push_back(e); }
+
 enum class event : int32_t
 {
     close = 1,
@@ -113,8 +115,6 @@ EXPORT void CALLCONV MsdEndPullEvents(HWND hwnd, event_list_t* handle)
 
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-#define push_event(e) { event_list->push_back(e); }
-
     void* gc_handle = (void*)GetWindowLongPtrW(hwnd, 0);
     win_event we{};
     we.gc_handle = gc_handle;

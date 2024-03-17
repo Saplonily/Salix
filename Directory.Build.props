@@ -14,7 +14,6 @@
     <AnalysisMode>all</AnalysisMode>-->
 
     <!-- hm, just magic -->
-    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 </Project>

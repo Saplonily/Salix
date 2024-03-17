@@ -182,7 +182,7 @@ public class Window
         count = (int)ncount;
         int sizeInInt = 4 + sizeof(IntPtr) / 4;
 
-        // magic number at ../libmsd/windowing_msgloop.cpp :: event
+        // magic number at ../msd/windowing_msgloop.cpp :: event
         for (int i = 0; i < count * sizeInInt; i += sizeInInt)
         {
             IntPtr v = ((IntPtr*)(e + i + 4))[0];

@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-// ../libmsd/exports_graphics.cpp
+// ../msd/graphics.cpp
 public enum PrimitiveType
 {
     TriangleList,

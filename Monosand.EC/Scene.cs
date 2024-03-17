@@ -24,8 +24,7 @@ public class Scene
         toRemoves = new(4);
     }
 
-    public Scene(IEnumerable<Entity> entities)
-        : this()
+    public Scene(IEnumerable<Entity> entities) : this()
     {
         this.entities.AddRange(entities);
     }

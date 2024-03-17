@@ -127,9 +127,9 @@ public class Game
             Window.Update();
             Window.SwapBuffers();
             LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
+            RenderContext.ProcessQueuedActions();
             foreach (var item in deferredActions) item();
             deferredActions.Clear();
-            RenderContext.ProcessQueuedActions();
             ticks++;
             if (Window.IsClosed)
                 break;
@@ -170,7 +170,7 @@ public class Game
                     laggedFrames = 0;
             }
         }
-        // usally graphics resource deletions
+        // usually graphics resource deletions
         RenderContext.ProcessQueuedActions();
     }
 }
