@@ -11,6 +11,7 @@ public sealed partial class SpriteBatch
     private readonly VertexBuffer<vpct> buffer;
     private readonly RenderContext context;
 
+    private bool flushing;
     private SpriteShader shader = null!;
     private Matrix3x2 transform2d;
     private Matrix3x2 projection2d;
@@ -88,10 +89,21 @@ public sealed partial class SpriteBatch
         TextShader = new(loader.LoadGlslShader(vertText, fragText));
 
         game.Window.PreviewSwapBuffer += Flush;
-        context.PreviewViewportChanged += Flush;
-        context.PreviewRenderTargetChanged += Flush;
-        context.ViewportChanged += () => projection2dDirty = true;
+        context.StateChanged += ContextStateChanged;
+        context.PreviewStateChanged += PreviewContextStateChanged;
         Shader = SpriteShader;
+    }
+
+    private void ContextStateChanged(RenderContextState state)
+    {
+        if (state is RenderContextState.Viewport) projection2dDirty = true;
+    }
+
+    private void PreviewContextStateChanged(RenderContextState state)
+    {
+        if (flushing) return;
+        if (state is RenderContextState.Viewport or RenderContextState.RenderTarget or RenderContextState.Shader)
+            Flush();
     }
 
     public void DrawTexture(Texture2D texture, DrawTransform drawTransform, RectangleProperty<Color> color)
@@ -411,14 +423,15 @@ public sealed partial class SpriteBatch
     public void Flush()
     {
         if (verticesIndex == 0) return;
+        flushing = true;
         context.SetTexture(0, lastTexture!);
         Shader.Use();
         Shader.SetTransform2D(transform2d);
         Shader.SetProjection2D(CleanedProjection2D);
-
         buffer.SetData(vertices.AsSpan(0, verticesIndex));
         buffer.SetIndexData(indices.AsSpan(0, indicesIndex));
         context.DrawIndexedPrimitives(buffer, PrimitiveType.TriangleList);
         verticesIndex = indicesIndex = 0;
+        flushing = false;
     }
 }

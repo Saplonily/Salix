@@ -32,10 +32,10 @@ public sealed class RenderContext
         set
         {
             EnsureState();
-            PreviewViewportChanged?.Invoke();
+            PreviewStateChanged?.Invoke(RenderContextState.Viewport);
             Interop.MsdgViewport(value.X, value.Y, value.Width, value.Height);
             viewport = value;
-            ViewportChanged?.Invoke();
+            StateChanged?.Invoke(RenderContextState.Viewport);
         }
     }
 
@@ -74,7 +74,7 @@ public sealed class RenderContext
         }
         set
         {
-            PreviewRenderTargetChanged?.Invoke();
+            PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
             if (value is null)
             {
                 Interop.MsdgSetRenderTarget(IntPtr.Zero);
@@ -86,6 +86,7 @@ public sealed class RenderContext
                 Viewport = new(0, 0, value.Width, value.Height);
             }
             currentRenderTarget = value;
+            StateChanged?.Invoke(RenderContextState.RenderTarget);
         }
     }
 
@@ -98,18 +99,19 @@ public sealed class RenderContext
         }
         set
         {
+            PreviewStateChanged?.Invoke(RenderContextState.Shader);
             if (value == currentShader) return;
             if (value is not null)
                 Interop.MsdgSetShader(value.NativeHandle);
             else
                 Interop.MsdgSetShader(IntPtr.Zero);
             currentShader = value;
+            StateChanged?.Invoke(RenderContextState.Shader);
         }
     }
 
-    internal event Action? ViewportChanged;
-    internal event Action? PreviewViewportChanged;
-    internal event Action? PreviewRenderTargetChanged;
+    public event Action<RenderContextState>? StateChanged;
+    public event Action<RenderContextState>? PreviewStateChanged;
 
     public RenderContext()
     {

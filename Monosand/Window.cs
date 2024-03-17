@@ -107,7 +107,7 @@ public class Window
     /// <summary>Occurs after the window got focus.</summary>
     public event Action<Window>? GotFocus;
 
-    internal event Action? PreviewSwapBuffer;
+    public event Action? PreviewSwapBuffer;
 
     /// <summary>Construct a window.</summary>
     public unsafe Window(Game game, int width, int height, string title)

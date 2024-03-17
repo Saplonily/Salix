@@ -1,4 +1,5 @@
-﻿using Monosand;
+﻿using System.Numerics;
+using Monosand;
 using Monosand.EC;
 using Color = Monosand.Color;
 
@@ -47,7 +48,5 @@ public class MyGame : ECGame
     {
         RenderContext.Clear(Color.Known.CornflowerBlue);
         base.Render();
-
-        SpriteBatch.Flush();
     }
 }
