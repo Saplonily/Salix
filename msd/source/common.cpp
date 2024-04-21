@@ -11,7 +11,6 @@ EXPORT int CALLCONV MsdInitialize()
     QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
 
     windowing_initialize();
-    windowing_msgloop_initialize();
 
     return 0;
 }

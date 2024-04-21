@@ -5,7 +5,7 @@ public abstract class ResourceManager<TToken> where TToken : notnull
     private readonly WeakDictionary<TToken, object> weakDictionary;
     protected readonly ResourceLoader loader;
 
-    public ResourceManager(ResourceLoader loader)
+    protected ResourceManager(ResourceLoader loader)
     {
         weakDictionary = new();
         this.loader = loader;

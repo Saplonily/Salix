@@ -11,7 +11,7 @@ public struct VertexPosition2DColorTexture : IEquatable<VertexPosition2DColorTex
     public static readonly VertexDeclaration VertexDeclaration;
 
     public Vector2 Position;
-    public Vector4 Color;
+    public Color Color;
     public Vector2 TextureCoord;
 
     static VertexPosition2DColorTexture()
@@ -19,7 +19,7 @@ public struct VertexPosition2DColorTexture : IEquatable<VertexPosition2DColorTex
         VertexDeclaration = new(VertexElementType.Vector2, VertexElementType.Color, VertexElementType.Vector2);
     }
 
-    public VertexPosition2DColorTexture(Vector2 position, Vector4 color, Vector2 textureCoord)
+    public VertexPosition2DColorTexture(Vector2 position, Color color, Vector2 textureCoord)
     {
         Position = position;
         Color = color;

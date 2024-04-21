@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Buffers;
+using System.Numerics;
 using Monosand;
 using Monosand.EC;
 using Color = Monosand.Color;
@@ -26,7 +27,6 @@ public class MyGame : ECGame
         }
         ExpectedFps = VSyncFps;
         //VSyncEnabled = true;
-
         GotoScene(new MyScene());
     }
 

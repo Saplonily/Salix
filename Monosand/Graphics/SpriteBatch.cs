@@ -23,22 +23,19 @@ public sealed partial class SpriteBatch
     private int verticesIndex;
     private int indicesIndex;
 
-    private ref Matrix3x2 CleanedProjection2D
+    private Matrix3x2 CleanedProjection2D
     {
         get
         {
-            if (projection2dDirty)
-            {
-                Rectangle rect = RenderContext.Viewport;
-                Matrix3x2 mat = Matrix3x2.Identity;
-                mat *= Matrix3x2.CreateScale(2f / rect.Width, -2f / rect.Height);
-                mat *= Matrix3x2.CreateTranslation(-1f, 1f);
-                if (RenderContext.RenderTarget is not null)
-                    mat *= Matrix3x2.CreateScale(1f, -1f);
-                projection2d = mat;
-                return ref projection2d;
-            }
-            return ref projection2d;
+            if (!projection2dDirty) return projection2d;
+            Rectangle rect = RenderContext.Viewport;
+            Matrix3x2 mat = Matrix3x2.Identity;
+            mat *= Matrix3x2.CreateScale(2f / rect.Width, -2f / rect.Height);
+            mat *= Matrix3x2.CreateTranslation(-1f, 1f);
+            if (RenderContext.RenderTarget is not null)
+                mat *= Matrix3x2.CreateScale(1f, -1f);
+            projection2d = mat;
+            return projection2d;
         }
     }
 
@@ -293,13 +290,13 @@ public sealed partial class SpriteBatch
         fixed (ushort* iptr = indices)
         {
             vptr[vind + 0] =
-                new(position.TopLeft, color.TopLeft.ToVector4(), new(textureTopLeft.X, textureTopLeft.Y));
+                new(position.TopLeft, color.TopLeft, new(textureTopLeft.X, textureTopLeft.Y));
             vptr[vind + 1] =
-                new(position.TopRight, color.TopRight.ToVector4(), new(textureBottomRight.X, textureTopLeft.Y));
+                new(position.TopRight, color.TopRight, new(textureBottomRight.X, textureTopLeft.Y));
             vptr[vind + 2] =
-                new(position.BottomLeft, color.BottomLeft.ToVector4(), new(textureTopLeft.X, textureBottomRight.Y));
+                new(position.BottomLeft, color.BottomLeft, new(textureTopLeft.X, textureBottomRight.Y));
             vptr[vind + 3] =
-                new(position.BottomRight, color.BottomRight.ToVector4(), new(textureBottomRight.X, textureBottomRight.Y));
+                new(position.BottomRight, color.BottomRight, new(textureBottomRight.X, textureBottomRight.Y));
 
             iptr[iind + 0] = (ushort)(vind + 0);
             iptr[iind + 1] = (ushort)(vind + 1);
@@ -333,7 +330,7 @@ public sealed partial class SpriteBatch
         for (int i = 0; i < precise; i++)
         {
             Vector2 pos = new(MathF.Cos(radianPerSide * i), MathF.Sin(radianPerSide * i));
-            vertices[vind + i] = new(Vector2.Transform(pos, matrix), color.ToVector4(), new(pos.X / 2f + 0.5f, pos.Y / 2f + 0.5f));
+            vertices[vind + i] = new(Vector2.Transform(pos, matrix), color, new(pos.X / 2f + 0.5f, pos.Y / 2f + 0.5f));
         }
         // precise = 4: 0 1 2 / 0 2 3
         // precise = 6: 0 1 2 / 0 2 3 / 0 3 4 / 0 4 5
@@ -385,11 +382,11 @@ public sealed partial class SpriteBatch
         fixed (ushort* iptr = indices)
         {
             vptr[vind + 0] =
-                new(Vector2.Transform(pointPositions.First, matrix), color.First.ToVector4(), textureCoord.First);
+                new(Vector2.Transform(pointPositions.First, matrix), color.First, textureCoord.First);
             vptr[vind + 1] =
-                new(Vector2.Transform(pointPositions.Second, matrix), color.Second.ToVector4(), textureCoord.Second);
+                new(Vector2.Transform(pointPositions.Second, matrix), color.Second, textureCoord.Second);
             vptr[vind + 2] =
-                new(Vector2.Transform(pointPositions.Third, matrix), color.Third.ToVector4(), textureCoord.Third);
+                new(Vector2.Transform(pointPositions.Third, matrix), color.Third, textureCoord.Third);
 
             iptr[indicesIndex + 0] = (ushort)(vind + 0);
             iptr[indicesIndex + 1] = (ushort)(vind + 1);

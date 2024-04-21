@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Monosand;
@@ -14,9 +15,6 @@ public class Window
     private readonly PointerState pointerState;
 
     private IntPtr nativeHandle;
-
-    /// <summary>Native handle of this Window, on windows it's an HWND.</summary>
-    public unsafe IntPtr Handle => NativeHandle;
 
     internal IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
 
@@ -126,9 +124,6 @@ public class Window
         nativeHandle = winHandle;
     }
 
-    public Window(Game game) : this(game, Game.DefaultWindowWidth, Game.DefaultWindowHeight, nameof(Monosand))
-    { }
-
     public void Show()
     {
         EnsureState();
@@ -173,20 +168,20 @@ public class Window
     internal unsafe void PollEvents()
     {
         EnsureState();
-        Game.RenderContext.ProcessQueuedActions();
+        Interop.MsdPollEvents(nativeHandle);
         int count;
         int* e;
-        void* handle = Interop.MsdBeginPullEvents(nativeHandle, out var ncount, out e);
+        void* handle = Interop.MsdBeginProcessEvents(nativeHandle, out var ncount, out e);
         if (ncount > int.MaxValue)
-            throw new OperationFailedException(SR.TooManyWindowEvents);
+            throw new FrameworkException(SR.TooManyWindowEvents);
         count = (int)ncount;
         int sizeInInt = 4 + sizeof(IntPtr) / 4;
 
-        // magic number at ../msd/windowing_msgloop.cpp :: event
+        // FIXME: use structs instead of pointer
+        // magic number at ../msd/windowing.h :: event
         for (int i = 0; i < count * sizeInInt; i += sizeInInt)
         {
-            IntPtr v = ((IntPtr*)(e + i + 4))[0];
-            Window win = HandleToWin(v);
+            Window win = (Window)GCHandle.FromIntPtr(((IntPtr*)(e + i + 4))[0]).Target!;
             switch (e[i])
             {
             case 1: if (win.OnClosing()) Close(); break;
@@ -217,14 +212,11 @@ public class Window
                 win.OnPointerWheelMoved(x, y, delta);
             }
             break;
-            default: Debug.Fail("Unknown event type."); break;
+            default: throw new FrameworkException(string.Format(SR.UnknownWindowEventType, e[i]));
             }
         }
 
-        Interop.MsdEndPullEvents(nativeHandle, handle);
-
-        static Window HandleToWin(IntPtr handle)
-            => (Window)GCHandle.FromIntPtr(handle).Target!;
+        Interop.MsdEndProcessEvents(nativeHandle, handle);
     }
 
     /// <summary>Called when the window closed.</summary>

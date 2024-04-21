@@ -5,20 +5,20 @@ namespace Monosand;
 
 internal unsafe partial class Interop
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct RECT { public int left, top, right, bottom; }
+    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 16)]
+    internal struct RECT { public int left, top, right, bottom; }
 
-    // on windows, it returns a pointer point to { HWND, HDC }
     [DllImport(DllPath)] public static extern IntPtr MsdCreateWindow(int width, int height, char* title, IntPtr gcHandle);
 
-    // when the graphics backend is opengl33, it returns HGLRC
+    // when the graphics backend is opengl33, returns HGLRC
     [DllImport(DllPath)] public static extern IntPtr MsdCreateRenderContext();
 
     [DllImport(DllPath)] public static extern IntPtr MsdAttachRenderContext(IntPtr winHandle, IntPtr hrc);
 
-    [DllImport(DllPath)] public static extern void* MsdBeginPullEvents(IntPtr winHandle, out nint count, out int* events);
+    [DllImport(DllPath)] public static extern void MsdPollEvents(IntPtr winHandle);
+    [DllImport(DllPath)] public static extern void* MsdBeginProcessEvents(IntPtr winHandle, out nint count, out int* events);
 
-    [DllImport(DllPath)] public static extern void MsdEndPullEvents(IntPtr winHandle, void* ehandle);
+    [DllImport(DllPath)] public static extern void MsdEndProcessEvents(IntPtr winHandle, void* ehandle);
 
     [DllImport(DllPath)] public static extern void MsdShowWindow(IntPtr winHandle);
 

@@ -3,6 +3,7 @@
     <MsdTargetFrameworks Condition="'$(Configuration)' == 'Release'">netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</MsdTargetFrameworks>
     <MsdTargetFrameworks Condition="'$(Configuration)' == 'Debug'">netstandard2.0;netstandard2.1;net8.0</MsdTargetFrameworks>
 
+    <Features>strict</Features>
     <LangVersion>preview</LangVersion>
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
 
@@ -13,7 +14,6 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>all</AnalysisMode>-->
 
-    <!-- hm, just magic -->
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 </Project>

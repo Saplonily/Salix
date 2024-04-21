@@ -8,7 +8,7 @@ public abstract class GraphicsResource : IDisposable
 
     public bool IsDisposed => renderContext == null;
 
-    public GraphicsResource(RenderContext renderContext)
+    protected GraphicsResource(RenderContext renderContext)
     {
         ThrowHelper.ThrowIfNull(renderContext);
         this.renderContext = renderContext;

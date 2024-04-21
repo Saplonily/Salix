@@ -1,6 +1,6 @@
 ﻿namespace Monosand;
 
-public unsafe class FileSystemResourceManager : ResourceManager<string>
+public sealed unsafe class FileSystemResourceManager : ResourceManager<string>
 {
     public string RootPath { get; set; }
 

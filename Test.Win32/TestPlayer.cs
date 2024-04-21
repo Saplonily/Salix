@@ -22,22 +22,22 @@ public class TestPlayer : Entity
         base.Update();
         var game = MyGame.Current;
         var ks = MyGame.Current.KeyboardState;
-        velocity += Vector2.UnitY * 900f * game.FrameTimeF;
+        velocity += Vector2.UnitY * 900f * game.ExpectedFrameTimeF;
 
         if (ks.IsPressing(Key.A))
         {
-            TryMove(-Vector2.UnitX * 640f * game.FrameTimeF);
+            TryMove(-Vector2.UnitX * 640f * game.ExpectedFrameTimeF);
         }
         if (ks.IsPressing(Key.D))
         {
-            TryMove(Vector2.UnitX * 640f * game.FrameTimeF);
+            TryMove(Vector2.UnitX * 640f * game.ExpectedFrameTimeF);
         }
         if (ks.IsJustPressed(Key.W))
         {
             velocity.Y = -400f;
         }
 
-        TestPlatform? p = TryMove(velocity * game.FrameTimeF);
+        TestPlatform? p = TryMove(velocity * game.ExpectedFrameTimeF);
         if (p is not null)
         {
             position.Y = p.Position.Y - size.Y;

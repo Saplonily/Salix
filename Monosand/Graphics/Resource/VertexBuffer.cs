@@ -46,7 +46,7 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
     /// <summary>Copy and set the data from a <paramref name="span"/></summary>
     public unsafe void SetData(ReadOnlySpan<T> span)
     {
-        ThrowHelper.ThrowIfInvalid(span.IsEmpty, SR.DataIsNull);
+        ThrowHelper.ThrowIfInvalid(span.IsEmpty, SR.VerticesDataIsNull);
         fixed (T* data = span)
             SetData(data, span.Length);
     }
@@ -56,7 +56,7 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
     public unsafe void SetData(T* data, int count)
     {
         EnsureState();
-        ThrowHelper.ThrowIfInvalid(data is null, SR.DataIsNull);
+        ThrowHelper.ThrowIfInvalid(data is null, SR.VerticesDataIsNull);
         verticesCount = count;
         Interop.MsdgSetVertexBufferData(nativeHandle, data, sizeof(T) * count, dataUsage);
     }
@@ -73,7 +73,7 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
     [CLSCompliant(false)]
     public unsafe void SetIndexData(ReadOnlySpan<ushort> span)
     {
-        ThrowHelper.ThrowIfInvalid(span.IsEmpty, SR.DataIsNull);
+        ThrowHelper.ThrowIfInvalid(span.IsEmpty, SR.VerticesDataIsNull);
         fixed (ushort* ptr = span)
             SetIndexData(ptr, span.Length);
     }
@@ -83,7 +83,7 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
     public unsafe void SetIndexData(ushort* data, int count)
     {
         EnsureState();
-        ThrowHelper.ThrowIfInvalid(data is null, SR.DataIsNull);
+        ThrowHelper.ThrowIfInvalid(data is null, SR.VerticesDataIsNull);
         indicesCount = count;
         Interop.MsdgSetIndexBufferData(nativeHandle, data, sizeof(ushort) * count, dataUsage);
     }

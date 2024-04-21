@@ -27,7 +27,7 @@ internal sealed class WeakDictionary<TKey, TValue>
 
     public void Clean()
     {
-        // see https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.remove?view=net-8.0
+        // https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.remove?view=net-8.0
         /*
             .NET Core 3.0+ only: 
             this mutating method may be safely called without invalidating 

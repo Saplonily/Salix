@@ -4,6 +4,7 @@
 #include <vector>
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
+#include "windowing.h"
 #include "common.h"
 #include "graphics_enums.h"
 
@@ -47,7 +48,7 @@ EXPORT GraphicsBackend CALLCONV MsdgGetGraphicsBackend()
     return GraphicsBackend::Opengl33;
 }
 
-EXPORT void CALLCONV MsdgSwapBuffers(HWND hwnd)
+EXPORT void CALLCONV MsdgSwapBuffers(msd_window* win)
 {
     // FIXME some screen recorders may break our program here
     // for example, OCam and Bandicam
@@ -57,7 +58,7 @@ EXPORT void CALLCONV MsdgSwapBuffers(HWND hwnd)
     // WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB to the WGL_CONTEXT_PROFILE_MASK_ARB,
     // for now it can be enabled by uncommenting the MSDG_COMPATIBILITY_GL macro definition in the exports.h.
     // If you have a better solution, welcome your contributions!
-    SwapBuffers((HDC)GetWindowLongPtrW(hwnd, sizeof(void*)));
+    SwapBuffers(win->hdc);
 }
 
 EXPORT double CALLCONV MsdgGetVSyncFrameTime()
@@ -68,7 +69,7 @@ EXPORT double CALLCONV MsdgGetVSyncFrameTime()
     return 1.0 / rate;
 }
 
-EXPORT void CALLCONV MsdgViewport(int x, int y, int width, int height)
+EXPORT void CALLCONV MsdgViewport(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     glViewport(x, y, width, height);
     GL_CHECK_ERROR;
@@ -87,7 +88,7 @@ EXPORT void CALLCONV MsdgSetVSyncEnabled(byte enable)
     wglSwapIntervalEXT(enable ? 1 : 0);
 }
 
-EXPORT void* CALLCONV MsdgRegisterVertexType(VertexElementType* type, int len)
+EXPORT void* CALLCONV MsdgRegisterVertexType(VertexElementType* type, int32_t len)
 {
     VertexElementType* tptr = new VertexElementType[len];
     memcpy(tptr, type, len * sizeof(VertexElementType));
@@ -98,7 +99,7 @@ EXPORT void* CALLCONV MsdgRegisterVertexType(VertexElementType* type, int len)
     return h;
 }
 
-EXPORT void CALLCONV MsdgDrawPrimitives(vertex_type_handle* vertex_type, PrimitiveType pt, void* data, int data_size, int vertices_to_draw)
+EXPORT void CALLCONV MsdgDrawPrimitives(vertex_type_handle* vertex_type, PrimitiveType pt, void* data, int32_t data_size, int32_t vertices_to_draw)
 {
     ensure_vbo(default_vbo);
     if (vertex_type->default_vao_id == 0)
@@ -139,7 +140,7 @@ EXPORT void CALLCONV MsdgDeleteVertexBuffer(buffer_handle* buffer)
         glDeleteBuffers(1, &buffer->ibo_id);
 }
 
-EXPORT void CALLCONV MsdgSetVertexBufferData(buffer_handle* buffer_handle, void* data, int dataSize, VertexBufferDataUsage data_usage)
+EXPORT void CALLCONV MsdgSetVertexBufferData(buffer_handle* buffer_handle, void* data, int32_t dataSize, VertexBufferDataUsage data_usage)
 {
     ensure_vbo(buffer_handle->vbo_id);
     ensure_vao(buffer_handle->vao_id);
@@ -147,7 +148,7 @@ EXPORT void CALLCONV MsdgSetVertexBufferData(buffer_handle* buffer_handle, void*
     GL_CHECK_ERROR;
 }
 
-EXPORT void CALLCONV MsdgDrawBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int verticesCount)
+EXPORT void CALLCONV MsdgDrawBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int32_t verticesCount)
 {
     ensure_vbo(buffer_handle->vbo_id);
     ensure_vao(buffer_handle->vao_id);
@@ -155,7 +156,7 @@ EXPORT void CALLCONV MsdgDrawBufferPrimitives(buffer_handle* buffer_handle, Prim
     GL_CHECK_ERROR;
 }
 
-EXPORT void CALLCONV MsdgSetIndexBufferData(buffer_handle* buffer_handle, void* data, int dataSize, VertexBufferDataUsage data_usage)
+EXPORT void CALLCONV MsdgSetIndexBufferData(buffer_handle* buffer_handle, void* data, int32_t dataSize, VertexBufferDataUsage data_usage)
 {
     assert(buffer_handle->ibo_id != 0);
     ensure_vao(buffer_handle->vao_id);
@@ -163,7 +164,7 @@ EXPORT void CALLCONV MsdgSetIndexBufferData(buffer_handle* buffer_handle, void* 
     GL_CHECK_ERROR;
 }
 
-EXPORT void CALLCONV MsdgDrawIndexedBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int verticesCount)
+EXPORT void CALLCONV MsdgDrawIndexedBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int32_t verticesCount)
 {
     ensure_vbo(buffer_handle->vbo_id);
     ensure_vao(buffer_handle->vao_id);
@@ -171,7 +172,7 @@ EXPORT void CALLCONV MsdgDrawIndexedBufferPrimitives(buffer_handle* buffer_handl
     GL_CHECK_ERROR;
 }
 
-EXPORT void* CALLCONV MsdgCreateTexture(int width, int height)
+EXPORT void* CALLCONV MsdgCreateTexture(int32_t width, int32_t height)
 {
     GLuint tex;
     glGenTextures(1, &tex); GL_CHECK_ERROR;
@@ -196,7 +197,7 @@ EXPORT void CALLCONV MsdgSetTextureWrap(void* tex_handle, TextureWrapType wrap)
 }
 
 // TODO support more other formats
-EXPORT void CALLCONV MsdgSetTextureData(void* tex_handle, int width, int height, void* data, ImageFormat imageFormat)
+EXPORT void CALLCONV MsdgSetTextureData(void* tex_handle, int32_t width, int32_t height, void* data, ImageFormat imageFormat)
 {
     GLuint tex = (GLuint)(size_t)tex_handle;
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -214,7 +215,7 @@ EXPORT void CALLCONV MsdgDeleteTexture(void* tex_handle)
     glDeleteTextures(1, &tex); GL_CHECK_ERROR;
 }
 
-EXPORT void CALLCONV MsdgSetTexture(int index, void* tex_handle)
+EXPORT void CALLCONV MsdgSetTexture(int32_t index, void* tex_handle)
 {
     glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
     glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
@@ -260,23 +261,23 @@ EXPORT int CALLCONV MsdgGetShaderParamLocation(void* shaderHandle, const char* n
 {
     return glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamInt(int loc, int value)
+EXPORT void CALLCONV MsdgSetShaderParamInt(int32_t loc, int32_t value)
 {
     glUniform1i(loc, value); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamFloat(int loc, float value)
+EXPORT void CALLCONV MsdgSetShaderParamFloat(int32_t loc, float value)
 {
     glUniform1f(loc, value); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamVec4(int loc, float* vec)
+EXPORT void CALLCONV MsdgSetShaderParamVec4(int32_t loc, float* vec)
 {
     glUniform4fv(loc, 1, vec); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamMat4(int loc, float* mat)
+EXPORT void CALLCONV MsdgSetShaderParamMat4(int32_t loc, float* mat)
 {
     glUniformMatrix4fv(loc, 1, true, mat); GL_CHECK_ERROR;
 }
-EXPORT void CALLCONV MsdgSetShaderParamMat3x2(int loc, float* mat)
+EXPORT void CALLCONV MsdgSetShaderParamMat3x2(int32_t loc, float* mat)
 {
     glUniformMatrix3x2fv(loc, 1, false, mat); GL_CHECK_ERROR;
 }
@@ -334,7 +335,7 @@ static void ensure_vbo(GLuint vbo)
     }
 }
 
-static GLuint make_vao(VertexElementType* type, int len)
+static GLuint make_vao(VertexElementType* type, int32_t len)
 {
     assert(type != nullptr && len >= 1);
     assert(cur_vbo != 0);

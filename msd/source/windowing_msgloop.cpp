@@ -2,14 +2,65 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <vector>
+#include <mutex>
 #include <assert.h>
 #include "common.h"
 #include "keyboard.h"
+#include "windowing.h"
+
+msgloop_struct::msgloop_struct()
+{
+    event_list = new event_list_t();
+    event_list->reserve(16);
+    event_list_2 = new event_list_t();
+    event_list_2->reserve(16);
+}
+
+msgloop_struct::~msgloop_struct()
+{
+    delete event_list;
+    delete event_list_2;
+}
+
+EXPORT void CALLCONV MsdPollEvents(msd_window* win)
+{
+    HWND hwnd = win->hwnd;
+    MSG msg{};
+    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+}
+
+EXPORT event_list_t* CALLCONV MsdBeginProcessEvents(msd_window* win, size_t* count, win_event** events)
+{
+    msgloop_struct* m = &win->msgloop;
+
+    assert(m->began_polling == false);
+    event_list_t* temp = m->event_list;
+    m->event_list = m->event_list_2;
+    m->event_list_2 = temp;
+
+    *count = m->event_list_2->size();
+    *events = m->event_list_2->data();
+    m->began_polling = true;
+    return m->event_list_2;
+}
+
+EXPORT void CALLCONV MsdEndProcessEvents(msd_window* win, event_list_t* handle)
+{
+    assert(win->msgloop.began_polling == true);
+    handle->clear();
+    win->msgloop.began_polling = false;
+}
+
+#define push_event(e) { win->msgloop.event_list->push_back(e); }
 
 #define make_check_button_down_case(wm, btn) \
     case wm:                                 \
     {                                        \
-        we.type = event::pointer;            \
+        we.type = event_type::pointer;       \
         we.arg1 = GET_X_LPARAM(lParam);      \
         we.arg2 = GET_Y_LPARAM(lParam);      \
         we.arg3.int16_left = btn;            \
@@ -22,7 +73,7 @@
 #define make_check_button_up_case(wm, btn)   \
     case wm:                                 \
     {                                        \
-        we.type = event::pointer;            \
+        we.type = event_type::pointer;       \
         we.arg1 = GET_X_LPARAM(lParam);      \
         we.arg2 = GET_Y_LPARAM(lParam);      \
         we.arg3.int16_left = btn;            \
@@ -32,100 +83,29 @@
         return 0;                            \
     }                                        \
 
-#define push_event(e) { event_list->push_back(e); }
-
-enum class event : int32_t
-{
-    close = 1,
-    move = 3,
-    resize,
-    key_down,
-    key_up,
-    got_focus,
-    lost_focus,
-    // arg1: x
-    // arg2: y
-    // arg3:
-    //   left int16:  type, 0:none, 1:left, 2:right, 3:middle
-    //   right int16: 0:down, 1:up, 2:moved
-    pointer,
-    pointer_wheel
-};
-
-struct win_event
-{
-    event type;
-    int32_t arg1;
-    int32_t arg2;
-    union arg3_union
-    {
-        arg3_union() { int32 = 0; };
-        arg3_union(int32_t int32) { this->int32 = int32; }
-        int32_t int32;
-        struct
-        {
-            int16_t int16_left;
-            int16_t int16_right;
-        };
-    } arg3;
-    void* gc_handle;
-};
-
-using event_list_t = std::vector<win_event>;
-
-static bool began_polling = false;
-static event_list_t* event_list;
-static event_list_t* event_list_2;
-
-void windowing_msgloop_initialize()
-{
-    event_list = new event_list_t;
-    event_list->reserve(16);
-    event_list_2 = new event_list_t;
-    event_list_2->reserve(16);
-}
-
-EXPORT event_list_t* CALLCONV MsdBeginPullEvents(HWND hwnd, size_t* count, win_event** events)
-{
-    assert(began_polling == false);
-    // TODO message merging
-    MSG msg{};
-    while (PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-
-    event_list_t* temp = event_list;
-    event_list = event_list_2;
-    event_list_2 = temp;
-
-    *count = event_list_2->size();
-    *events = event_list_2->data();
-    began_polling = true;
-    return event_list_2;
-}
-
-EXPORT void CALLCONV MsdEndPullEvents(HWND hwnd, event_list_t* handle)
-{
-    assert(began_polling == true);
-    handle->clear();
-    began_polling = false;
-}
-
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-    void* gc_handle = (void*)GetWindowLongPtrW(hwnd, 0);
+    msd_window* win = (msd_window*)GetWindowLongPtrW(hwnd, 0);
+    if (!win) return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     win_event we{};
-    we.gc_handle = gc_handle;
+    we.gc_handle = win->gc_handle;
     switch (uMsg)
     {
+    case WM_USER_MSDCLOSE:
+        DestroyWindow(hwnd);
+        return 0;
     case WM_ERASEBKGND:
-        return 1;
-
+        return 0;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps{};
+        BeginPaint(hwnd, &ps);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
     case WM_CLOSE:
     {
-        we.type = event::close;
+        we.type = event_type::close;
         push_event(we);
         return 0;
     }
@@ -133,7 +113,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     {
         int x = (int)(short)LOWORD(lParam);
         int y = (int)(short)HIWORD(lParam);
-        we.type = event::move;
+        we.type = event_type::move;
         we.arg1 = x;
         we.arg2 = y;
         push_event(we);
@@ -143,7 +123,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     {
         int width = (int)(short)LOWORD(lParam);
         int height = (int)(short)HIWORD(lParam);
-        we.type = event::resize;
+        we.type = event_type::resize;
         we.arg1 = width;
         we.arg2 = height;
         push_event(we);
@@ -169,10 +149,10 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         if (vkCode == VK_SNAPSHOT)
         {
             Key key = vkCode_to_Key(vkCode);
-            we.type = event::key_down;
+            we.type = event_type::key_down;
             we.arg1 = (int32_t)key;
             push_event(we);
-            we.type = event::key_up;
+            we.type = event_type::key_up;
             push_event(we);
             break;
         }
@@ -188,7 +168,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         // then the behaviour will be strange, also, it's not urgent at now.
 
         Key key = vkCode_to_Key(vkCode);
-        we.type = !isKeyReleased ? event::key_down : event::key_up;
+        we.type = !isKeyReleased ? event_type::key_down : event_type::key_up;
         we.arg1 = (int32_t)key;
         push_event(we);
 
@@ -196,13 +176,13 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_SETFOCUS:
     {
-        we.type = event::got_focus;
+        we.type = event_type::got_focus;
         push_event(we);
         return 0;
     }
     case WM_KILLFOCUS:
     {
-        we.type = event::lost_focus;
+        we.type = event_type::lost_focus;
         push_event(we);
         return 0;
     }
@@ -216,7 +196,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
     case WM_MOUSEMOVE:
     {
-        we.type = event::pointer;
+        we.type = event_type::pointer;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 0;
@@ -226,7 +206,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_MOUSEWHEEL:
     {
-        we.type = event::pointer_wheel;
+        we.type = event_type::pointer_wheel;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3 = (int)GET_WHEEL_DELTA_WPARAM(wParam);

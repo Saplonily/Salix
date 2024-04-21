@@ -1,6 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 
 using FreeTypeSharp.Native;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace TextAtlasMaker;
 

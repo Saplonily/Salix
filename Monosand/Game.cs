@@ -4,6 +4,7 @@ public class Game
 {
     public const int DefaultWindowWidth = 1280;
     public const int DefaultWindowHeight = 720;
+    public const string DefaultWindowTitle = nameof(Monosand);
 
     private readonly Platform platform;
     private long ticks;
@@ -71,7 +72,7 @@ public class Game
         ticks = 0;
         ExpectedFps = 60d;
         FrameTime = 1d / 60d;
-        Window = new Window(this);
+        Window = new Window(this, DefaultWindowWidth, DefaultWindowHeight, DefaultWindowTitle);
         RenderContext = new RenderContext();
         Window.AttachRenderContext(RenderContext);
         ResourceLoader = new(this);
@@ -89,9 +90,24 @@ public class Game
     public void RequestExit()
         => requestedExit = true;
 
+    public void Tick()
+    {
+        Window.PollEvents();
+        long pdrawcalls = RenderContext.TotalDrawCalls;
+        Update();
+        Render();
+        Window.Update();
+        Window.SwapBuffers();
+        LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
+        RenderContext.ProcessQueuedActions();
+        foreach (var item in deferredActions) item();
+        deferredActions.Clear();
+        ticks++;
+    }
 
     public void Run()
     {
+        RunBegin();
         Window.Show();
         FrameTime = ExpectedFrameTime;
 
@@ -120,21 +136,9 @@ public class Game
 
             if (requestedExit)
                 break;
-            // ----- tick ------
-            Window.PollEvents();
-            long pdrawcalls = RenderContext.TotalDrawCalls;
-            Update();
-            Render();
-            Window.Update();
-            Window.SwapBuffers();
-            LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
-            RenderContext.ProcessQueuedActions();
-            foreach (var item in deferredActions) item();
-            deferredActions.Clear();
-            ticks++;
+            Tick();
             if (Window.IsClosed)
                 break;
-            // -----------------
 
             // now do sleep
             long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
@@ -173,5 +177,14 @@ public class Game
         }
         // usually graphics resource deletions
         RenderContext.ProcessQueuedActions();
+        RunEnd();
+    }
+
+    public virtual void RunBegin()
+    {
+    }
+
+    public virtual void RunEnd()
+    {
     }
 }

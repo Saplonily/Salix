@@ -2,11 +2,8 @@
 
 public class ResourceLoadFailedException : Exception
 {
-    public string? Resource { get; internal set; }
-    public Type? Type { get; internal set; }
-
     public ResourceLoadFailedException(Type type)
-        : this(null, type)
+        : this(null, type, null)
     {
     }
 
@@ -16,6 +13,6 @@ public class ResourceLoadFailedException : Exception
     }
 
     public ResourceLoadFailedException(string? message, Type type, Exception? innerExcpetion)
-        : base($"Resource type of {type} load failed. {message}", innerExcpetion)
+        : base(string.Format(SR.ResourceLoadFailed, type, message), innerExcpetion)
     { }
 }
