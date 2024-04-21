@@ -96,13 +96,6 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
         return 0;
     case WM_ERASEBKGND:
         return 0;
-    case WM_PAINT:
-    {
-        PAINTSTRUCT ps{};
-        BeginPaint(hwnd, &ps);
-        EndPaint(hwnd, &ps);
-        return 0;
-    }
     case WM_CLOSE:
     {
         we.type = event_type::close;

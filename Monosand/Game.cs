@@ -92,7 +92,6 @@ public class Game
 
     public void Tick()
     {
-        Window.PollEvents();
         long pdrawcalls = RenderContext.TotalDrawCalls;
         Update();
         Render();
@@ -136,6 +135,7 @@ public class Game
 
             if (requestedExit)
                 break;
+            Window.PollEvents();
             Tick();
             if (Window.IsClosed)
                 break;
