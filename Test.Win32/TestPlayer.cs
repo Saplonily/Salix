@@ -36,6 +36,11 @@ public class TestPlayer : Entity
         {
             velocity.Y = -400f;
         }
+        if (ks.IsJustPressed(Key.P))
+        {
+            position = MyGame.Current.CursorState.Position;
+            velocity = Vector2.Zero;
+        }
 
         TestPlatform? p = TryMove(velocity * game.ExpectedFrameTimeF);
         if (p is not null)
