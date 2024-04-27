@@ -12,7 +12,7 @@ public class Window
     private Size size;
     private Point position;
     private readonly KeyboardState keyboardState;
-    private readonly PointerState pointerState;
+    private readonly CursorState cursorState;
 
     private IntPtr nativeHandle;
 
@@ -91,8 +91,8 @@ public class Window
     /// <summary>The <see cref="Monosand.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
     public KeyboardState KeyboardState => keyboardState;
 
-    /// <summary>The <see cref="Monosand.PointerState"/> of this window. Usually used for getting mouse input.</summary>
-    public PointerState PointerState => pointerState;
+    /// <summary>The <see cref="Monosand.CursorState"/> of this window. Usually used for getting mouse input.</summary>
+    public CursorState CursorState => cursorState;
 
     /// <summary>Occurs after the window closed. After the <see cref="OnClosing"/> be called.</summary>
     public event Action<Window>? Closed;
@@ -112,7 +112,7 @@ public class Window
     {
         Game = game;
         keyboardState = new(this);
-        pointerState = new(this);
+        cursorState = new(this);
 
         IntPtr winHandle;
         fixed (char* ptitle = title)
@@ -159,7 +159,7 @@ public class Window
     {
         EnsureState();
         keyboardState.Update();
-        pointerState.Update();
+        cursorState.Update();
     }
 
     internal void AttachRenderContext(RenderContext context)
@@ -263,7 +263,7 @@ public class Window
     public virtual void OnLostFocus()
     {
         KeyboardState.Clear();
-        PointerState.Clear();
+        CursorState.Clear();
         LostFocus?.Invoke(this);
     }
 
@@ -275,22 +275,22 @@ public class Window
 
     public virtual void OnPointerPressed(int x, int y, PointerButton button)
     {
-        PointerState.SetTrue(1 << (int)button);
+        CursorState.SetTrue(1 << (int)button);
     }
 
     public virtual void OnPointerReleased(int x, int y, PointerButton button)
     {
-        PointerState.SetFalse(1 << (int)button);
+        CursorState.SetFalse(1 << (int)button);
     }
 
     public virtual void OnPointerMoved(int x, int y)
     {
-        PointerState.SetPosition(new(x, y));
+        CursorState.SetPosition(new(x, y));
     }
 
     public virtual void OnPointerWheelMoved(int x, int y, float delta)
     {
-        PointerState.AddWheelDelta(delta);
+        CursorState.AddWheelDelta(delta);
     }
 
     private void EnsureState()

@@ -42,15 +42,6 @@ public sealed class KeyboardState
     private Bits128 bitsCurrent;
     private Bits128 bitsPrevious;
 
-    public static KeyboardState Current
-    {
-        get
-        {
-            ThrowHelper.ThrowIfInvalid(window is null, "No window created for getting the KeyboardState.");
-            return window.KeyboardState;
-        }
-    }
-
     internal KeyboardState(Window window)
     {
         KeyboardState.window = window;

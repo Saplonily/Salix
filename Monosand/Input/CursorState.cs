@@ -2,7 +2,7 @@
 
 namespace Monosand;
 
-public sealed class PointerState
+public sealed class CursorState
 {
     // 1 << 0: left bitmask
     // 1 << 1: right bitmask
@@ -15,15 +15,6 @@ public sealed class PointerState
     private float wheelOffsetPrevious;
     private static Window? window;
 
-    public static PointerState Current
-    {
-        get
-        {
-            ThrowHelper.ThrowIfInvalid(window is null, "No window created for getting the KeyboardState.");
-            return window.PointerState;
-        }
-    }
-
     public Vector2 Position => position;
     public Vector2 PositionPrevious => positionPrevious;
     public Vector2 PositionDelta => position - positionPrevious;
@@ -34,9 +25,9 @@ public sealed class PointerState
     public bool IsRightButtonPressing => IsPressing(PointerButton.Right);
     public bool IsMiddleButtonPressing => IsPressing(PointerButton.Middle);
 
-    internal PointerState(Window window)
+    internal CursorState(Window window)
     {
-        PointerState.window = window;
+        CursorState.window = window;
         Clear();
     }
 
