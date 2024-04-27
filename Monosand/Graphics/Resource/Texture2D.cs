@@ -47,21 +47,21 @@ public sealed class Texture2D : GraphicsResource
         : this(renderContext, width, height)
     {
         if (data == null) return;
-        (this.width, this.height) = (width, height);
         SetData(width, height, data, format);
-    }
-
-    [CLSCompliant(false)]
-    public unsafe void SetData(int width, int height, void* data, ImageFormat format)
-    {
-        (this.width, this.height) = (width, height);
-        Interop.MsdgSetTextureData(nativeHandle, width, height, data, format);
     }
 
     public unsafe void SetData(int width, int height, ReadOnlySpan<byte> data, ImageFormat format)
     {
         fixed (byte* ptr = data)
             SetData(width, height, ptr, format);
+    }
+
+    [CLSCompliant(false)]
+    public unsafe void SetData(int width, int height, void* data, ImageFormat format)
+    {
+        EnsureState();
+        (this.width, this.height) = (width, height);
+        Interop.MsdgSetTextureData(nativeHandle, width, height, data, format);
     }
 
     protected override void Dispose(bool disposing)

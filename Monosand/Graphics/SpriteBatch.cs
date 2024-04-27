@@ -99,7 +99,11 @@ public sealed partial class SpriteBatch
     private void PreviewContextStateChanged(RenderContextState state)
     {
         if (flushing) return;
-        if (state is RenderContextState.Viewport or RenderContextState.RenderTarget or RenderContextState.Shader)
+        if (state is
+            RenderContextState.Viewport or
+            RenderContextState.RenderTarget or
+            RenderContextState.Shader or
+            RenderContextState.Sampler)
             Flush();
     }
 

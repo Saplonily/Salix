@@ -219,8 +219,19 @@ public sealed class RenderContext
         EnsureState();
         if (index < 0)
             throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
-
+        PreviewStateChanged?.Invoke(RenderContextState.Texture);
         Interop.MsdgSetTexture(index, texture.NativeHandle);
+        StateChanged?.Invoke(RenderContextState.Texture);
+    }
+
+    public void SetSampler(int index, Sampler sampler)
+    {
+        EnsureState();
+        if (index < 0)
+            throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
+        PreviewStateChanged?.Invoke(RenderContextState.Sampler);
+        Interop.MsdgSetSampler(index, sampler.NativeHandle);
+        StateChanged?.Invoke(RenderContextState.Sampler);
     }
 
     private void EnsureState()

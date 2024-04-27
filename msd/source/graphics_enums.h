@@ -51,6 +51,7 @@ enum class ImageFormat
     Rgba32
 };
 
+// ../Monosand/Graphics/TextureFilterType.cs
 enum class TextureFilterType
 {
     Linear,
@@ -61,6 +62,7 @@ enum class TextureFilterType
     NearestMipmapNearest
 };
 
+// ../Monosand/Graphics/TextureWrapType.cs
 enum class TextureWrapType
 {
     ClampToEdge,

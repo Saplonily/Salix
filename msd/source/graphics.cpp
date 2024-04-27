@@ -219,7 +219,6 @@ EXPORT void CALLCONV MsdgSetTexture(int32_t index, void* tex_handle)
 {
     glActiveTexture(GL_TEXTURE0 + index); GL_CHECK_ERROR;
     glBindTexture(GL_TEXTURE_2D, (GLuint)(size_t)tex_handle); GL_CHECK_ERROR;
-
 }
 
 EXPORT void* CALLCONV MsdgCreateShaderFromGlsl(const char* vert_source, const char* frag_source)
@@ -254,6 +253,30 @@ EXPORT void CALLCONV MsdgSetShader(void* shader_handle)
         glUseProgram(prog); GL_CHECK_ERROR;
         cur_shd = prog;
     }
+}
+
+EXPORT void* CALLCONV MsdgCreateSampler(TextureFilterType filter_type, TextureWrapType wrap_type)
+{
+    GLuint sampler = 0;
+    glGenSamplers(1, &sampler); GL_CHECK_ERROR;
+    GLenum filter = TextureFilterType_to_gl(filter_type);
+    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, filter); GL_CHECK_ERROR;
+    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, filter); GL_CHECK_ERROR;
+    GLenum wrap = TextureWrapType_to_gl(wrap_type);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, wrap); GL_CHECK_ERROR;
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, wrap); GL_CHECK_ERROR;
+    return (void*)(size_t)sampler;
+}
+
+EXPORT void CALLCONV MsdgSetSampler(int32_t index, void* sampler_handle)
+{
+    glBindSampler(index, (GLuint)(size_t)sampler_handle); GL_CHECK_ERROR;
+}
+
+EXPORT void CALLCONV MsdgDeleteSampler(void* sampler_handle)
+{
+    GLuint sampler = (GLuint)(size_t)sampler_handle;
+    glDeleteSamplers(1, &sampler); GL_CHECK_ERROR;
 }
 
 #pragma region uniform

@@ -8,6 +8,7 @@ namespace Test.Win32;
 
 public class MyGame : ECGame
 {
+    public Texture2D TestTexture;
     public SpriteFont SpriteFont;
 
     public FileSystemResourceManager ResourceManager { get; private set; }
@@ -25,6 +26,7 @@ public class MyGame : ECGame
         {
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas.bin' to the Content folder of Test.Win32!", e);
         }
+        TestTexture = ResourceManager.Load<Texture2D>("64x64");
         ExpectedFps = VSyncFps;
         //VSyncEnabled = true;
         GotoScene(new MyScene());

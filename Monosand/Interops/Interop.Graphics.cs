@@ -53,6 +53,12 @@ internal unsafe partial class Interop
 
     [DllImport(DllPath)] public static extern void MsdgSetTexture(int index, IntPtr texHandle);
 
+    [DllImport(DllPath)] public static extern IntPtr MsdgCreateSampler(TextureFilterType filter, TextureWrapType wrap);
+
+    [DllImport(DllPath)] public static extern void MsdgSetSampler(int index, IntPtr samplerHandle);
+
+    [DllImport(DllPath)] public static extern void MsdgDeleteSampler(IntPtr samplerHandle);
+
     [DllImport(DllPath)] public static extern IntPtr MsdgCreateShaderFromGlsl(byte* vertSource, byte* fragSource);
 
     [DllImport(DllPath)] public static extern void MsdgSetShader(IntPtr shaderHandle);
