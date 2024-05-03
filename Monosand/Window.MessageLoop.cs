@@ -90,7 +90,6 @@ public partial class Window
 
             default: throw new FrameworkException(string.Format(SR.UnknownWindowEventType, pevent[i]));
             }
-            Console.WriteLine($"{e->type} {e->arg1}, {e->arg2}, {e->arg3}|({e->arg3_left}/{e->arg3_right})");
         }
 
         Interop.MsdEndProcessEvents(nativeHandle, handle);
