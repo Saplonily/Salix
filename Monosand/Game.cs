@@ -10,6 +10,7 @@ public class Game
     private long ticks;
     private int laggedFrames;
     private bool requestedExit;
+    private bool deferredInvoking;
     private List<Action> deferredActions;
 
     public RenderContext RenderContext { get; private set; }
@@ -85,7 +86,14 @@ public class Game
     public virtual void Render() { }
 
     public void InvokeDeferred(Action action)
-        => deferredActions.Add(action);
+    {
+        if (deferredInvoking)
+        {
+            action();
+            return;
+        }
+        deferredActions.Add(action);
+    }
 
     public void RequestExit()
         => requestedExit = true;
@@ -99,8 +107,10 @@ public class Game
         Window.SwapBuffers();
         LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
         RenderContext.ProcessQueuedActions();
+        deferredInvoking = true;
         foreach (var item in deferredActions) item();
         deferredActions.Clear();
+        deferredInvoking = false;
         ticks++;
     }
 

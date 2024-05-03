@@ -147,13 +147,21 @@ public partial class Window
     public void Show()
     {
         EnsureState();
-        Interop.MsdShowWindow(nativeHandle);
+        Game.InvokeDeferred(() =>
+        {
+            EnsureState();
+            Interop.MsdShowWindow(nativeHandle);
+        });
     }
 
     public void Hide()
     {
         EnsureState();
-        Interop.MsdHideWindow(nativeHandle);
+        Game.InvokeDeferred(() =>
+        {
+            EnsureState();
+            Interop.MsdHideWindow(nativeHandle);
+        });
     }
 
     public void Close()
@@ -161,6 +169,7 @@ public partial class Window
         EnsureState();
         Game.InvokeDeferred(() =>
         {
+            EnsureState();
             Interop.MsdDestroyWindow(nativeHandle);
             isClosed = true;
             nativeHandle = IntPtr.Zero;
