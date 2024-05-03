@@ -39,12 +39,14 @@ public class Window
         set
         {
             EnsureState();
+            ThrowHelper.ThrowIfNull(value);
             fixed (char* str = value)
                 Interop.MsdSetWindowTitle(nativeHandle, str);
         }
     }
 
     #region Position & Size
+
     /// <summary>The X coord of this window.</summary>
     public int X
     {
@@ -63,14 +65,14 @@ public class Window
     public int Width
     {
         get => size.Width;
-        set { size.Width = value; Size = new(value, Height); }
+        set { Size = new(value, Height); size.Width = value; }
     }
 
     /// <summary>The Height of this window.</summary>
     public int Height
     {
         get => size.Height;
-        set { size.Height = value; Size = new(Width, value); }
+        set { Size = new(Width, value); size.Height = value; }
     }
 
     /// <summary>The Position of this window on the screen.</summary>
@@ -84,8 +86,16 @@ public class Window
     public Size Size
     {
         get { EnsureState(); return size; }
-        set { EnsureState(); size = value; Interop.MsdSetWindowSize(nativeHandle, value.Width, value.Height); }
+        set
+        {
+            if (value.Width < 1 || value.Height < 1)
+                throw new ArgumentOutOfRangeException(nameof(value), SR.InvalidWindowSize);
+            EnsureState();
+            size = value;
+            Interop.MsdSetWindowSize(nativeHandle, value.Width, value.Height);
+        }
     }
+
     #endregion
 
     /// <summary>The <see cref="Monosand.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
@@ -108,18 +118,28 @@ public class Window
     public event Action? PreviewSwapBuffer;
 
     /// <summary>Construct a window.</summary>
-    public unsafe Window(Game game, int width, int height, string title)
+    internal unsafe Window(Game game, int width, int height, string title)
     {
+        ThrowHelper.ThrowIfNull(game);
+        if (width < 1)
+            throw new ArgumentOutOfRangeException(nameof(width), SR.InvalidWindowSize);
+        if (height < 1)
+            throw new ArgumentOutOfRangeException(nameof(height), SR.InvalidWindowSize);
+        ThrowHelper.ThrowIfNull(title);
+
         Game = game;
         keyboardState = new(this);
         cursorState = new(this);
 
         IntPtr winHandle;
         fixed (char* ptitle = title)
-            winHandle = Interop.MsdCreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
-
-        if (winHandle == IntPtr.Zero)
-            throw new OperationFailedException(SR.FailedToCreateWindow);
+        {
+            var r = Interop.MsdCreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
+            if (r.OK)
+                winHandle = r.Value;
+            else
+                throw new FrameworkException(SR.FailedToCreateWindow, new ErrorCodeException(r.ErrorCode));
+        }
 
         nativeHandle = winHandle;
     }
@@ -163,7 +183,11 @@ public class Window
     }
 
     internal void AttachRenderContext(RenderContext context)
-        => Interop.MsdAttachRenderContext(NativeHandle, context.NativeHandle);
+    {
+        var r = Interop.MsdAttachRenderContext(NativeHandle, context.NativeHandle);
+        if (!r.OK)
+            throw new FrameworkException(SR.FailedToAttachRenderContext, new ErrorCodeException(r.ErrorCode, r.PlatformResult));
+    }
 
     internal unsafe void PollEvents()
     {

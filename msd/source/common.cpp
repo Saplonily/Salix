@@ -6,13 +6,13 @@
 
 static int64_t performanceFrequency = 0;
 
-EXPORT int CALLCONV MsdInitialize()
+EXPORT error_code CALLCONV MsdInitialize()
 {
     QueryPerformanceFrequency((LARGE_INTEGER*)&performanceFrequency);
 
-    windowing_initialize();
+    error_code code = windowing_initialize();
 
-    return 0;
+    return code;
 }
 
 EXPORT int64_t CALLCONV MsdGetUsecTimeline()

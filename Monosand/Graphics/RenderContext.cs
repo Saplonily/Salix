@@ -119,9 +119,10 @@ public sealed class RenderContext
         queuedActions = new(8);
         creationThreadId = Environment.CurrentManagedThreadId;
         vSyncFrameTime = Interop.MsdgGetVSyncFrameTime();
-        nativeHandle = Interop.MsdCreateRenderContext();
-        if (nativeHandle == IntPtr.Zero)
-            throw new OperationFailedException(SR.FailedToCreateRenderContext);
+        var r = Interop.MsdCreateRenderContext();
+        if (!r.OK)
+            throw new FrameworkException(SR.FailedToCreateRenderContext, new ErrorCodeException(r.ErrorCode, r.PlatformResult));
+        nativeHandle = r.Value;
     }
 
     internal void ProcessQueuedActions()

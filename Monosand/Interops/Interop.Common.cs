@@ -8,7 +8,7 @@ internal unsafe partial class Interop
 {
     private const string DllPath = "msd";
 
-    [DllImport(DllPath)] public static extern int MsdInitialize();
+    [DllImport(DllPath)] public static extern ErrorCode MsdInitialize();
 
     [DllImport(DllPath)] public static extern GraphicsBackend MsdgGetGraphicsBackend();
 

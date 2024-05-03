@@ -1,18 +1,22 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <timeapi.h>
+
 #include <cstdint>
 #include <assert.h>
 #include <stdio.h>
+
 #include <glad/glad.h>
 #include <glad/glad_wgl.h>
+
 #include "common.h"
 #include "initializations.h"
 #include "windowing.h"
+#include "error_code.h"
 
 static PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
 
-void windowing_initialize()
+error_code windowing_initialize()
 {
     WNDCLASSW wc{};
     wc.lpfnWndProc = WindowProc;
@@ -21,7 +25,8 @@ void windowing_initialize()
     wc.lpszClassName = Monosand;
     // | msd_window* |
     wc.cbWndExtra = sizeof(void*);
-    RegisterClassW(&wc);
+    ATOM atom = RegisterClassW(&wc);
+    if (!atom) return error_code::register_window_failed;
 
     pixelFormatDescriptor = {
         sizeof(PIXELFORMATDESCRIPTOR),
@@ -46,24 +51,33 @@ void windowing_initialize()
 
     timeBeginPeriod(1);
     ImmDisableIME(NULL); // TODO: imm support
+    return error_code::none;
 }
-
-// TODO: error handle
-EXPORT HGLRC MsdCreateRenderContext()
+template struct m_result<HGLRC>;
+EXPORT m_result<HGLRC> MsdCreateRenderContext()
 {
     // this function can only be called once
-    assert(glViewport == 0);
+    if (glViewport)
+        return make_result<HGLRC>(error_code::create_render_context_twice);
 
-    wchar_t chr = L'\0';
-    HWND dummyHwnd = CreateWindowExW(0, &chr, &chr, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    WCHAR c = '\0';
+    HWND dummyHwnd = CreateWindowExW(0, Monosand, &c, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    if (!dummyHwnd) goto failed;
+
     HDC hdc = GetDC(dummyHwnd);
+    if (!hdc) goto failed;
+
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
-    SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
+    if (!pixelFormat) goto failed;
+
+    if (!SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor)) goto failed;
 
     HGLRC hglrc = wglCreateContext(hdc);
-    wglMakeCurrent(hdc, hglrc);
-    gladLoadGL();
-    gladLoadWGL(hdc);
+    if (!hglrc) goto failed;
+
+    if (!wglMakeCurrent(hdc, hglrc)) goto failed;
+    if (!gladLoadGL()) goto failed;
+    if (!gladLoadWGL(hdc)) goto failed;
     wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(hglrc);
 
@@ -84,27 +98,39 @@ EXPORT HGLRC MsdCreateRenderContext()
     };
     hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
     wglMakeCurrent(hdc, hglrc);
-    // TODO error handling
-    assert(hglrc != nullptr);
-    assert(GLAD_WGL_EXT_swap_control);
 #if _DEBUG
+    if (!GLAD_GL_ARB_debug_output)
+    {
+        wglDeleteContext(hglrc);
+        return make_result<HGLRC>(error_code::context_not_support_debug_output);
+    }
     glDebugMessageCallbackARB(gl_debug_callback, hglrc);
 #endif
     render_context_graphics_init();
     ReleaseDC(dummyHwnd, hdc);
     DestroyWindow(dummyHwnd);
     wglMakeCurrent(nullptr, nullptr);
-    return hglrc;
+    if (!GLAD_WGL_EXT_swap_control)
+    {
+        wglDeleteContext(hglrc);
+        return make_result<HGLRC>(error_code::context_not_support_swap_control);
+    }
+    return make_result<HGLRC>(hglrc);
+failed:
+    return make_result<HGLRC>(error_code::create_render_context_failed, HRESULT_FROM_WIN32(GetLastError()));
 }
 
-EXPORT void MsdAttachRenderContext(msd_window* win, HGLRC hglrc)
+EXPORT m_result<void> MsdAttachRenderContext(msd_window* win, HGLRC hglrc)
 {
-    wglMakeCurrent(win->hdc, hglrc);
+    if (!wglMakeCurrent(win->hdc, hglrc))
+        return make_result(error_code::context_attach_failed, HRESULT_FROM_WIN32(GetLastError()));
+    return make_result();
 }
 
 // TODO: initial position
 // TODO: window style
-EXPORT msd_window* CALLCONV MsdCreateWindow(int32_t width, int32_t height, wchar_t* title, void* gc_handle)
+template struct m_result<msd_window*>;
+EXPORT m_result<msd_window*> CALLCONV MsdCreateWindow(int32_t width, int32_t height, wchar_t* title, void* gc_handle)
 {
     RECT rect{ 0, 0, width, height };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
@@ -113,21 +139,21 @@ EXPORT msd_window* CALLCONV MsdCreateWindow(int32_t width, int32_t height, wchar
         rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, NULL, NULL
     );
+    if (!hwnd) goto failed;
 
     ShowWindow(hwnd, SW_HIDE);
     UpdateWindow(hwnd);
 
-    // TODO impl error handler
     HDC hdc = GetDC(hwnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
-    SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor);
-    msd_window* win = new msd_window();
-    win->gc_handle = gc_handle;
-    win->hwnd = hwnd;
-    win->hdc = hdc;
+    if (!pixelFormat) goto failed;
+    if (!SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor)) goto failed;
+    msd_window* win = new msd_window(hwnd, hdc, gc_handle);
     SetWindowLongPtrW(hwnd, 0, (LONG_PTR)win);
 
-    return win;
+    return make_result<msd_window*>(win);
+failed:
+    return make_result<msd_window*>(error_code::create_window_failed, HRESULT_FROM_WIN32(GetLastError()));
 }
 
 EXPORT void CALLCONV MsdShowWindow(msd_window* win) { ShowWindow(win->hwnd, SW_NORMAL); }

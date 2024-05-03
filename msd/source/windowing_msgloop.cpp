@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <vector>
-#include <mutex>
 #include <assert.h>
 #include "common.h"
 #include "keyboard.h"

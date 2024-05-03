@@ -69,6 +69,13 @@ struct msd_window
     HDC hdc;
     void* gc_handle;
     msgloop_struct msgloop;
+
+    inline msd_window(HWND hwnd, HDC hdc, void* gc_handle)
+    {
+        this->hwnd = hwnd;
+        this->hdc = hdc;
+        this->gc_handle = gc_handle;
+    }
 };
 
 #endif

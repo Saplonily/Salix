@@ -25,4 +25,6 @@ internal static class SR
     public static readonly string VerticesDataIsNull = "Vertices or indices data is null";
     public static readonly string UnknownWindowEventType = "Unknown window event type {0}.";
     public static readonly string ResourceLoadFailed = "Resource type of {0} load failed. {1}";
+    public static readonly string InvalidWindowSize = "Invalid window size.";
+    public static readonly string FailedToAttachRenderContext = "Failed to attach RenderContext.";
 }

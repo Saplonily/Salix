@@ -18,9 +18,9 @@ public unsafe class Platform
 
     internal void Initialize()
     {
-        // TODO error handle
-        if (Interop.MsdInitialize() != 0)
-            throw new OperationFailedException(SR.PlatformInitializeFailed);
+        var err = Interop.MsdInitialize();
+        if (err != ErrorCode.None)
+            throw new FrameworkException(SR.PlatformInitializeFailed, new ErrorCodeException(err));
         graphicsBackend = Interop.MsdgGetGraphicsBackend();
         identifier = MonosandPlatform.Win32;
     }
