@@ -16,7 +16,7 @@ internal unsafe partial class Interop
 
     [DllImport(DllPath)] public static extern void MsdPollEvents(IntPtr win);
 
-    [DllImport(DllPath)] public static extern void* MsdBeginProcessEvents(IntPtr win, out nint count, out int* events);
+    [DllImport(DllPath)] public static extern void* MsdBeginProcessEvents(IntPtr win, out nint count, out void* events);
 
     [DllImport(DllPath)] public static extern void MsdEndProcessEvents(IntPtr win, void* ehandle);
 

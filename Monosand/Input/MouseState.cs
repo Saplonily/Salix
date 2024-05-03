@@ -2,7 +2,7 @@
 
 namespace Monosand;
 
-public sealed class CursorState
+public sealed class MouseState
 {
     // 1 << 0: left bitmask
     // 1 << 1: right bitmask
@@ -21,13 +21,13 @@ public sealed class CursorState
     public float WheelOffset => wheelOffset;
     public float WheelOffsetPrevious => wheelOffsetPrevious;
     public float WheelDelta => wheelOffset - wheelOffsetPrevious;
-    public bool IsLeftButtonPressing => IsPressing(PointerButton.Left);
-    public bool IsRightButtonPressing => IsPressing(PointerButton.Right);
-    public bool IsMiddleButtonPressing => IsPressing(PointerButton.Middle);
+    public bool IsLeftButtonPressing => IsPressing(MouseButton.Left);
+    public bool IsRightButtonPressing => IsPressing(MouseButton.Right);
+    public bool IsMiddleButtonPressing => IsPressing(MouseButton.Middle);
 
-    internal CursorState(Window window)
+    internal MouseState(Window window)
     {
-        CursorState.window = window;
+        MouseState.window = window;
         Clear();
     }
 
@@ -56,12 +56,12 @@ public sealed class CursorState
         wheelOffset = wheelOffsetPrevious = 0f;
     }
 
-    public bool IsPressing(PointerButton button)
+    public bool IsPressing(MouseButton button)
         => (state & (1 << (int)button)) != 0;
 
-    public bool IsJustPressed(PointerButton button)
+    public bool IsJustPressed(MouseButton button)
         => (state & (1 << (int)button)) != 0 && (statePrevious & (1 << (int)button)) == 0;
 
-    public bool IsJustReleased(PointerButton button)
+    public bool IsJustReleased(MouseButton button)
         => (state & (1 << (int)button)) == 0 && (statePrevious & (1 << (int)button)) != 0;
 }

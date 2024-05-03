@@ -18,7 +18,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum se
 enum class event_type : int32_t
 {
     close = 1,
-    move = 3,
+    move,
     resize,
     key_down,
     key_up,
@@ -29,8 +29,8 @@ enum class event_type : int32_t
     // arg3:
     //   left int16:  type, 0:none, 1:left, 2:right, 3:middle
     //   right int16: 0:down, 1:up, 2:moved
-    pointer,
-    pointer_wheel
+    mouse,
+    mouse_wheel
 };
 
 struct win_event

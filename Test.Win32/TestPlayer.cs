@@ -38,7 +38,7 @@ public class TestPlayer : Entity
         }
         if (ks.IsJustPressed(Key.P))
         {
-            position = MyGame.Current.CursorState.Position;
+            position = MyGame.Current.MouseState.Position;
             velocity = Vector2.Zero;
         }
 

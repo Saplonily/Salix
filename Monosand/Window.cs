@@ -5,14 +5,14 @@ using System.Runtime.InteropServices;
 
 namespace Monosand;
 
-public class Window
+public partial class Window
 {
     private bool isClosed = false;
 
     private Size size;
     private Point position;
     private readonly KeyboardState keyboardState;
-    private readonly CursorState cursorState;
+    private readonly MouseState mouseState;
 
     private IntPtr nativeHandle;
 
@@ -101,8 +101,8 @@ public class Window
     /// <summary>The <see cref="Monosand.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
     public KeyboardState KeyboardState => keyboardState;
 
-    /// <summary>The <see cref="Monosand.CursorState"/> of this window. Usually used for getting mouse input.</summary>
-    public CursorState CursorState => cursorState;
+    /// <summary>The <see cref="Monosand.MouseState"/> of this window. Usually used for getting mouse input.</summary>
+    public MouseState MouseState => mouseState;
 
     /// <summary>Occurs after the window closed. After the <see cref="OnClosing"/> be called.</summary>
     public event Action<Window>? Closed;
@@ -129,7 +129,7 @@ public class Window
 
         Game = game;
         keyboardState = new(this);
-        cursorState = new(this);
+        mouseState = new(this);
 
         IntPtr winHandle;
         fixed (char* ptitle = title)
@@ -179,7 +179,7 @@ public class Window
     {
         EnsureState();
         keyboardState.Update();
-        cursorState.Update();
+        mouseState.Update();
     }
 
     internal void AttachRenderContext(RenderContext context)
@@ -187,60 +187,6 @@ public class Window
         var r = Interop.MsdAttachRenderContext(NativeHandle, context.NativeHandle);
         if (!r.OK)
             throw new FrameworkException(SR.FailedToAttachRenderContext, new ErrorCodeException(r.ErrorCode, r.PlatformResult));
-    }
-
-    internal unsafe void PollEvents()
-    {
-        EnsureState();
-        Interop.MsdPollEvents(nativeHandle);
-        int count;
-        int* e;
-        void* handle = Interop.MsdBeginProcessEvents(nativeHandle, out var ncount, out e);
-        if (ncount > int.MaxValue)
-            throw new FrameworkException(SR.TooManyWindowEvents);
-        count = (int)ncount;
-        int sizeInInt = 4 + sizeof(IntPtr) / 4;
-
-        // FIXME: use structs instead of pointer
-        // magic number at ../msd/windowing.h :: event
-        for (int i = 0; i < count * sizeInInt; i += sizeInInt)
-        {
-            Window win = (Window)GCHandle.FromIntPtr(((IntPtr*)(e + i + 4))[0]).Target!;
-            switch (e[i])
-            {
-            case 1: if (win.OnClosing()) Close(); break;
-            case 3: win.OnMoved(e[i + 1], e[i + 2]); break;
-            case 4: win.OnResized(e[i + 1], e[i + 2]); break;
-            case 5: win.OnKeyPressed((Key)e[i + 1]); break;
-            case 6: win.OnKeyReleased((Key)e[i + 1]); break;
-            case 7: win.OnGotFocus(); break;
-            case 8: win.OnLostFocus(); break;
-            case 9:
-            {
-                int x = e[i + 1], y = e[i + 2];
-                short btnType = *((short*)(e + i + 3) + 0);
-                PointerButton button = (PointerButton)btnType;
-                short downType = *((short*)(e + i + 3) + 1);
-                if (downType == 0)
-                    win.OnPointerPressed(x, y, button);
-                else if (downType == 1)
-                    win.OnPointerReleased(x, y, button);
-                else if (downType == 2 && button == PointerButton.None)
-                    win.OnPointerMoved(x, y);
-            }
-            break;
-            case 10:
-            {
-                int x = e[i + 1], y = e[i + 2];
-                int delta = e[i + 3];
-                win.OnPointerWheelMoved(x, y, delta);
-            }
-            break;
-            default: throw new FrameworkException(string.Format(SR.UnknownWindowEventType, e[i]));
-            }
-        }
-
-        Interop.MsdEndProcessEvents(nativeHandle, handle);
     }
 
     /// <summary>Called when the window closed.</summary>
@@ -287,7 +233,7 @@ public class Window
     public virtual void OnLostFocus()
     {
         KeyboardState.Clear();
-        CursorState.Clear();
+        MouseState.Clear();
         LostFocus?.Invoke(this);
     }
 
@@ -297,24 +243,24 @@ public class Window
         GotFocus?.Invoke(this);
     }
 
-    public virtual void OnPointerPressed(int x, int y, PointerButton button)
+    public virtual void OnMouseButtonPressed(int x, int y, MouseButton button)
     {
-        CursorState.SetTrue(1 << (int)button);
+        MouseState.SetTrue(1 << (int)button);
     }
 
-    public virtual void OnPointerReleased(int x, int y, PointerButton button)
+    public virtual void OnMouseButtonReleased(int x, int y, MouseButton button)
     {
-        CursorState.SetFalse(1 << (int)button);
+        MouseState.SetFalse(1 << (int)button);
     }
 
-    public virtual void OnPointerMoved(int x, int y)
+    public virtual void OnMouseMoved(int x, int y)
     {
-        CursorState.SetPosition(new(x, y));
+        MouseState.SetPosition(new(x, y));
     }
 
-    public virtual void OnPointerWheelMoved(int x, int y, float delta)
+    public virtual void OnMouseWheelMoved(float delta)
     {
-        CursorState.AddWheelDelta(delta);
+        MouseState.AddWheelDelta(delta);
     }
 
     private void EnsureState()

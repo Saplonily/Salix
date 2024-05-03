@@ -59,7 +59,7 @@ EXPORT void CALLCONV MsdEndProcessEvents(msd_window* win, event_list_t* handle)
 #define make_check_button_down_case(wm, btn) \
     case wm:                                 \
     {                                        \
-        we.type = event_type::pointer;       \
+        we.type = event_type::mouse;       \
         we.arg1 = GET_X_LPARAM(lParam);      \
         we.arg2 = GET_Y_LPARAM(lParam);      \
         we.arg3.int16_left = btn;            \
@@ -72,7 +72,7 @@ EXPORT void CALLCONV MsdEndProcessEvents(msd_window* win, event_list_t* handle)
 #define make_check_button_up_case(wm, btn)   \
     case wm:                                 \
     {                                        \
-        we.type = event_type::pointer;       \
+        we.type = event_type::mouse;       \
         we.arg1 = GET_X_LPARAM(lParam);      \
         we.arg2 = GET_Y_LPARAM(lParam);      \
         we.arg3.int16_left = btn;            \
@@ -188,7 +188,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
     case WM_MOUSEMOVE:
     {
-        we.type = event_type::pointer;
+        we.type = event_type::mouse;
         we.arg1 = GET_X_LPARAM(lParam);
         we.arg2 = GET_Y_LPARAM(lParam);
         we.arg3.int16_left = 0;
@@ -198,10 +198,8 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
     }
     case WM_MOUSEWHEEL:
     {
-        we.type = event_type::pointer_wheel;
-        we.arg1 = GET_X_LPARAM(lParam);
-        we.arg2 = GET_Y_LPARAM(lParam);
-        we.arg3 = (int)GET_WHEEL_DELTA_WPARAM(wParam);
+        we.type = event_type::mouse_wheel;
+        we.arg1 = (int)GET_WHEEL_DELTA_WPARAM(wParam);
         push_event(we);
         return 0;
     }

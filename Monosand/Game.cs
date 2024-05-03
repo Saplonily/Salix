@@ -62,7 +62,7 @@ public class Game
 
     public int LastDrawCalls { get; private set; }
     public KeyboardState KeyboardState => Window.KeyboardState;
-    public CursorState CursorState => Window.CursorState;
+    public MouseState MouseState => Window.MouseState;
 
     public Game()
     {
