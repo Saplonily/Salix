@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MsdTargetFrameworks)</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!--Any other ways to simplify these?-->
+  <ItemGroup>
+    <None Include="..\msd\bin\win-x64\msd.dll" Condition="Exists('..\msd\bin\win-x64\msd.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes\win-x64\native</PackagePath>
+      <Pack>true</Pack>
+      <Visible>false</Visible>
+    </None>
+
+    <None Include="..\msd\bin\win-x32\msd.dll" Condition="Exists('..\msd\bin\win-x32\msd.dll')">
+      <PackagePath>runtimes\win-x32\native</PackagePath>
+      <Pack>true</Pack>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Salix\Salix.csproj" />
+  </ItemGroup>
+
+
+</Project>

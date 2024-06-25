@@ -7,5 +7,6 @@
 **/obj/**
 **/*.pubxml
 **/*.pubxml.user
-msd/build*/**
+**/Salix.Native/build*/**
 TestResults/**
+_private_**
