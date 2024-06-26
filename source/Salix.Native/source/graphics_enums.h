@@ -34,14 +34,6 @@ enum class VertexBufferDataUsage
     StreamDraw
 };
 
-// ../Salix/Graphics/GraphicsBackend.cs
-enum class GraphicsBackend
-{
-    Unknown,
-    Opengl33,
-    DirectX11,
-};
-
 // ../Salix/Graphics/ImageFormat.cs
 enum class ImageFormat
 {

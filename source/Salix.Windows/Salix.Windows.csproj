@@ -9,17 +9,17 @@
 
   <!--Any other ways to simplify these?-->
   <ItemGroup>
-    <None Include="..\msd\bin\win-x64\msd.dll" Condition="Exists('..\msd\bin\win-x64\msd.dll')">
+    <None Include="..\Salix.Native\bin\win-x64\slx.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes\win-x64\native</PackagePath>
       <Pack>true</Pack>
-      <Visible>false</Visible>
+      <!--<Visible>false</Visible>-->
     </None>
 
-    <None Include="..\msd\bin\win-x32\msd.dll" Condition="Exists('..\msd\bin\win-x32\msd.dll')">
+    <None Include="..\Salix.Native\bin\win-x32\slx.dll">
       <PackagePath>runtimes\win-x32\native</PackagePath>
       <Pack>true</Pack>
-      <Visible>false</Visible>
+      <!--<Visible>false</Visible>-->
     </None>
   </ItemGroup>
   <ItemGroup>

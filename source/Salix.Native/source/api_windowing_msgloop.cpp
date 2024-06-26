@@ -50,7 +50,7 @@ SLX_API event_list_t* SLX_CALLCONV SLX_BeginProcessEvents(P_IN msd_window* win, 
     return m->event_list_2;
 }
 
-SLX_API void SLX_CALLCONV SLX_EndProcessEvents(msd_window* win, event_list_t* handle)
+SLX_API void SLX_CALLCONV SLX_EndProcessEvents(P_IN msd_window* win, P_IN event_list_t* handle)
 {
     assert(win->msgloop.began_polling == true);
     handle->clear();

@@ -1,6 +1,6 @@
 ﻿namespace Salix;
 
-// ../Monosand.Win32GL.Native/enums.h
+// ../Salix.Native/source/graphics_enums.h
 public enum VertexBufferDataUsage
 {
     StaticDraw,

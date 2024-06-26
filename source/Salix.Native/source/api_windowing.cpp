@@ -49,8 +49,9 @@ s_bool slxapi_windowing_init()
 // TODO: initial position
 // TODO: window style
 // TODO: window_config struct
-SLX_API msd_window* SLX_CALLCONV SLX_CreateWindow(int32_t width, int32_t height, wchar_t* title, void* gc_handle)
+SLX_API msd_window* SLX_CALLCONV SLX_CreateWindow(int32_t width, int32_t height, P_IN wchar_t* title, void* gc_handle)
 {
+    msd_window* win = nullptr;
     RECT rect{ 0, 0, width, height };
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowExW(0L, FrameworkName, title, WS_OVERLAPPEDWINDOW,
@@ -67,12 +68,13 @@ SLX_API msd_window* SLX_CALLCONV SLX_CreateWindow(int32_t width, int32_t height,
     int pixelFormat = ChoosePixelFormat(hdc, &pixelFormatDescriptor);
     if (!pixelFormat) goto failed;
     if (!SetPixelFormat(hdc, pixelFormat, &pixelFormatDescriptor)) goto failed;
-    msd_window* win = new msd_window(hwnd, hdc, gc_handle);
+    win = new msd_window(hwnd, hdc, gc_handle);
     SetWindowLongPtrW(hwnd, 0, (LONG_PTR)win);
 
     return win;
 failed:
     if (hwnd) DestroyWindow(hwnd);
+    if (win) delete win;
     SLX_FAIL_NULL(error_code::platform_error);
 }
 
@@ -110,15 +112,15 @@ SLX_API void SLX_CALLCONV SLX_SetWindowPos(P_IN msd_window* win, int x, int y)
     SetWindowPos(win->hwnd, NULL, rect.left, rect.top, 0, 0, SWP_NOSIZE);
 }
 
-SLX_API void SLX_CALLCONV SLX_SetWindowTitle(P_IN msd_window* win, wchar_t* title)
+SLX_API void SLX_CALLCONV SLX_SetWindowTitle(P_IN msd_window* win, P_OUT wchar_t* out_title)
 {
-    SetWindowTextW(win->hwnd, title);
+    SetWindowTextW(win->hwnd, out_title);
 }
 
-SLX_API int SLX_CALLCONV SLX_GetWindowTitle(P_IN msd_window* win, wchar_t* title)
+SLX_API int SLX_CALLCONV SLX_GetWindowTitle(P_IN msd_window* win, P_OUT wchar_t* out_title)
 {
     int len = GetWindowTextLengthW(win->hwnd);
-    if (title != nullptr)
-        GetWindowTextW(win->hwnd, title, len + 1);
+    if (out_title != nullptr)
+        GetWindowTextW(win->hwnd, out_title, len + 1);
     return len;
 }

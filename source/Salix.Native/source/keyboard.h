@@ -64,7 +64,6 @@ enum class Key : int32_t
 
 inline Key vkCode_to_Key(WORD vkCode)
 {
-#define nothing()
 #define make_case(vkCode, key) case vkCode: return key
     switch (vkCode)
     {

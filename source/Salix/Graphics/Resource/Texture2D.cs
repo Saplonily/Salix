@@ -20,13 +20,25 @@ public sealed class Texture2D : GraphicsResource
     public TextureFilterType Filter
     {
         get { EnsureState(); return filter; }
-        set { EnsureState(); filter = value; Interop.SLX_SetTextureFilter(nativeHandle, filter, filter); }
+        set
+        {
+            EnsureState();
+            if (Interop.SLX_SetTextureFilter(nativeHandle, filter, filter))
+                Interop.Throw();
+            filter = value;
+        }
     }
 
     public TextureWrapType Wrap
     {
         get { EnsureState(); return wrap; }
-        set { EnsureState(); wrap = value; Interop.SLX_SetTextureWrap(nativeHandle, wrap); }
+        set
+        {
+            EnsureState();
+            if (Interop.SLX_SetTextureWrap(nativeHandle, wrap))
+                Interop.Throw();
+            wrap = value;
+        }
     }
 
     public Texture2D(RenderContext renderContext, int width, int height)
@@ -34,6 +46,7 @@ public sealed class Texture2D : GraphicsResource
     {
         (this.width, this.height) = (width, height);
         nativeHandle = Interop.SLX_CreateTexture(width, height);
+        if (nativeHandle == IntPtr.Zero) Interop.Throw();
         Filter = TextureFilterType.Linear;
         Wrap = TextureWrapType.ClampToEdge;
     }
@@ -61,13 +74,15 @@ public sealed class Texture2D : GraphicsResource
     {
         EnsureState();
         (this.width, this.height) = (width, height);
-        Interop.SLX_SetTextureData(nativeHandle, width, height, data, format);
+        if (Interop.SLX_SetTextureData(nativeHandle, width, height, data, format))
+            Interop.Throw();
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Interop.SLX_DeleteTexture(nativeHandle);
+        if (Interop.SLX_DeleteTexture(nativeHandle))
+            Interop.Throw();
         nativeHandle = IntPtr.Zero;
     }
 }

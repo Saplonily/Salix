@@ -75,10 +75,10 @@ public sealed partial class SpriteBatch
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
 
-        using var vert = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.SpriteShader.vert");
-        using var frag = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.SpriteShader.frag");
-        using var vertText = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.TextShader.vert");
-        using var fragText = ResourceLoader.OpenEmbeddedFileStream("Monosand.Embedded.TextShader.frag");
+        using var vert = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.SpriteShader.vert");
+        using var frag = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.SpriteShader.frag");
+        using var vertText = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.TextShader.vert");
+        using var fragText = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.TextShader.frag");
 
         var loader = game.ResourceLoader;
         SpriteShader = new(loader.LoadGlslShader(vert, frag));

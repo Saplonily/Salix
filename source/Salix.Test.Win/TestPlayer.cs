@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using Monosand;
-using Monosand.EC;
-using Color = Monosand.Color;
+using Salix;
+using Salix.EC;
+using Color = Salix.Color;
 
 namespace Test.Win32;
 

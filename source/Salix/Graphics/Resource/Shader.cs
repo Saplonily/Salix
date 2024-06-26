@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -14,6 +14,7 @@ public sealed class Shader : GraphicsResource
         : base(context)
     {
         nativeHandle = Interop.SLX_CreateShaderFromGlsl(vertSource, fragSource);
+        if (nativeHandle == IntPtr.Zero) Interop.Throw();
     }
 
     public unsafe Shader(RenderContext context, ReadOnlySpan<byte> vertSource, ReadOnlySpan<byte> fragSource)
@@ -21,7 +22,10 @@ public sealed class Shader : GraphicsResource
     {
         fixed (byte* vptr = vertSource)
         fixed (byte* fptr = fragSource)
+        {
             nativeHandle = Interop.SLX_CreateShaderFromGlsl(vptr, fptr);
+            if (nativeHandle == IntPtr.Zero) Interop.Throw();
+        }
     }
 
     public ShaderParameter GetParameter(string name)
@@ -36,7 +40,8 @@ public sealed class Shader : GraphicsResource
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Interop.SLX_DeleteShader(nativeHandle);
+        if (Interop.SLX_DeleteShader(nativeHandle))
+            Interop.Throw();
         nativeHandle = IntPtr.Zero;
     }
 
@@ -83,40 +88,46 @@ public sealed class Shader : GraphicsResource
 
         if (typeof(T) == typeof(int))
         {
-            Interop.SLX_SetShaderParamInt(location, Unsafe.As<T, int>(ref value));
+            if (Interop.SLX_SetShaderParamInt(location, Unsafe.As<T, int>(ref value)))
+                Interop.Throw();
             return;
         }
 
         if (typeof(T) == typeof(bool))
         {
-            Interop.SLX_SetShaderParamInt(location, Unsafe.As<T, bool>(ref value) ? 1 : 0);
+            if (Interop.SLX_SetShaderParamInt(location, Unsafe.As<T, bool>(ref value) ? 1 : 0))
+                Interop.Throw();
             return;
         }
 
         if (typeof(T) == typeof(float))
         {
-            Interop.SLX_SetShaderParamFloat(location, Unsafe.As<T, float>(ref value));
+            if (Interop.SLX_SetShaderParamFloat(location, Unsafe.As<T, float>(ref value)))
+                Interop.Throw();
             return;
         }
 
         if (typeof(T) == typeof(Vector4))
         {
             ref var vec = ref Unsafe.As<T, Vector4>(ref value);
-            Interop.SLX_SetShaderParamVec4(location, (float*)Unsafe.AsPointer(ref vec));
+            if (Interop.SLX_SetShaderParamVec4(location, (float*)Unsafe.AsPointer(ref vec)))
+                Interop.Throw();
             return;
         }
 
         if (typeof(T) == typeof(Matrix3x2))
         {
             ref var mat = ref Unsafe.As<T, Matrix3x2>(ref value);
-            Interop.SLX_SetShaderParamMat3x2(location, (float*)Unsafe.AsPointer(ref mat));
+            if (Interop.SLX_SetShaderParamMat3x2(location, (float*)Unsafe.AsPointer(ref mat)))
+                Interop.Throw();
             return;
         }
 
         if (typeof(T) == typeof(Matrix4x4))
         {
             ref var mat = ref Unsafe.As<T, Matrix4x4>(ref value);
-            Interop.SLX_SetShaderParamMat4(location, (float*)Unsafe.AsPointer(ref mat));
+            if (Interop.SLX_SetShaderParamMat4(location, (float*)Unsafe.AsPointer(ref mat)))
+                Interop.Throw();
             return;
         }
 

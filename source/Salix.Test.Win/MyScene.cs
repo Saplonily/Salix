@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using Monosand;
-using Monosand.EC;
+using Salix;
+using Salix.EC;
 
 namespace Test.Win32;
 

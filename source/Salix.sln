@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.7.34018.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Salix", "Salix\Salix.csproj", "{3FD4B477-92C2-4C66-A392-B6A5869F14B3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4FAA0E45-BEA6-3BDC-9746-5D6F882C17A1} = {4FAA0E45-BEA6-3BDC-9746-5D6F882C17A1}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Salix.Test.Win", "Salix.Test.Win\Salix.Test.Win.csproj", "{E07D9D86-52E8-466F-9020-B6FFBBBD446E}"
 EndProject
@@ -12,10 +15,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
 		global.json = global.json
-	EndProjectSection
-	ProjectSection(FolderGlobals) = preProject
-		D_5_4Projects_4Monosand_4global_1json__JsonSchema = https://json.schemastore.org/global.json
-		C_5_4Users_4Saplonily_4source_4repos_4Monosand_4global_1json__JsonSchema = https://json.schemastore.org/global.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TextAtlasMaker", "TextAtlasMaker\TextAtlasMaker.csproj", "{D76466B8-C475-42E3-BB3D-EF1ADDA94F1E}"
@@ -30,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{61C88700
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "slx", "Salix.Native\build\slx.vcxproj", "{4FAA0E45-BEA6-3BDC-9746-5D6F882C17A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Salix.Windows", "Salix.Windows\Salix.Windows.csproj", "{9AF3C1B4-C674-4345-A032-DE3478128C2C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Salix.Windows", "Salix.Windows\Salix.Windows.csproj", "{9AF3C1B4-C674-4345-A032-DE3478128C2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

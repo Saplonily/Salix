@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Salix.EC\Salix.EC.csproj" />
-    <ProjectReference Include="..\Salix.Win\Salix.Win.csproj" />
+    <ProjectReference Include="..\Salix.Windows\Salix.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>

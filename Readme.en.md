@@ -1,13 +1,16 @@
 # Salix
 
 > Chinese version at [Readme.md](./Readme.md)  
-> Github Repository (source): https://github.com/Saplonily/Monosand  
-> Gitee Repository: https://gitee.com/Saplonily/Monosand
+> Github Repository (source): https://github.com/Saplonily/Salix  
+> Gitee Repository: https://gitee.com/Saplonily/Salix
+
+> Warning: This project is for my personal learning purpose and may contains huge number of TODOs and bugs.
 
 ## Introduction
-Monosand is a lightweight framework based on `.NET standard 2.0/2.1` and `.NET 6, 7, 8` focused on **2D**.  
 
-Currently Monosand only implements the OpenGL rendering backend on Win32 platform, but this will expand as the project progresses.  
+Salix is a lightweight framework based on `.NET standard 2.0/2.1` and `.NET 6, 7, 8` focused on **2D**.  
+
+Currently Salix only implements the `OpenGL` rendering backend on `Win32` platform, but this will expand as the project progresses.  
 
 Note that the project is still in a **very early** development, so **breaking changes** can happen anytime.  
 
@@ -17,7 +20,7 @@ The following contents only ensure the compatibility with commit `08256f6`. But 
 
 ### Environment Setup
 
-Well, this is pretty easy. You just need to open the project, create a new console project targeting `.NET 8`, reference the `Monosand` project and you are good to go.  
+Well, this is pretty easy. You just need to open the project, create a new console project targeting `.NET 8`, reference the `Salix` project and you are good to go.  
 
 ### Run the Game
 
@@ -28,7 +31,7 @@ Game game = new();
 game.Run();
 ```
 
-Then launch it. You should see a black window titled 'Monosand' but nothing else. But this means you have successfully started the project!
+Then launch it. You should see a black window titled 'Salix' but nothing else. But this means you have successfully started the project!
 
 ### Overriding Update Logic & Rendering Textures
 

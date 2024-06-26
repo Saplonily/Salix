@@ -1,0 +1,1 @@
+﻿global using ByteArrayPool = System.Buffers.ArrayPool<byte>;

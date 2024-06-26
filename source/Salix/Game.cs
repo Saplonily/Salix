@@ -118,6 +118,7 @@ public class Game
     {
         RunBegin();
         Window.Show();
+        Window.PollEvents();
         FrameTime = ExpectedFrameTime;
 
         //// FIXME this is a silly method to sync with the display

@@ -31,7 +31,8 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
         this.dataUsage = dataUsage;
         this.indexed = indexed;
         this.vertexDeclaration = vertexDeclaration;
-        nativeHandle = Interop.SLX_CreateVertexBuffer(context.SafeGetVertexType(vertexDeclaration), (byte)(indexed ? 1 : 0));
+        nativeHandle = Interop.SLX_CreateVertexBuffer(context.SafeGetVertexType(vertexDeclaration), indexed);
+        if (nativeHandle == IntPtr.Zero) Interop.Throw();
         indicesCount = -1;
         verticesCount = -1;
     }
@@ -58,7 +59,8 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
         EnsureState();
         ThrowHelper.ThrowIfInvalid(data is null, SR.VerticesDataIsNull);
         verticesCount = count;
-        Interop.SLX_SetVertexBufferData(nativeHandle, data, sizeof(T) * count, dataUsage);
+        if (Interop.SLX_SetVertexBufferData(nativeHandle, data, sizeof(T) * count, dataUsage))
+            Interop.Throw();
     }
 
     /// <summary>Copy and set the data from an <paramref name="array"/></summary>
@@ -85,13 +87,15 @@ public sealed class VertexBuffer<T> : GraphicsResource where T : unmanaged
         EnsureState();
         ThrowHelper.ThrowIfInvalid(data is null, SR.VerticesDataIsNull);
         indicesCount = count;
-        Interop.SLX_SetIndexBufferData(nativeHandle, data, sizeof(ushort) * count, dataUsage);
+        if (Interop.SLX_SetIndexBufferData(nativeHandle, data, sizeof(ushort) * count, dataUsage))
+            Interop.Throw();
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Interop.SLX_DeleteVertexBuffer(nativeHandle);
+        if (Interop.SLX_DeleteVertexBuffer(nativeHandle))
+            Interop.Throw();
         nativeHandle = IntPtr.Zero;
     }
 }

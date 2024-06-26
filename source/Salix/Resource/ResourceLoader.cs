@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using ByteArrayPool = System.Buffers.ArrayPool<byte>;
 
 namespace Salix;
 

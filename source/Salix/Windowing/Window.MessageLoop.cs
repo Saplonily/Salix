@@ -35,7 +35,7 @@ public partial class Window
         EnsureState();
         Interop.SLX_PollEvents(nativeHandle);
         win_event* pevent;
-        void* handle = (win_event*)Interop.SLX_BeginProcessEvents(nativeHandle, out var ncount, out var vpevent);
+        void* handle = Interop.SLX_BeginProcessEvents(nativeHandle, out var ncount, out var vpevent);
         pevent = (win_event*)vpevent;
         if (ncount > int.MaxValue)
             throw new FrameworkException(SR.TooManyWindowEvents);

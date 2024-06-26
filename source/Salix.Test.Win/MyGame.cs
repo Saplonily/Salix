@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Numerics;
-using Monosand;
-using Monosand.EC;
-using Color = Monosand.Color;
+using Salix;
+using Salix.EC;
+using Color = Salix.Color;
 
 namespace Test.Win32;
 
@@ -43,7 +43,7 @@ public class MyGame : ECGame
             Window.X += 1;
         }
         if (Ticks % 10 == 0)
-            Window.Title = $"Monosand | Fps: {Fps} | DrawCall: {LastDrawCalls} | Entities: {Scene.Entities.Count}";
+            Window.Title = $"Saladim.Salix | Fps: {Fps} | DrawCall: {LastDrawCalls} | Entities: {Scene.Entities.Count}";
     }
 
     public override void Render()

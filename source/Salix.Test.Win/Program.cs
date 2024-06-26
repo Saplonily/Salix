@@ -9,6 +9,9 @@ public class Program
 {
     public static void Main()
     {
+        MyGame game = new();
+        game.Run();
+#if !DEBUG
         try
         {
             MyGame game = new();
@@ -16,7 +19,7 @@ public class Program
         }
         catch (Exception ex)
         {
-#if !DEBUG
+            Console.WriteLine(ex);
             using (StreamWriter sw = new("error.txt", false))
             {
                 sw.WriteLine("Test.Win32 Game Error");
@@ -26,8 +29,7 @@ public class Program
                 sw.WriteLine(ex.ToString());
             }
             Process.Start("notepad.exe", "error.txt");
-#endif
-            Console.WriteLine(ex);
         }
+#endif
     }
 }

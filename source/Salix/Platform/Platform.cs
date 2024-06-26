@@ -6,23 +6,22 @@
 public unsafe class Platform
 {
     private GraphicsBackend graphicsBackend;
-    private MonosandPlatform identifier;
+    private SalixPlatform identifier;
 
     /// <summary>The graphics backend currently using.</summary>
     public GraphicsBackend GraphicsBackend => graphicsBackend;
 
     /// <summary>Current platform.</summary>
-    public MonosandPlatform Identifier => identifier;
+    public SalixPlatform Identifier => identifier;
 
     public Platform() { }
 
     internal void Initialize()
     {
-        var err = Interop.SLX_Initialize();
-        if (err != ErrorCode.None)
-            throw new FrameworkException(SR.PlatformInitializeFailed, new ErrorCodeException(err));
-        graphicsBackend = Interop.SLX_GetGraphicsBackend();
-        identifier = MonosandPlatform.Win32;
+        if (Interop.SLX_Initialize())
+            throw new FrameworkException(SR.PlatformInitializeFailed, Interop.SLX_GetError());
+        graphicsBackend = GraphicsBackend.Opengl33;
+        identifier = SalixPlatform.Win32;
     }
 
     // TODO remove these resource loading methods

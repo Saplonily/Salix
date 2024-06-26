@@ -15,13 +15,15 @@ public sealed class RenderTarget : GraphicsResource
         var tex = new Texture2D(renderContext, width, height);
         tex.SetData(width, height, (void*)0, ImageFormat.Rgba32);
         nativeHandle = Interop.SLX_CreateRenderTarget(tex.NativeHandle);
+        if (nativeHandle == IntPtr.Zero) Interop.Throw();
         Texture = tex;
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Interop.SLX_DeleteRenderTarget(nativeHandle);
+        if (Interop.SLX_DeleteRenderTarget(nativeHandle)) 
+            Interop.Throw();
         nativeHandle = IntPtr.Zero;
     }
 }

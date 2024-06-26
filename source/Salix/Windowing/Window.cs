@@ -30,10 +30,21 @@ public partial class Window
         {
             EnsureState();
             int len = Interop.SLX_GetWindowTitle(nativeHandle, null);
-            char* pchar = (char*)Marshal.AllocHGlobal(len * sizeof(char));
-            _ = Interop.SLX_GetWindowTitle(nativeHandle, pchar);
-            string str = new string(pchar);
-            Marshal.FreeHGlobal((nint)pchar);
+            if (len < 0) throw new FrameworkException(SR.FailedToGetWindowTitle);
+            byte[] chars = ByteArrayPool.Shared.Rent(len * sizeof(char));
+            string str;
+            try
+            {
+                fixed (byte* pchar = chars)
+                {
+                    _ = Interop.SLX_GetWindowTitle(nativeHandle, (char*)pchar);
+                    str = new string((char*)pchar, 0, len);
+                }
+            }
+            finally
+            {
+                ByteArrayPool.Shared.Return(chars);
+            }
             return str;
         }
         set
@@ -134,13 +145,10 @@ public partial class Window
         IntPtr winHandle;
         fixed (char* ptitle = title)
         {
-            var r = Interop.SLX_CreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
-            if (r.OK)
-                winHandle = r.Value;
-            else
-                throw new FrameworkException(SR.FailedToCreateWindow, new ErrorCodeException(r.ErrorCode));
+            winHandle = Interop.SLX_CreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
+            if (winHandle == IntPtr.Zero)
+                throw new FrameworkException(SR.FailedToCreateWindow, Interop.SLX_GetError());
         }
-
         nativeHandle = winHandle;
     }
 
@@ -193,9 +201,8 @@ public partial class Window
 
     internal void AttachRenderContext(RenderContext context)
     {
-        var r = Interop.SLX_AttachRenderContext(NativeHandle, context.NativeHandle);
-        if (!r.OK)
-            throw new FrameworkException(SR.FailedToAttachRenderContext, new ErrorCodeException(r.ErrorCode, r.PlatformResult));
+        if (Interop.SLX_AttachRenderContext(NativeHandle, context.NativeHandle))
+            throw new FrameworkException(SR.FailedToAttachRenderContext, Interop.SLX_GetError());
     }
 
     /// <summary>Called when the window closed.</summary>
@@ -225,7 +232,7 @@ public partial class Window
     /// <summary>Called when the window is ready to initialize.</summary>
     public virtual void OnInitialize()
     {
-        var r = Interop.SLX_GetWindowRect(nativeHandle);
+        Interop.SLX_GetWindowRect(nativeHandle, out var r);
         size = new(r.right - r.left, r.bottom - r.top);
         position = new(r.left, r.top);
     }

@@ -1,8 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace Salix;
 
-internal partial class Interop
+internal static partial class Interop
 {
     private const string LibName = "slx";
     private const CallingConvention CallConv = CallingConvention.StdCall;
@@ -25,5 +26,23 @@ internal partial class Interop
 
         public static bool operator false(NBool @bool)
             => @bool.Value == 0;
+    }
+
+    internal static void CheckAndThrow()
+    {
+        ErrorCode err = SLX_GetError();
+        if (err != ErrorCode.OK)
+            throw new FrameworkException(err);
+        return;
+    }
+
+    [DoesNotReturn]
+    internal static void Throw()
+    {
+        ErrorCode err = SLX_GetError();
+        if (err != ErrorCode.OK)
+            throw new FrameworkException(err);
+        else
+            throw new InvalidOperationException(SR.ThrowOnOK);
     }
 }

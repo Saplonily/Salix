@@ -93,9 +93,9 @@ SLX_API HGLRC SLX_CALLCONV SLX_CreateRenderContext()
 
     graphics_initialize();
 
+    wglMakeCurrent(nullptr, nullptr);
     ReleaseDC(dummyHwnd, hdc);
     DestroyWindow(dummyHwnd);
-    wglMakeCurrent(nullptr, nullptr);
 
 #ifdef SLX_DEBUG
     if (!GLAD_GL_ARB_debug_output)

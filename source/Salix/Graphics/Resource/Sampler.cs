@@ -1,6 +1,7 @@
 ﻿namespace Salix;
 
 // TODO lazy create
+// TODO dispose check
 public sealed class Sampler : GraphicsResource
 {
     private TextureFilterType filterType;
@@ -17,11 +18,13 @@ public sealed class Sampler : GraphicsResource
     {
         (filterType, wrapType) = (filter, wrap);
         nativeHandle = Interop.SLX_CreateSampler(filter, wrap);
+        if (nativeHandle == IntPtr.Zero) Interop.Throw();
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        Interop.SLX_DeleteSampler(nativeHandle);
+        if (Interop.SLX_DeleteSampler(nativeHandle))
+            Interop.Throw();
     }
 }

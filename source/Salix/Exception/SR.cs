@@ -27,4 +27,6 @@ internal static class SR
     public static readonly string ResourceLoadFailed = "Resource type of {0} load failed. {1}";
     public static readonly string InvalidWindowSize = "Invalid window size.";
     public static readonly string FailedToAttachRenderContext = "Failed to attach RenderContext.";
+    public static readonly string ThrowOnOK = "Can not throw FrameworkException on ErrorCode OK.";
+    public static readonly string FailedToGetWindowTitle = "Failed to get the title of the window.";
 }

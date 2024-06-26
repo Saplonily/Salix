@@ -33,7 +33,8 @@ public sealed class RenderContext
         {
             EnsureState();
             PreviewStateChanged?.Invoke(RenderContextState.Viewport);
-            Interop.SLX_Viewport(value.X, value.Y, value.Width, value.Height);
+            if (Interop.SLX_Viewport(value.X, value.Y, value.Width, value.Height))
+                Interop.Throw();
             viewport = value;
             StateChanged?.Invoke(RenderContextState.Viewport);
         }
@@ -50,7 +51,7 @@ public sealed class RenderContext
         set
         {
             EnsureState();
-            Interop.SLX_SetVSyncEnabled(value ? (byte)1 : (byte)0);
+            Interop.SLX_SetVSyncEnabled(value);
             vSyncEnabled = value;
         }
     }
@@ -77,12 +78,14 @@ public sealed class RenderContext
             PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
             if (value is null)
             {
-                Interop.SLX_SetRenderTarget(IntPtr.Zero);
+                if (Interop.SLX_SetRenderTarget(IntPtr.Zero))
+                    Interop.Throw();
                 Viewport = new(0, 0, windowSize.Width, windowSize.Height);
             }
             else
             {
-                Interop.SLX_SetRenderTarget(value.NativeHandle);
+                if (Interop.SLX_SetRenderTarget(value.NativeHandle))
+                    Interop.Throw();
                 Viewport = new(0, 0, value.Width, value.Height);
             }
             currentRenderTarget = value;
@@ -101,10 +104,10 @@ public sealed class RenderContext
         {
             PreviewStateChanged?.Invoke(RenderContextState.Shader);
             if (value == currentShader) return;
-            if (value is not null)
-                Interop.SLX_SetShader(value.NativeHandle);
-            else
+            bool result = value is not null ?
+                Interop.SLX_SetShader(value.NativeHandle) :
                 Interop.SLX_SetShader(IntPtr.Zero);
+            if (result) Interop.Throw();
             currentShader = value;
             StateChanged?.Invoke(RenderContextState.Shader);
         }
@@ -119,10 +122,9 @@ public sealed class RenderContext
         queuedActions = new(8);
         creationThreadId = Environment.CurrentManagedThreadId;
         vSyncFrameTime = Interop.SLX_GetVSyncFrameTime();
-        var r = Interop.SLX_CreateRenderContext();
-        if (!r.OK)
-            throw new FrameworkException(SR.FailedToCreateRenderContext, new ErrorCodeException(r.ErrorCode, r.PlatformResult));
-        nativeHandle = r.Value;
+        var rc = Interop.SLX_CreateRenderContext();
+        if (rc == IntPtr.Zero) throw new FrameworkException(SR.FailedToCreateRenderContext, Interop.SLX_GetError());
+        nativeHandle = rc;
     }
 
     internal void ProcessQueuedActions()
@@ -157,7 +159,8 @@ public sealed class RenderContext
     public void Clear(Color color)
     {
         EnsureState();
-        Interop.SLX_Clear(color);
+        if (Interop.SLX_Clear(color.R, color.G, color.B, color.A))
+            Interop.Throw();
     }
 
     internal unsafe IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
@@ -169,6 +172,7 @@ public sealed class RenderContext
             fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
             {
                 vertexType = Interop.SLX_RegisterVertexType(ptr, vertexDeclaration.Count);
+                if (vertexType == IntPtr.Zero) Interop.Throw();
                 vertexDeclarations.Add(vertexDeclaration, vertexType);
             }
         }
@@ -188,7 +192,10 @@ public sealed class RenderContext
 
         IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
         fixed (T* vptr = vertices)
-            Interop.SLX_DrawPrimitives(vertexType, primitiveType, vptr, vertices.Length * sizeof(T), vertices.Length);
+        {
+            bool result = Interop.SLX_DrawPrimitives(vertexType, primitiveType, vptr, vertices.Length * sizeof(T), vertices.Length);
+            if (result) Interop.Throw();
+        }
     }
 
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
@@ -200,7 +207,8 @@ public sealed class RenderContext
             throw new InvalidOperationException(SR.BufferIsIndexed);
         totalDrawCalls++;
 
-        Interop.SLX_DrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
+        bool result = Interop.SLX_DrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
+        if (result) Interop.Throw();
     }
 
     /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
@@ -212,7 +220,8 @@ public sealed class RenderContext
             throw new InvalidOperationException(SR.BufferIsNotIndexed);
         totalDrawCalls++;
 
-        Interop.SLX_DrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
+        bool result = Interop.SLX_DrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
+        if (result) Interop.Throw();
     }
 
     public void SetTexture(int index, Texture2D texture)
@@ -221,7 +230,8 @@ public sealed class RenderContext
         if (index < 0)
             throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
         PreviewStateChanged?.Invoke(RenderContextState.Texture);
-        Interop.SLX_SetTexture(index, texture.NativeHandle);
+        bool result = Interop.SLX_SetTexture(index, texture.NativeHandle);
+        if (result) Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Texture);
     }
 
@@ -231,7 +241,8 @@ public sealed class RenderContext
         if (index < 0)
             throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
         PreviewStateChanged?.Invoke(RenderContextState.Sampler);
-        Interop.SLX_SetSampler(index, sampler.NativeHandle);
+        bool result = Interop.SLX_SetSampler(index, sampler.NativeHandle);
+        if (result) Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Sampler);
     }
 

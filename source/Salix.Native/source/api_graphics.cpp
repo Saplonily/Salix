@@ -145,16 +145,20 @@ void graphics_initialize()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-SLX_API void SLX_CALLCONV SLX_Viewport(int32_t x, int32_t y, int32_t width, int32_t height)
+SLX_API s_bool SLX_CALLCONV SLX_Viewport(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     glViewport(x, y, width, height);
+    SLX_FAIL_ON_GL_ERROR();
+    return false;
 }
 
-SLX_API void SLX_CALLCONV SLX_Clear(float r, float g, float b, float a)
+SLX_API s_bool SLX_CALLCONV SLX_Clear(float r, float g, float b, float a)
 {
     assert(r >= 0.0f && g >= 0.0f && b >= 0.0f && a >= 0.0f);
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT);
+    SLX_FAIL_ON_GL_ERROR();
+    return false;
 }
 
 SLX_API void* SLX_CALLCONV SLX_RegisterVertexType(P_IN VertexElementType* type, int32_t len)
@@ -195,10 +199,9 @@ SLX_API s_bool SLX_CALLCONV SLX_DrawPrimitives(
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_CreateVertexBuffer(P_IN vertex_type_handle* vertex_type, s_bool use_ibo, P_OUT buffer_handle** out_handle)
+SLX_API buffer_handle* SLX_CALLCONV SLX_CreateVertexBuffer(P_IN vertex_type_handle* vertex_type, s_bool use_ibo)
 {
     assert(vertex_type != 0);
-    assert(out_handle != 0);
     GLuint id;
     glGenBuffers(1, &id);
     ensure_vbo(id);
@@ -208,7 +211,7 @@ SLX_API s_bool SLX_CALLCONV SLX_CreateVertexBuffer(P_IN vertex_type_handle* vert
     if (make_vao(vertex_type->type_ptr, vertex_type->length, &h->vao_id))
     {
         glDeleteBuffers(1, &id);
-        return true;
+        return nullptr;
     }
 
     h->ibo_id = 0;
@@ -216,10 +219,9 @@ SLX_API s_bool SLX_CALLCONV SLX_CreateVertexBuffer(P_IN vertex_type_handle* vert
     {
         glGenBuffers(1, &h->ibo_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, h->ibo_id);
-        SLX_FAIL_ON_GL_ERROR();
+        SLX_FAIL_ON_GL_ERROR_NULL();
     }
-    *out_handle = h;
-    return false;
+    return h;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_DeleteVertexBuffer(P_IN buffer_handle* buffer)
@@ -281,18 +283,18 @@ SLX_API s_bool SLX_CALLCONV SLX_DrawIndexedBufferPrimitives(buffer_handle* buffe
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_CreateTexture(int32_t width, int32_t height, P_OUT void** out_texture)
+SLX_API void* SLX_CALLCONV SLX_CreateTexture(int32_t width, int32_t height)
 {
     GLuint tex;
     glGenTextures(1, &tex);
     SLX_FAIL_ON_GL_ERROR_GOTO(failed);
     glBindTexture(GL_TEXTURE_2D, tex);
     SLX_FAIL_ON_GL_ERROR_GOTO(failed);
-    *out_texture = (void*)(size_t)tex;
+    return (void*)(size_t)tex;
     return false;
 failed:
     if (tex) glDeleteTextures(1, &tex);
-    return true;
+    return nullptr;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_SetTextureFilter(void* tex_handle, TextureFilterType min, TextureFilterType max)
@@ -366,7 +368,7 @@ SLX_API s_bool SLX_CALLCONV SLX_SetTexture(int32_t index, void* tex_handle)
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_CreateShaderFromGlsl(const char* vert_source, const char* frag_source, P_OUT void** out_program)
+SLX_API void* SLX_CALLCONV SLX_CreateShaderFromGlsl(const char* vert_source, const char* frag_source)
 {
     GLuint vsh = glCreateShader(GL_VERTEX_SHADER);
     GLuint fsh = glCreateShader(GL_FRAGMENT_SHADER);
@@ -381,8 +383,8 @@ SLX_API s_bool SLX_CALLCONV SLX_CreateShaderFromGlsl(const char* vert_source, co
     glLinkProgram(prog);
     glDeleteShader(vsh);
     glDeleteShader(fsh);
-    SLX_FAIL_ON_GL_ERROR();
-    *out_program = (void*)(size_t)prog;
+    SLX_FAIL_ON_GL_ERROR_NULL();
+    return (void*)(size_t)prog;
     return false;
 }
 
@@ -397,7 +399,7 @@ SLX_API s_bool SLX_CALLCONV SLX_DeleteShader(void* shader_handle)
 
 SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader_handle)
 {
-    assert(shader_handle != 0);
+    //assert(shader_handle != 0);
     GLuint prog = (GLuint)(size_t)shader_handle;
     if (cur_shader != prog)
     {
@@ -408,7 +410,7 @@ SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader_handle)
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_CreateSampler(TextureFilterType filter_type, TextureWrapType wrap_type, P_OUT void** out_sampler)
+SLX_API void* SLX_CALLCONV SLX_CreateSampler(TextureFilterType filter_type, TextureWrapType wrap_type)
 {
     GLuint sampler = 0;
     glGenSamplers(1, &sampler);
@@ -428,11 +430,11 @@ SLX_API s_bool SLX_CALLCONV SLX_CreateSampler(TextureFilterType filter_type, Tex
     glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, wrap);
     SLX_FAIL_ON_GL_ERROR_GOTO(failed);
 
-    *out_sampler = (void*)(size_t)sampler;
+    return (void*)(size_t)sampler;
     return false;
 failed:
     if (sampler) glDeleteSamplers(1, &sampler);
-    return true;
+    return nullptr;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_SetSampler(int32_t index, void* sampler_handle)
@@ -473,21 +475,21 @@ SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamFloat(int32_t loc, float value)
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(int32_t loc, float* vec)
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(int32_t loc, P_IN float* vec)
 {
     glUniform4fv(loc, 1, vec);
     SLX_FAIL_ON_GL_ERROR();
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(int32_t loc, float* mat)
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(int32_t loc, P_IN float* mat)
 {
     glUniformMatrix4fv(loc, 1, true, mat);
     SLX_FAIL_ON_GL_ERROR();
     return false;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(int32_t loc, float* mat)
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(int32_t loc, P_IN float* mat)
 {
     glUniformMatrix3x2fv(loc, 1, false, mat);
     SLX_FAIL_ON_GL_ERROR();
@@ -496,7 +498,7 @@ SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(int32_t loc, float* mat)
 
 #pragma endregion
 
-SLX_API s_bool SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle, P_OUT void** out_rt)
+SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle)
 {
     assert(tex_handle != 0);
 
@@ -517,13 +519,12 @@ SLX_API s_bool SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle, P_OUT void*
         goto failed;
     }
 
-    *out_rt = (void*)(size_t)fbo;
-    return false;
+    return (void*)(size_t)fbo;
 failed:
     if (fbo)
         glDeleteFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, cur_fbo);
-    return true;
+    return nullptr;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_SetRenderTarget(void* fbo_handle)

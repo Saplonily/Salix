@@ -71,7 +71,6 @@ struct msd_window
     msd_window(HWND hwnd, HDC hdc, void* gc_handle) :
         hwnd(hwnd), hdc(hdc), gc_handle(gc_handle)
     {
-        msgloop = win_msgloop();
     }
 };
 
@@ -81,18 +80,18 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, 
 
 s_bool slxapi_windowing_init();
 
-SLX_API msd_window* SLX_CALLCONV SLX_CreateWindow(int32_t width, int32_t height, wchar_t* title, void* gc_handle);
+SLX_API msd_window* SLX_CALLCONV SLX_CreateWindow(int32_t width, int32_t height, P_IN wchar_t* title, void* gc_handle);
+SLX_API void SLX_CALLCONV SLX_DestroyWindow(P_IN msd_window* win);
 SLX_API void SLX_CALLCONV SLX_ShowWindow(P_IN msd_window* win);
 SLX_API void SLX_CALLCONV SLX_HideWindow(P_IN msd_window* win);
-SLX_API void SLX_CALLCONV SLX_DestroyWindow(P_IN msd_window* win);
 SLX_API void SLX_CALLCONV SLX_GetWindowRect(P_IN msd_window* win, P_OUT RECT* out_rect);
 SLX_API void SLX_CALLCONV SLX_SetWindowSize(P_IN msd_window* win, int width, int height);
 SLX_API void SLX_CALLCONV SLX_SetWindowPos(P_IN msd_window* win, int x, int y);
-SLX_API void SLX_CALLCONV SLX_SetWindowTitle(P_IN msd_window* win, wchar_t* title);
-SLX_API int SLX_CALLCONV SLX_GetWindowTitle(P_IN msd_window* win, wchar_t* title);
+SLX_API void SLX_CALLCONV SLX_SetWindowTitle(P_IN msd_window* win, P_OUT wchar_t* out_title);
+SLX_API int SLX_CALLCONV SLX_GetWindowTitle(P_IN msd_window* win, P_OUT wchar_t* out_title);
 
 SLX_API void SLX_CALLCONV SLX_PollEvents(P_IN msd_window* win);
 SLX_API event_list_t* SLX_CALLCONV SLX_BeginProcessEvents(P_IN msd_window* win, P_OUT size_t* count, P_OUT win_event** events);
-SLX_API void SLX_CALLCONV SLX_EndProcessEvents(msd_window* win, event_list_t* handle);
+SLX_API void SLX_CALLCONV SLX_EndProcessEvents(P_IN msd_window* win, P_IN event_list_t* handle);
 
 #endif

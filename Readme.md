@@ -1,13 +1,15 @@
-# Salix
+# Saladim.Salix
 
 > English version at [Readme.en.md](./Readme.en.md)  
-> Github Repository (source): https://github.com/Saplonily/Monosand  
-> Gitee Repository: https://gitee.com/Saplonily/Monosand
+> Github Repository (source): https://github.com/Saplonily/Salix  
+> Gitee Repository: https://gitee.com/Saplonily/Salix
+
+> 警告: 个人学习项目, 可能包含大量 TODO 和 Bug.
 
 ## 简介
 
-Monosand 是一个聚焦于 **2d** 游戏的基于 `.NET standard 2.0/2.1` 及 `.NET 6,7,8` 简易框架.  
-Monosand 目前只实现了 Win32 平台上的 OpenGL 渲染后端, 不过这会随着项目的推进而增加.  
+Salix 是一个聚焦于 **2d** 游戏的基于 `.NET standard 2.0/2.1` 及 `.NET 6,7,8` 简易框架.  
+Salix 目前只实现了 `Win32` 平台上的 `OpenGL` 渲染后端, 不过这会随着项目的推进而增加.  
 注意的是, 目前项目依然处在**极早期**的开发之中, 随时都会产生**破坏性**更改.  
 
 
@@ -17,7 +19,7 @@ Monosand 目前只实现了 Win32 平台上的 OpenGL 渲染后端, 不过这会
 
 ### 环境配置
 
-嗯, 这部分东西属于是老生常谈了, 不过这里我不会赘述, 你应该只需要打开项目, 新建一个控制台项目, 目标框架我会推荐 `.NET 8`, 然后引用 `Monosand` 项目就行了.
+嗯, 这部分东西属于是老生常谈了, 不过这里我不会赘述, 你应该只需要打开项目, 新建一个控制台项目, 目标框架我会推荐 `.NET 8`, 然后引用 `Salix` 项目就行了.
 
 ### 启动游戏
 
@@ -28,7 +30,7 @@ Game game = new();
 game.Run();
 ```
 
-然后启动, 你应该会看到一个黑色的窗口, 标题为 'Monosand', 但是什么也没有. 不过这代表你成功的启动了项目!
+然后启动, 你应该会看到一个黑色的窗口, 标题为 'Salix', 但是什么也没有. 不过这代表你成功的启动了项目!
 
 ### 重写更新逻辑 & 渲染贴图
 
