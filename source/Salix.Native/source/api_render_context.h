@@ -16,8 +16,9 @@ s_bool slxapi_render_context_init();
 void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* userParam);
 #endif
 
-SLX_API HGLRC SLX_CALLCONV SLX_CreateRenderContext();
-SLX_API s_bool SLX_CALLCONV SLX_AttachRenderContext(P_IN msd_window* win, HGLRC hglrc);
+struct opengl_render_context;
+SLX_API opengl_render_context* SLX_CALLCONV SLX_CreateRenderContext();
+SLX_API s_bool SLX_CALLCONV SLX_AttachRenderContext(P_IN msd_window* win, P_IN opengl_render_context* hglrc);
 SLX_API void SLX_CALLCONV SLX_SwapBuffers(P_IN msd_window* win);
 SLX_API double SLX_CALLCONV SLX_GetVSyncFrameTime();
 SLX_API void SLX_CALLCONV SLX_SetVSyncEnabled(s_bool enable);

@@ -36,10 +36,12 @@ extern error_code last_error_code;
 void slx_set_last_error(error_code error_code);
 
 #define SLX_FAIL(code) { slx_set_last_error(code); return true; }
-#define SLX_FAIL_COND(cond, code) { if(cond) SLX_FAIL(code); }
+#define SLX_FAIL_COND(cond, code) { if (cond) SLX_FAIL(code); }
 #define SLX_FAIL_NULL(code) { slx_set_last_error(code); return nullptr; }
-#define SLX_FAIL_COND_NULL(cond, code) { if(cond) SLX_FAIL_NULL(code); }
+#define SLX_FAIL_COND_NULL(cond, code) { if (cond) SLX_FAIL_NULL(code); }
+#define SLX_FAIL_RET(code, ret) { slx_set_last_error(code); return ret; }
+#define SLX_FAIL_COND_RET(cond, code, ret) { if (cond) SLX_FAIL_RET(code, ret); }
 #define SLX_FAIL_GOTO(code, label) { slx_set_last_error(code); goto label; }
-#define SLX_FAIL_COND_GOTO(cond, code, label) { if(cond) SLX_FAIL_GOTO(code, label); }
+#define SLX_FAIL_COND_GOTO(cond, code, label) { if (cond) SLX_FAIL_GOTO(code, label); }
 
 #endif

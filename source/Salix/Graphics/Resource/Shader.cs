@@ -49,30 +49,33 @@ public sealed class Shader : GraphicsResource
     {
         EnsureState();
         EnsureCurrentState();
-#if NETSTANDARD2_1_OR_GREATER
-        return Interop.SLX_GetShaderParamLocation(nativeHandle, name);
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+        int ret = Interop.SLX_GetShaderParamLocation(nativeHandle, name);
+        if (ret == -2) Interop.Throw();
+        return ret;
 #else
         byte[] utf8NameBytes = Encoding.UTF8.GetBytes(name);
         unsafe
         {
             fixed (byte* ptr = utf8NameBytes)
             {
-                return Interop.SLX_GetShaderParamLocation(nativeHandle, ptr);
+                int ret = Interop.SLX_GetShaderParamLocation(nativeHandle, ptr);
+                if (ret == -2) Interop.Throw();
+                return ret;
             }
         }
 #endif
     }
 
-    private int GetParameterLocation(ReadOnlySpan<byte> nameUtf8)
+    private unsafe int GetParameterLocation(ReadOnlySpan<byte> nameUtf8)
     {
         EnsureState();
         EnsureCurrentState();
-        unsafe
+        fixed (byte* ptr = nameUtf8)
         {
-            fixed (byte* ptr = nameUtf8)
-            {
-                return Interop.SLX_GetShaderParamLocation(nativeHandle, ptr);
-            }
+            int ret = Interop.SLX_GetShaderParamLocation(nativeHandle, ptr);
+            if (ret == -2) Interop.Throw();
+            return ret;
         }
     }
 

@@ -54,7 +54,7 @@ AddMethod("NBool SLX_SetRenderTarget(IntPtr renderTargetHandle)");
 
 /* api_graphics ShaderParam */
 AddMethod("int SLX_GetShaderParamLocation(IntPtr shaderHandle, byte* nameUtf8)");
-CondBegin("NETSTANDARD2_1_OR_GREATER");
+CondBegin("NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER");
 AddMethod("int SLX_GetShaderParamLocation(IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name)");
 CondEnd();
 AddMethod("NBool SLX_SetShaderParamInt(int location, int value)");

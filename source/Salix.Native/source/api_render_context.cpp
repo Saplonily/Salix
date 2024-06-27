@@ -37,11 +37,12 @@ s_bool slxapi_render_context_init()
     return false;
 }
 
-SLX_API HGLRC SLX_CALLCONV SLX_CreateRenderContext()
+SLX_API opengl_render_context* SLX_CALLCONV SLX_CreateRenderContext()
 {
     HWND dummyHwnd = nullptr;
     HDC hdc = nullptr;
     HGLRC hglrc = nullptr;
+    opengl_render_context* rc = nullptr;
 
     // this function can only be called once for now
     SLX_FAIL_COND_NULL(glViewport != nullptr, error_code::context_created_twice);
@@ -89,11 +90,16 @@ SLX_API HGLRC SLX_CALLCONV SLX_CreateRenderContext()
     hglrc = wglCreateContextAttribsARB(hdc, nullptr, attribs);
     SLX_FAIL_COND_GOTO(!hglrc, error_code::platform_error, failed);
 
+    rc = new opengl_render_context();
+    rc->hglrc = hglrc;
+
     wglMakeCurrent(hdc, hglrc);
+    current_context = rc;
 
     graphics_initialize();
 
     wglMakeCurrent(nullptr, nullptr);
+    current_context = nullptr;
     ReleaseDC(dummyHwnd, hdc);
     DestroyWindow(dummyHwnd);
 
@@ -104,19 +110,22 @@ SLX_API HGLRC SLX_CALLCONV SLX_CreateRenderContext()
 #endif
     if (!GLAD_WGL_EXT_swap_control)
         SLX_FAIL_GOTO(error_code::context_gl_swap_control_not_supported, failed);
-    return hglrc;
+
+    return rc;
 
 failed:
     if (hglrc) wglDeleteContext(hglrc);
     if (hdc) ReleaseDC(dummyHwnd, hdc);
     if (dummyHwnd) DestroyWindow(dummyHwnd);
+    if (rc) delete rc;
     return nullptr;
 }
 
-SLX_API s_bool SLX_CALLCONV SLX_AttachRenderContext(P_IN msd_window* win, HGLRC hglrc)
+SLX_API s_bool SLX_CALLCONV SLX_AttachRenderContext(P_IN msd_window* win, P_IN opengl_render_context* rc)
 {
-    if (!wglMakeCurrent(win->hdc, hglrc))
+    if (!wglMakeCurrent(win->hdc, rc->hglrc))
         SLX_FAIL(error_code::platform_error);
+    current_context = rc;
     return false;
 }
 
@@ -173,7 +182,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum se
 #ifdef SLX_COMPATIBILITY_GL
     if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB)
         return;
-#endif
+#endif // SLX_COMPATIBILITY_GL
     const char* sourceStr = message_source_to_string(source);
     if (!length)
         length = (GLsizei)strlen(msg);

@@ -28,7 +28,7 @@ public class MyGame : ECGame
         }
         TestTexture = ResourceManager.Load<Texture2D>("64x64");
         ExpectedFps = VSyncFps;
-        //VSyncEnabled = true;
+        VSyncEnabled = true;
         GotoScene(new MyScene());
     }
 

@@ -17,14 +17,14 @@ public enum ErrorCode : int
     ContextGLSwapControlNotSupported = 0x22,
     ContextGLDebugOutputNotSupported = 0x23,
 
-    ContextGlInvalidEnum = 0x24,
-    ContextGlInvalidValue = 0x25,
-    ContextGlInvalidOperation = 0x26,
-    ContextGlInvalidFramebufferOperation = 0x27,
-    ContextGlOutOfMemory = 0x29,
-    ContextGlStackUnderflow = 0x2a,
-    ContextGlStackOverflow = 0x2b,
-    ContextGlUnknownError = 0x2c,
+    ContextGLInvalidEnum = 0x24,
+    ContextGLInvalidValue = 0x25,
+    ContextGLInvalidOperation = 0x26,
+    ContextGLInvalidFramebufferOperation = 0x27,
+    ContextGLOutOfMemory = 0x29,
+    ContextGLStackUnderflow = 0x2a,
+    ContextGLStackOverflow = 0x2b,
+    ContextGLUnknownError = 0x2c,
 
     GLFramebufferNotComplete = 0x30
 }

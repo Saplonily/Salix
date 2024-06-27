@@ -5,6 +5,7 @@
 **/x64/**
 **/bin/**
 **/obj/**
+**/*.csproj.user
 **/*.pubxml
 **/*.pubxml.user
 **/Salix.Native/build*/**

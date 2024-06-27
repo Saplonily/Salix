@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Salix;
@@ -28,16 +29,8 @@ internal static partial class Interop
             => @bool.Value == 0;
     }
 
-    internal static void CheckAndThrow()
-    {
-        ErrorCode err = SLX_GetError();
-        if (err != ErrorCode.OK)
-            throw new FrameworkException(err);
-        return;
-    }
-
-    [DoesNotReturn]
-    internal static void Throw()
+    [DoesNotReturn, DebuggerHidden, StackTraceHidden]
+    public static void Throw()
     {
         ErrorCode err = SLX_GetError();
         if (err != ErrorCode.OK)

@@ -22,12 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Interops.cs">
+    <None Include="Platform\Interops.cs">
       <DependentUpon>Interops.tt</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </None>
-    <None Update="Interops.tt">
+    <None Update="Platform\Interops.tt">
       <LastGenOutput>Interops.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Interops.cs">
+    <Compile Update="Platform\Interops.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Interops.tt</DependentUpon>

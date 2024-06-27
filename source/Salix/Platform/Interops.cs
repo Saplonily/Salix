@@ -72,7 +72,7 @@ unsafe partial class Interop
 	internal static extern NBool SLX_SetRenderTarget(IntPtr renderTargetHandle);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern int SLX_GetShaderParamLocation(IntPtr shaderHandle, byte* nameUtf8);
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern int SLX_GetShaderParamLocation(IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 #endif

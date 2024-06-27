@@ -53,7 +53,7 @@ public sealed class ResourceLoader
         ThrowHelper.ThrowIfNull(stream);
         int length = VerifyLongValue(stream.Length);
         byte[] bytes = ByteArrayPool.Shared.Rent(length);
-        stream.Read(bytes, 0, length);
+        _ = stream.Read(bytes, 0, length);
 
         var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
         if (chunk.IsEmpty)
@@ -73,8 +73,8 @@ public sealed class ResourceLoader
         int fragLength = VerifyLongValue(fragStream.Length + 1);
         byte[] vertData = ByteArrayPool.Shared.Rent(vertLength);
         byte[] fragData = ByteArrayPool.Shared.Rent(fragLength);
-        vertStream.Read(vertData, 0, vertLength - 1);
-        fragStream.Read(fragData, 0, fragLength - 1);
+        _ = vertStream.Read(vertData, 0, vertLength - 1);
+        _ = fragStream.Read(fragData, 0, fragLength - 1);
         vertData[vertLength - 1] = 0;
         fragData[fragLength - 1] = 0;
 

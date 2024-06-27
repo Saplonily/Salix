@@ -3,6 +3,7 @@
 #define H_API_GRAPHICS
 
 #include <glad/glad.h>
+#undef APIENTRY
 #include "common.h"
 #include "error.h"
 #include "graphics_enums.h"
@@ -13,13 +14,34 @@ struct vertex_type_handle
     int length;
     // for the default 'DrawPrimitive' method 
     // TODO: did we really need that?
-    GLuint default_vao_id;
+    GLuint default_vao;
 };
 
 struct buffer_handle
 {
     GLuint vbo_id, vao_id, ibo_id;
 };
+
+typedef struct HGLRC__ *HGLRC;
+
+struct opengl_render_context
+{
+    HGLRC hglrc;
+
+    GLuint current_vbo;
+    GLuint current_vao;
+    GLuint current_shader;
+    GLuint current_fbo;
+
+    GLuint default_vbo;
+
+    GLuint expected_vbo;
+    GLuint expected_vao;
+    GLuint expected_shader;
+    GLuint expected_fbo;
+};
+
+extern opengl_render_context* current_context;
 
 void graphics_initialize();
 

@@ -9,9 +9,10 @@ public class Program
 {
     public static void Main()
     {
+#if DEBUG
         MyGame game = new();
         game.Run();
-#if !DEBUG
+#else
         try
         {
             MyGame game = new();

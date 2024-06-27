@@ -7,6 +7,8 @@
 #include "common.h"
 #include "error.h"
 
+opengl_render_context* current_context;
+
 static error_code gl_error_to_error_code(GLenum glerr);
 
 #ifdef SLX_DEBUG
@@ -20,7 +22,7 @@ static const char* gl_error_to_string(GLenum glerr)
     case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
     case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
     case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
-    default: return "UNKNOWN_ERROR";
+    default: return "GL_UNKNOWN_ERROR";
     }
 }
 
@@ -29,26 +31,32 @@ static void on_gl_error(const char* func, int line, GLenum err)
     printf("[glError/%s:%d] %s\n", func, line, gl_error_to_string(err));
 }
 
-#define SLX_FAIL_ON_GL_ERROR() { if (GLenum err = glGetError() != GL_NO_ERROR) { \
+#define SLX_FAIL_ON_GL_ERROR() { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { \
     on_gl_error(__FUNCTION__, __LINE__, err); \
     SLX_FAIL(gl_error_to_error_code(err)); \
 }}
 
-#define SLX_FAIL_ON_GL_ERROR_NULL() { if (GLenum err = glGetError() != GL_NO_ERROR) { \
+#define SLX_FAIL_ON_GL_ERROR_NULL() { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { \
     on_gl_error(__FUNCTION__, __LINE__, err); \
     SLX_FAIL_NULL(gl_error_to_error_code(err)); \
 }}
 
-#define SLX_FAIL_ON_GL_ERROR_GOTO(label) { if (GLenum err = glGetError() != GL_NO_ERROR) { \
+#define SLX_FAIL_ON_GL_ERROR_RET(ret) { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { \
+    on_gl_error(__FUNCTION__, __LINE__, err); \
+    SLX_FAIL_RET(gl_error_to_error_code(err), ret); \
+}}
+
+#define SLX_FAIL_ON_GL_ERROR_GOTO(label) { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { \
     on_gl_error(__FUNCTION__, __LINE__, err); \
     SLX_FAIL_GOTO(gl_error_to_error_code(err), label); \
 }}
 
 #else
 
-#define SLX_FAIL_ON_GL_ERROR() { if (GLenum err = glGetError() != GL_NO_ERROR) { SLX_FAIL(gl_error_to_error_code(err)); }}
-#define SLX_FAIL_ON_GL_ERROR_NULL() { if (GLenum err = glGetError() != GL_NO_ERROR) { SLX_FAIL_NULL(gl_error_to_error_code(err)); }}
-#define SLX_FAIL_ON_GL_ERROR_GOTO(label) { if (GLenum err = glGetError() != GL_NO_ERROR) { SLX_FAIL_GOTO(gl_error_to_error_code(err), label); }}
+#define SLX_FAIL_ON_GL_ERROR() { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { SLX_FAIL(gl_error_to_error_code(err)); }}
+#define SLX_FAIL_ON_GL_ERROR_NULL() { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { SLX_FAIL_NULL(gl_error_to_error_code(err)); }}
+#define SLX_FAIL_ON_GL_ERROR_RET(ret) { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { SLX_FAIL_RET(gl_error_to_error_code(err), ret); }}
+#define SLX_FAIL_ON_GL_ERROR_GOTO(label) { GLenum err; if ((err = glGetError()) != GL_NO_ERROR) { SLX_FAIL_GOTO(gl_error_to_error_code(err), label); }}
 
 #endif // SLX_DEBUG
 
@@ -68,32 +76,35 @@ static error_code gl_error_to_error_code(GLenum glerr)
     }
 }
 
-static GLuint cur_vao = 0;
-static GLuint cur_vbo = 0;
-static GLuint cur_fbo = 0;
-static GLuint cur_shader = 0;
-static GLuint default_vbo = 0;
-
 static s_bool ensure_vao(GLuint vao)
 {
-    if (cur_vao != vao)
+    if (current_context->current_vao != vao)
     {
         glBindVertexArray(vao);
         SLX_FAIL_ON_GL_ERROR();
-        cur_vao = vao;
+        current_context->current_vao = vao;
     }
     return false;
 }
 
 static s_bool ensure_vbo(GLuint vbo)
 {
-    if (cur_vbo != vbo)
+    if (current_context->current_vbo != vbo)
     {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         SLX_FAIL_ON_GL_ERROR();
-        cur_vbo = vbo;
+        current_context->current_vbo = vbo;
     }
     return false;
+}
+
+static s_bool apply_expected_state()
+{
+    if (ensure_vao(current_context->current_vao))
+        return true;
+    if (ensure_vbo(current_context->current_vbo))
+        return true;
+
 }
 
 static s_bool make_vao(VertexElementType* type, int32_t len, P_OUT GLuint* out_vao)
@@ -102,10 +113,10 @@ static s_bool make_vao(VertexElementType* type, int32_t len, P_OUT GLuint* out_v
     assert(len > 0);
     assert(out_vao != 0);
     GLuint vao = 0;
-    assert(cur_vbo != 0);
+    assert(current_context->current_vbo != 0);
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
-    cur_vao = vao;
+    current_context->current_vao = vao;
 
     int vertexSize = 0;
     for (int i = 0; i < len; i++)
@@ -132,7 +143,7 @@ err:
     {
         glDeleteVertexArrays(1, &vao);
         glBindVertexArray(0);
-        cur_vao = 0;
+        current_context->current_vao = 0;
     }
     return true;
 }
@@ -140,7 +151,7 @@ err:
 // TODO: move these to managed
 void graphics_initialize()
 {
-    glGenBuffers(1, &default_vbo);
+    glGenBuffers(1, &current_context->default_vbo);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -170,7 +181,7 @@ SLX_API void* SLX_CALLCONV SLX_RegisterVertexType(P_IN VertexElementType* type, 
     vertex_type_handle* h = new vertex_type_handle();
     h->type_ptr = tptr;
     h->length = len;
-    h->default_vao_id = 0;
+    h->default_vao = 0;
     return h;
 }
 
@@ -185,12 +196,12 @@ SLX_API s_bool SLX_CALLCONV SLX_DrawPrimitives(
     assert(data != 0);
     assert(data_size >= 1);
     assert(vertices_to_draw >= 1);
-    if (ensure_vbo(default_vbo)) return true;
+    if (ensure_vbo(current_context->default_vbo)) return true;
 
-    if (vertex_type->default_vao_id == 0)
-        if (make_vao(vertex_type->type_ptr, vertex_type->length, &vertex_type->default_vao_id))
+    if (vertex_type->default_vao == 0)
+        if (make_vao(vertex_type->type_ptr, vertex_type->length, &vertex_type->default_vao))
             return true;
-    if (ensure_vao(vertex_type->default_vao_id)) return true;
+    if (ensure_vao(vertex_type->default_vao)) return true;
 
     glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_DYNAMIC_DRAW);
     SLX_FAIL_ON_GL_ERROR();
@@ -401,11 +412,11 @@ SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader_handle)
 {
     //assert(shader_handle != 0);
     GLuint prog = (GLuint)(size_t)shader_handle;
-    if (cur_shader != prog)
+    if (current_context->current_shader != prog)
     {
         glUseProgram(prog);
         SLX_FAIL_ON_GL_ERROR();
-        cur_shader = prog;
+        current_context->current_shader = prog;
     }
     return false;
 }
@@ -458,7 +469,9 @@ SLX_API s_bool SLX_CALLCONV SLX_DeleteSampler(void* sampler_handle)
 
 SLX_API int SLX_CALLCONV SLX_GetShaderParamLocation(void* shaderHandle, const char* nameUtf8)
 {
-    return glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8);
+    int ret = glGetUniformLocation((GLuint)(size_t)shaderHandle, nameUtf8);
+    SLX_FAIL_ON_GL_ERROR_RET(-2);
+    return ret;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamInt(int32_t loc, int32_t value)
@@ -511,7 +524,7 @@ SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (GLuint)(size_t)tex_handle, 0);
 
     SLX_FAIL_ON_GL_ERROR_GOTO(failed);
-    glBindFramebuffer(GL_FRAMEBUFFER, cur_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, current_context->current_fbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -523,19 +536,19 @@ SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle)
 failed:
     if (fbo)
         glDeleteFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, cur_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, current_context->current_fbo);
     return nullptr;
 }
 
 SLX_API s_bool SLX_CALLCONV SLX_SetRenderTarget(void* fbo_handle)
 {
     GLuint fbo = (GLuint)(size_t)fbo_handle;
-    if (cur_fbo != fbo)
+    if (current_context->current_fbo != fbo)
     {
         // no need to check wheather it's equals to 0
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         SLX_FAIL_ON_GL_ERROR();
-        cur_fbo = fbo;
+        current_context->current_fbo = fbo;
     }
     return false;
 }
