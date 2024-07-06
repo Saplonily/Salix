@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 // ../msd/graphics_enums.h
 public enum VertexElementType

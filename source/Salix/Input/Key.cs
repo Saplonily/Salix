@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 /// <summary>
 /// <para>Represents a Key.</para>

@@ -1,10 +1,10 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 public class Game
 {
     public const int DefaultWindowWidth = 1280;
     public const int DefaultWindowHeight = 720;
-    public const string DefaultWindowTitle = nameof(Salix);
+    public const string DefaultWindowTitle = nameof(Saladim.Salix);
 
     private readonly Platform platform;
     private long ticks;
@@ -75,7 +75,7 @@ public class Game
         FrameTime = 1d / 60d;
         Window = new Window(this, DefaultWindowWidth, DefaultWindowHeight, DefaultWindowTitle);
         RenderContext = new RenderContext();
-        Window.AttachRenderContext(RenderContext);
+        RenderContext.AttachToWindow(Window);
         ResourceLoader = new(this);
     }
 
@@ -87,12 +87,10 @@ public class Game
 
     public void InvokeDeferred(Action action)
     {
-        if (deferredInvoking)
-        {
-            action();
-            return;
-        }
-        deferredActions.Add(action);
+        if (deferredInvoking) 
+            action(); 
+        else 
+            deferredActions.Add(action);
     }
 
     public void RequestExit()

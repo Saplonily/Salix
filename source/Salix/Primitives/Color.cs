@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 /// <summary>Represents an RGBA (Red, Green, Blue, Alpha) color. 4 bytes per component.</summary>
 [DebuggerDisplay("RGBA: ({R}, {G}, {B}, {A})")]

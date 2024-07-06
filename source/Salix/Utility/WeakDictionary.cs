@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 internal sealed class WeakDictionary<TKey, TValue>
     where TKey : notnull where TValue : class

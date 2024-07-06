@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 // TODO lazy create
 // TODO dispose check

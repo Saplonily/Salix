@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 internal static class SR
 {
@@ -8,7 +8,6 @@ internal static class SR
     public static readonly string ValueMustBePositive = "Value must be greater then 0.";
     public static readonly string FailedToCreateRenderContext = "Failed to create RenderContext.";
     public static readonly string TypeNotSupportedInShader = "Type of '{0}' is not supported in shader parameter.";
-    public static readonly string ShaderRequiredCurrent = "This operation required this shader to be the current.";
     public static readonly string PlatformInitializeFailed = "Platform initialize failed.";
     public static readonly string ResourceTypeNotSupported = "Resource type {0} is not supported.";
     public static readonly string StreamIsTooLong = "The stream is too long.";
@@ -27,6 +26,7 @@ internal static class SR
     public static readonly string ResourceLoadFailed = "Resource type of {0} load failed. {1}";
     public static readonly string InvalidWindowSize = "Invalid window size.";
     public static readonly string FailedToAttachRenderContext = "Failed to attach RenderContext.";
-    public static readonly string ThrowOnOK = "Can not throw FrameworkException on ErrorCode OK.";
+    public static readonly string ThrowOnOK = "Attempt to throw FrameworkException on ErrorCode OK, if this is not expected please report this bug.";
     public static readonly string FailedToGetWindowTitle = "Failed to get the title of the window.";
+    public static readonly string ShaderParamNotFound = "Shader parameter '{0}' does not exist.";
 }

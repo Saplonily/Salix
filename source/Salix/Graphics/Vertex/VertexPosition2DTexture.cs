@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct VertexPosition2DTexture : IEquatable<VertexPosition2DTexture>

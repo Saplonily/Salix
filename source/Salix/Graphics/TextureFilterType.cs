@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 public enum TextureFilterType
 {

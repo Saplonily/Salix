@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public sealed class SpriteShader
 {
@@ -16,8 +16,7 @@ public sealed class SpriteShader
     {
         ThrowHelper.ThrowIfNull(shader);
         this.shader = shader;
-        var pshader = shader.RenderContext.Shader;
-        shader.Use();
+
         paramTex = shader.GetParameter("tex"u8);
         if (paramTex.IsInvalid) throw ShaderParamNotFound("tex");
 
@@ -26,8 +25,6 @@ public sealed class SpriteShader
 
         paramProj2d = shader.GetParameter("proj2d"u8);
         if (paramProj2d.IsInvalid) throw ShaderParamNotFound("proj2d");
-
-        shader.RenderContext.Shader = pshader;
     }
 
     public void SetTransform2D(Matrix3x2 transform2d)
@@ -43,5 +40,5 @@ public sealed class SpriteShader
         => shader.Use();
 
     internal static ArgumentException ShaderParamNotFound(string paramName)
-        => new ArgumentException($"Shader parameter '{paramName}' does not exist.");
+        => new ArgumentException(string.Format(SR.ShaderParamNotFound, paramName));
 }

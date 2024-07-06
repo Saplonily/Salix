@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public sealed class KeyboardState
 {

@@ -1,15 +1,15 @@
 ﻿using System.Reflection;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public sealed class ResourceLoader
 {
-    private readonly Game game;
+    private readonly RenderContext context;
     private readonly Platform platform;
 
     public ResourceLoader(Game game)
     {
-        this.game = game;
+        context = game.RenderContext;
         platform = game.Platform;
     }
 
@@ -21,7 +21,6 @@ public sealed class ResourceLoader
             throw new ArgumentException(SR.InvalidStreamLength, nameof(value));
         return (int)value;
     }
-
 
     public SpriteFont LoadSpriteFont(Stream streamTexture, Stream streamEntries)
     {
@@ -58,7 +57,7 @@ public sealed class ResourceLoader
         var chunk = platform.LoadImage(new ReadOnlySpan<byte>(bytes, 0, length), out int width, out int height, out ImageFormat format);
         if (chunk.IsEmpty)
             throw new ArgumentException(SR.InvalidImageData, nameof(stream));
-        Texture2D texture = new(game.RenderContext, width, height, chunk.Pointer, format);
+        Texture2D texture = new(context, width, height, chunk.Pointer, format);
         platform.FreeImage(chunk);
 
         ByteArrayPool.Shared.Return(bytes);
@@ -78,7 +77,6 @@ public sealed class ResourceLoader
         vertData[vertLength - 1] = 0;
         fragData[fragLength - 1] = 0;
 
-        var context = game.RenderContext;
         Shader? shader;
         shader = new Shader(context, new ReadOnlySpan<byte>(vertData, 0, vertLength), new(fragData, 0, fragLength));
 

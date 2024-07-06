@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [DebuggerDisplay("{First}, {Second}, {Third}")]
 public struct TriangleProperty<TProperty> : IEquatable<TriangleProperty<TProperty>>

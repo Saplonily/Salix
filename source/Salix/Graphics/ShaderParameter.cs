@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 public readonly struct ShaderParameter : IEquatable<ShaderParameter>
 {
@@ -6,7 +6,7 @@ public readonly struct ShaderParameter : IEquatable<ShaderParameter>
     private readonly int location;
 
     public readonly Shader Shader => shader;
-    public bool IsInvalid => location == -1;
+    public readonly bool IsInvalid => location == -1;
     internal readonly int Location => location;
 
     internal ShaderParameter(Shader shader, int location)

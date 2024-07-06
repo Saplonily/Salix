@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Salix.UnitTest;
+namespace Saladim.Salix.UnitTest;
 
 [TestClass]
 public class ColorTests

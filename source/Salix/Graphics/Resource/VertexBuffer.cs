@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 /// <summary>
 /// A type of Buffer used to store vertices data

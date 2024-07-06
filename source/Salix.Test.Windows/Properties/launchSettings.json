@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Test.Win32": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

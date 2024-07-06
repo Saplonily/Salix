@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [DebuggerDisplay("Width: {Width}, Height: {Height}")]
 public sealed class Texture2D : GraphicsResource
@@ -23,7 +23,7 @@ public sealed class Texture2D : GraphicsResource
         set
         {
             EnsureState();
-            if (Interop.SLX_SetTextureFilter(nativeHandle, filter, filter))
+            if (Interop.SLX_SetTextureFilter(nativeHandle, value, value))
                 Interop.Throw();
             filter = value;
         }
@@ -35,7 +35,7 @@ public sealed class Texture2D : GraphicsResource
         set
         {
             EnsureState();
-            if (Interop.SLX_SetTextureWrap(nativeHandle, wrap))
+            if (Interop.SLX_SetTextureWrap(nativeHandle, value))
                 Interop.Throw();
             wrap = value;
         }

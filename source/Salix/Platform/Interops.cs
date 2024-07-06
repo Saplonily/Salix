@@ -2,7 +2,7 @@
 
 #pragma warning disable SYSLIB1054
 
-namespace Salix;
+namespace Saladim.Salix;
 
 unsafe partial class Interop
 {
@@ -20,6 +20,8 @@ unsafe partial class Interop
 	internal static extern void SLX_SetVSyncEnabled(NBool enable);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern double SLX_GetVSyncFrameTime();
+	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
+	internal static extern NBool SLX_QueryRenderContextInfo(out RenderContextInfo info);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern NBool SLX_Viewport(int x, int y, int width, int height);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
@@ -77,15 +79,15 @@ unsafe partial class Interop
 	internal static extern int SLX_GetShaderParamLocation(IntPtr shaderHandle, [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 #endif
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern NBool SLX_SetShaderParamInt(int location, int value);
+	internal static extern NBool SLX_SetShaderParamInt(IntPtr shaderHandle, int location, int value);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern NBool SLX_SetShaderParamFloat(int location, float value);
+	internal static extern NBool SLX_SetShaderParamFloat(IntPtr shaderHandle, int location, float value);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern NBool SLX_SetShaderParamVec4(int location, float* value);
+	internal static extern NBool SLX_SetShaderParamVec4(IntPtr shaderHandle, int location, float* value);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern NBool SLX_SetShaderParamMat4(int location, float* value);
+	internal static extern NBool SLX_SetShaderParamMat4(IntPtr shaderHandle, int location, float* value);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern NBool SLX_SetShaderParamMat3x2(int location, float* value);
+	internal static extern NBool SLX_SetShaderParamMat3x2(IntPtr shaderHandle, int location, float* value);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern IntPtr SLX_CreateWindow(int width, int height, char* title, IntPtr gcHandle);
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]

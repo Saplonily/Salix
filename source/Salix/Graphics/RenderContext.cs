@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 // TODO dispose impl
 public sealed class RenderContext
@@ -75,6 +75,7 @@ public sealed class RenderContext
         }
         set
         {
+            if (currentRenderTarget == value) return;
             PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
             if (value is null)
             {
@@ -102,8 +103,8 @@ public sealed class RenderContext
         }
         set
         {
+            if (currentShader == value) return;
             PreviewStateChanged?.Invoke(RenderContextState.Shader);
-            if (value == currentShader) return;
             bool result = value is not null ?
                 Interop.SLX_SetShader(value.NativeHandle) :
                 Interop.SLX_SetShader(IntPtr.Zero);
@@ -123,7 +124,8 @@ public sealed class RenderContext
         creationThreadId = Environment.CurrentManagedThreadId;
         vSyncFrameTime = Interop.SLX_GetVSyncFrameTime();
         var rc = Interop.SLX_CreateRenderContext();
-        if (rc == IntPtr.Zero) throw new FrameworkException(SR.FailedToCreateRenderContext, Interop.SLX_GetError());
+        if (rc == IntPtr.Zero) 
+            throw new FrameworkException(SR.FailedToCreateRenderContext, Interop.SLX_GetError());
         nativeHandle = rc;
     }
 
@@ -137,13 +139,19 @@ public sealed class RenderContext
         }
     }
 
-    internal void OnWindowResized(int width, int height)
+    internal void OnWindowResized(Window _, int width, int height)
     {
         windowSize = new(width, height);
         if (RenderTarget is null)
             Viewport = new(0, 0, width, height);
     }
 
+    internal void AttachToWindow(Window window)
+    {
+        if (Interop.SLX_AttachRenderContext(window.NativeHandle, NativeHandle))
+            throw new FrameworkException(SR.FailedToAttachRenderContext, Interop.SLX_GetError());
+        window.Resized += OnWindowResized;
+    }
 
     /// <summary>Invoke an action on the RenderContext creation thread.</summary>
     public void Invoke(Action action)
@@ -178,6 +186,8 @@ public sealed class RenderContext
         }
         return vertexType;
     }
+
+    // TODO check if the bound textures are actually disposed
 
     /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
     public unsafe void DrawPrimitives<T>(
@@ -230,9 +240,15 @@ public sealed class RenderContext
         if (index < 0)
             throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
         PreviewStateChanged?.Invoke(RenderContextState.Texture);
-        bool result = Interop.SLX_SetTexture(index, texture.NativeHandle);
-        if (result) Interop.Throw();
+        if (Interop.SLX_SetTexture(index, texture.NativeHandle)) 
+            Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Texture);
+    }
+
+    internal void OnResourceDisposed(GraphicsResource resource)
+    {
+        // HERE
+        Console.WriteLine($"Resource Dispose: {resource}");
     }
 
     public void SetSampler(int index, Sampler sampler)

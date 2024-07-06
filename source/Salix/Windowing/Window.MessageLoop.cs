@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public partial class Window
 {

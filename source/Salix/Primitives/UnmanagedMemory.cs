@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [StructLayout(LayoutKind.Sequential)]
 internal unsafe struct UnmanagedMemory
@@ -18,7 +18,7 @@ internal unsafe struct UnmanagedMemory
 
     public UnmanagedMemory(byte* pointer, nint size)
     {
-        ThrowHelper.ThrowIfNull(pointer is null, nameof(pointer));
+        ThrowHelper.ThrowIfNull(pointer);
         if (size <= 0)
             throw new ArgumentException(SR.ValueCannotBeNegative, nameof(size));
         Pointer = pointer;

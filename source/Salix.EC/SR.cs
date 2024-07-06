@@ -1,4 +1,4 @@
-﻿namespace Salix.EC;
+﻿namespace Saladim.Salix.EC;
 
 internal static class SR
 {

@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 #pragma warning disable CA1513
 #endif
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [StackTraceHidden]
 internal static class ThrowHelper
@@ -18,16 +18,19 @@ internal static class ThrowHelper
     }
 
     /// <summary>Throws <see cref="ArgumentNullException"/> when <paramref name="argument"/> is null.</summary>
-    public static void ThrowIfNull(object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    public static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    {
+        if (argument is null) throw new ArgumentNullException(paramName);
+    }
+
+    /// <summary>Throws <see cref="ArgumentNullException"/> when <paramref name="argument"/> is null.</summary>
+    public static unsafe void ThrowIfNull(void* argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
         if (argument is null) throw new ArgumentNullException(paramName);
     }
 
     /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="condition"/> is true.</summary>
-    public static void ThrowIfInvalid(
-        [DoesNotReturnIf(true)] bool condition,
-        string message
-        )
+    public static void ThrowIfInvalid([DoesNotReturnIf(true)] bool condition, string message)
     {
         if (condition) throw new InvalidOperationException(message);
     }

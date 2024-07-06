@@ -1,8 +1,8 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using Salix;
-using Salix.EC;
-using Color = Salix.Color;
+using Saladim.Salix;
+using Saladim.Salix.EC;
+using Color = Saladim.Salix.Color;
 
 namespace Test.Win32;
 

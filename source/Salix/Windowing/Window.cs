@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public partial class Window
 {
@@ -109,10 +109,10 @@ public partial class Window
 
     #endregion
 
-    /// <summary>The <see cref="Salix.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
+    /// <summary>The <see cref="Saladim.Salix.KeyboardState"/> of this window. Usually used for getting keyboard input.</summary>
     public KeyboardState KeyboardState => keyboardState;
 
-    /// <summary>The <see cref="Salix.MouseState"/> of this window. Usually used for getting mouse input.</summary>
+    /// <summary>The <see cref="Saladim.Salix.MouseState"/> of this window. Usually used for getting mouse input.</summary>
     public MouseState MouseState => mouseState;
 
     /// <summary>Occurs after the window closed. After the <see cref="OnClosing"/> be called.</summary>
@@ -126,7 +126,7 @@ public partial class Window
     /// <summary>Occurs after the window got focus.</summary>
     public event Action<Window>? GotFocus;
 
-    public event Action? PreviewSwapBuffer;
+    public event Action<Window>? PreviewSwapBuffer;
 
     /// <summary>Construct a window.</summary>
     internal unsafe Window(Game game, int width, int height, string title)
@@ -188,7 +188,7 @@ public partial class Window
     internal void SwapBuffers()
     {
         EnsureState();
-        PreviewSwapBuffer?.Invoke();
+        PreviewSwapBuffer?.Invoke(this);
         Interop.SLX_SwapBuffers(nativeHandle);
     }
 
@@ -197,12 +197,6 @@ public partial class Window
         EnsureState();
         keyboardState.Update();
         mouseState.Update();
-    }
-
-    internal void AttachRenderContext(RenderContext context)
-    {
-        if (Interop.SLX_AttachRenderContext(NativeHandle, context.NativeHandle))
-            throw new FrameworkException(SR.FailedToAttachRenderContext, Interop.SLX_GetError());
     }
 
     /// <summary>Called when the window closed.</summary>
@@ -224,7 +218,6 @@ public partial class Window
     /// <summary>Called when the window resized.</summary>
     public virtual void OnResized(int width, int height)
     {
-        Game.RenderContext.OnWindowResized(width, height);
         size = new(width, height);
         Resized?.Invoke(this, width, height);
     }

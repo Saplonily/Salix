@@ -2,16 +2,20 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 internal static partial class Interop
 {
     private const string LibName = "slx";
     private const CallingConvention CallConv = CallingConvention.StdCall;
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 16)]
+    [StructLayout(LayoutKind.Sequential)]
     internal struct RECT { public int left, top, right, bottom; }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct RenderContextInfo { public int maxTextures; }
+
+    [DebuggerStepThrough]
     internal struct NBool
     {
         public byte Value;
@@ -36,6 +40,6 @@ internal static partial class Interop
         if (err != ErrorCode.OK)
             throw new FrameworkException(err);
         else
-            throw new InvalidOperationException(SR.ThrowOnOK);
+            throw new FrameworkException(SR.ThrowOnOK);
     }
 }

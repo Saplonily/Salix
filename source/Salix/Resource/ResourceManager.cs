@@ -1,4 +1,6 @@
-﻿namespace Salix;
+﻿using System.Runtime.CompilerServices;
+
+namespace Saladim.Salix;
 
 public abstract class ResourceManager<TToken> where TToken : notnull
 {
@@ -13,11 +15,11 @@ public abstract class ResourceManager<TToken> where TToken : notnull
 
     public T Load<T>(TToken token) where T : class
     {
-        if (weakDictionary.TryGetValue(token, out object? value))
+        if (weakDictionary.TryGetValue(token, out object? value) && (value is not IResource ires || !ires.IsDisposed))
         {
-            if (value is null or not T)
+            if (value is not T)
                 throw new ResourceLoadFailedException(typeof(T));
-            return (T)value;
+            return Unsafe.As<T>(value);
         }
         else
         {

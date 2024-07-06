@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public static class MathHelper
 {

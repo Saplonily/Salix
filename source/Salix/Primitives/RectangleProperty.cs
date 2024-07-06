@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [DebuggerDisplay("{TopLeft}, {TopRight}, {BottomLeft}, {BottomRight}")]
 public struct RectangleProperty<TProperty> : IEquatable<RectangleProperty<TProperty>>

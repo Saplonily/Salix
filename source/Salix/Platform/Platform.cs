@@ -1,8 +1,6 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
-#pragma warning disable CA1822 // Mark members as static
-
-// TODO maybe we can just remove this class
+// TODO move implements to Salix.{Platform} projects
 public unsafe class Platform
 {
     private GraphicsBackend graphicsBackend;
@@ -20,11 +18,11 @@ public unsafe class Platform
     {
         if (Interop.SLX_Initialize())
             throw new FrameworkException(SR.PlatformInitializeFailed, Interop.SLX_GetError());
-        graphicsBackend = GraphicsBackend.Opengl33;
-        identifier = SalixPlatform.Win32;
+        graphicsBackend = GraphicsBackend.OpenGL33;
+        identifier = SalixPlatform.Windows;
     }
 
-    // TODO remove these resource loading methods
+    // TODO move these method to Salix.{Platform} projects
     internal unsafe UnmanagedMemory LoadImage(ReadOnlySpan<byte> source, out int width, out int height, out ImageFormat format)
     {
         void* data;

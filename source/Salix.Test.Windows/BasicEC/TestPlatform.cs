@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using Salix;
-using Salix.EC;
+using Saladim.Salix;
+using Saladim.Salix.EC;
 
 namespace Test.Win32;
 

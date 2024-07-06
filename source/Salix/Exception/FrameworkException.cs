@@ -1,4 +1,4 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 /// <summary>
 /// Thrown when an internal framework error occurred.

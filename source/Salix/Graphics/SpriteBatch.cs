@@ -1,9 +1,9 @@
 ﻿using System.Drawing;
 using System.Numerics;
 
-using VertexType = Salix.VertexPosition2DColorTexture;
+using VertexType = Saladim.Salix.VertexPosition2DColorTexture;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 public sealed partial class SpriteBatch
 {
@@ -75,16 +75,16 @@ public sealed partial class SpriteBatch
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;
 
-        using var vert = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.SpriteShader.vert");
-        using var frag = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.SpriteShader.frag");
-        using var vertText = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.TextShader.vert");
-        using var fragText = ResourceLoader.OpenEmbeddedFileStream("Salix.Embedded.TextShader.frag");
+        using var vert = ResourceLoader.OpenEmbeddedFileStream("SpriteShader.vert");
+        using var frag = ResourceLoader.OpenEmbeddedFileStream("SpriteShader.frag");
+        using var vertText = ResourceLoader.OpenEmbeddedFileStream("TextShader.vert");
+        using var fragText = ResourceLoader.OpenEmbeddedFileStream("TextShader.frag");
 
         var loader = game.ResourceLoader;
         SpriteShader = new(loader.LoadGlslShader(vert, frag));
         TextShader = new(loader.LoadGlslShader(vertText, fragText));
 
-        game.Window.PreviewSwapBuffer += Flush;
+        game.Window.PreviewSwapBuffer += _ => Flush();
         context.StateChanged += ContextStateChanged;
         context.PreviewStateChanged += PreviewContextStateChanged;
         Shader = SpriteShader;
@@ -140,7 +140,7 @@ public sealed partial class SpriteBatch
     public void DrawText<T>(SpriteFont spriteFont, T text, DrawTransform drawTransform) where T : IEnumerable<char>
         => DrawText(spriteFont, text, drawTransform.Position, drawTransform.Origin, drawTransform.Scale, drawTransform.Radians, Color.Known.Black);
 
-    /// <summary>Draw lines of text to the <see cref="Salix.RenderContext"/>.</summary>
+    /// <summary>Draw lines of text to the <see cref="Saladim.Salix.RenderContext"/>.</summary>
     /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
     /// <param name="spriteFont">The <see cref="SpriteFont"/> will be used to draw.</param>
     /// <param name="text">Text to draw, allowing '\n' for newlines.</param>
@@ -149,7 +149,7 @@ public sealed partial class SpriteBatch
     public void DrawText<T>(SpriteFont spriteFont, T text, DrawTransform drawTransform, Color color) where T : IEnumerable<char>
         => DrawText(spriteFont, text, drawTransform.Position, drawTransform.Origin, drawTransform.Scale, drawTransform.Radians, color);
 
-    /// <summary>Draw lines of text to the <see cref="Salix.RenderContext"/>.</summary>
+    /// <summary>Draw lines of text to the <see cref="Saladim.Salix.RenderContext"/>.</summary>
     /// <typeparam name="T">The type which implements <see cref="IEnumerable{char}"/>, used to enumerate characters.</typeparam>
     /// <param name="spriteFont">The <see cref="SpriteFont"/> will be used to draw.</param>
     /// <param name="text">Text to draw, allowing '\n' for newlines.</param>
@@ -165,11 +165,11 @@ public sealed partial class SpriteBatch
         ) where T : IEnumerable<char>
     {
         ThrowHelper.ThrowIfNull(spriteFont);
-        Shader = TextShader; // TODO shader flush optimization?
+        Shader = TextShader;
         float texWidth = spriteFont.Texture.Width;
         float texHeight = spriteFont.Texture.Height;
 
-        Vector2 rawSize = MeasureText(spriteFont, text);
+        Vector2 rawSize = spriteFont.MeasureText(text);
 
         float x = 0f;
         float y = 0f;
@@ -178,8 +178,7 @@ public sealed partial class SpriteBatch
             if (chr == '\n')
             {
                 x = 0f;
-                // TODO custom line-height
-                y += spriteFont.Size * 1.2f;
+                y += spriteFont.Size * SpriteFont.LineHeightMultiplier;
             }
             if (!spriteFont.Entries.TryGetValue(chr, out var entry))
                 continue;
@@ -192,32 +191,6 @@ public sealed partial class SpriteBatch
             DrawTexture(spriteFont.Texture, position, realOrigin, (br - tl) * scale, radians, color, tl, br);
             x += entry.Advance / 64f;
         }
-        Shader = SpriteShader;
-    }
-
-    // TODO move this to SpriteFont
-    public Vector2 MeasureText<T>(SpriteFont spriteFont, T text) where T : IEnumerable<char>
-    {
-        // measure the string
-        float totalWidth = 0;
-        float totalHeight = 0;
-
-        float curWidth = 0;
-        foreach (var chr in text)
-        {
-            if (chr == '\n')
-            {
-                curWidth = 0f;
-                totalHeight += spriteFont.Size * 1.2f;
-                continue;
-            }
-            if (!spriteFont.Entries.TryGetValue(chr, out var entry))
-                continue;
-            curWidth += entry.Advance / 64f;
-            if (curWidth > totalWidth)
-                totalWidth = curWidth;
-        }
-        return new(totalWidth, totalHeight);
     }
 
     public void DrawTexture(
@@ -283,6 +256,7 @@ public sealed partial class SpriteBatch
         )
     {
         ThrowHelper.ThrowIfNull(texture);
+        Shader = SpriteShader;
         if (lastTexture != texture) Flush();
         lastTexture = texture;
         EnsureVerticesAndIndices(4, 6);
@@ -318,6 +292,7 @@ public sealed partial class SpriteBatch
     public unsafe void DrawCircle(Texture2D texture, Matrix3x2 matrix, Color color, int precise = 24)
     {
         ThrowHelper.ThrowIfNull(texture);
+        Shader = SpriteShader;
         if (precise > 8192)
             throw new ArgumentOutOfRangeException(nameof(precise), precise, SR.PreciseTooBig);
         if (precise < 3)
@@ -376,6 +351,7 @@ public sealed partial class SpriteBatch
         )
     {
         ThrowHelper.ThrowIfNull(texture);
+        Shader = SpriteShader;
         if (lastTexture != texture) Flush();
         lastTexture = texture;
         EnsureVerticesAndIndices(3, 3);

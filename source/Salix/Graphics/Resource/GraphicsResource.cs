@@ -1,6 +1,6 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
-public abstract class GraphicsResource : IDisposable
+public abstract class GraphicsResource : IResource, IDisposable
 {
     private RenderContext? renderContext;
 
@@ -15,17 +15,15 @@ public abstract class GraphicsResource : IDisposable
     }
 
     protected virtual void Dispose(bool disposing)
-    {
-    }
+        => RenderContext.OnResourceDisposed(this);
 
     public void Dispose()
     {
-        if (renderContext != null)
-        {
-            Dispose(true);
-            renderContext = null;
-            GC.SuppressFinalize(this);
-        }
+        if (renderContext == null)
+            return;
+        Dispose(true);
+        renderContext = null;
+        GC.SuppressFinalize(this);
     }
 
     protected void EnsureState()

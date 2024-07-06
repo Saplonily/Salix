@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Embedded\**" />
+    <EmbeddedResource Include="Embedded\**">
+      <LogicalName>%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

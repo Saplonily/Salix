@@ -1,6 +1,6 @@
-﻿namespace Salix;
+﻿namespace Saladim.Salix;
 
 public enum SalixPlatform
 {
-    Unknown, Win32, Linux, Android
+    Unknown, Windows, Linux, Android
 }

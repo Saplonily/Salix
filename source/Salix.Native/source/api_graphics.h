@@ -4,6 +4,7 @@
 
 #include <glad/glad.h>
 #undef APIENTRY
+#include <cstdint>
 #include "common.h"
 #include "error.h"
 #include "graphics_enums.h"
@@ -19,10 +20,10 @@ struct vertex_type_handle
 
 struct buffer_handle
 {
-    GLuint vbo_id, vao_id, ibo_id;
+    GLuint vbo, vao, ibo;
 };
 
-typedef struct HGLRC__ *HGLRC;
+typedef struct HGLRC__* HGLRC;
 
 struct opengl_render_context
 {
@@ -30,21 +31,27 @@ struct opengl_render_context
 
     GLuint current_vbo;
     GLuint current_vao;
+    GLuint current_texture;
     GLuint current_shader;
     GLuint current_fbo;
 
     GLuint default_vbo;
 
-    GLuint expected_vbo;
-    GLuint expected_vao;
+    GLuint expected_texture;
     GLuint expected_shader;
     GLuint expected_fbo;
 };
 
 extern opengl_render_context* current_context;
 
+struct render_context_info
+{
+    int32_t max_textures;
+};
+
 void graphics_initialize();
 
+SLX_API s_bool SLX_CALLCONV SLX_QueryRenderContextInfo(P_OUT render_context_info* out_render_context_info);
 SLX_API s_bool SLX_CALLCONV SLX_Viewport(int32_t x, int32_t y, int32_t width, int32_t height);
 SLX_API s_bool SLX_CALLCONV SLX_Clear(float r, float g, float b, float a);
 SLX_API void* SLX_CALLCONV SLX_RegisterVertexType(P_IN VertexElementType* type, int32_t len);
@@ -67,12 +74,12 @@ SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader_handle);
 SLX_API void* SLX_CALLCONV SLX_CreateSampler(TextureFilterType filter_type, TextureWrapType wrap_type);
 SLX_API s_bool SLX_CALLCONV SLX_DeleteSampler(void* sampler_handle);
 SLX_API s_bool SLX_CALLCONV SLX_SetSampler(int32_t index, void* sampler_handle);
-SLX_API int SLX_CALLCONV SLX_GetShaderParamLocation(void* shaderHandle, const char* nameUtf8);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamInt(int32_t loc, int32_t value);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamFloat(int32_t loc, float value);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(int32_t loc, P_IN float* vec);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(int32_t loc, P_IN float* mat);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(int32_t loc, P_IN float* mat);
+SLX_API int SLX_CALLCONV SLX_GetShaderParamLocation(void* shader_handle, const char* name_utf8);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamInt(void* shader_handle, int32_t loc, int32_t value);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamFloat(void* shader_handle, int32_t loc, float value);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(void* shader_handle, int32_t loc, P_IN float* vec);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(void* shader_handle, int32_t loc, P_IN float* mat);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(void* shader_handle, int32_t loc, P_IN float* mat);
 SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle);
 SLX_API s_bool SLX_CALLCONV SLX_DeleteRenderTarget(void* fbo_handle);
 SLX_API s_bool SLX_CALLCONV SLX_SetRenderTarget(void* fbo_handle);

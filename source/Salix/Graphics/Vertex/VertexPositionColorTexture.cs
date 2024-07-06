@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [DebuggerDisplay("position: {Position}, color: {Color}, texCoord: {TextureCoord}")]
 [StructLayout(LayoutKind.Sequential, Pack = 1)]

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Salix;
+namespace Saladim.Salix;
 
 [SuppressMessage("Usage", "CA1720")]
 public enum VertexAttributeFormat

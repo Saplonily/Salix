@@ -3,7 +3,7 @@
 
 // just temporarily use stb_image
 // you can always switch to other libraries you like easily here
-static void* load_image(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
+static void* load_image(void* mem, int length, P_OUT int* x, P_OUT int* y, P_OUT int* data_length, P_OUT ImageFormat* format)
 {
     int channels;
     s_byte* data = stbi_load_from_memory((stbi_uc*)mem, length, x, y, &channels, 0);
@@ -27,7 +27,7 @@ static void free_image(void* data)
     stbi_image_free(data);
 }
 
-SLX_API void* SLX_CALLCONV SLX_LoadImage(void* mem, int length, int* x, int* y, int* data_length, ImageFormat* format)
+SLX_API void* SLX_CALLCONV SLX_LoadImage(void* mem, int length, P_OUT int* x, P_OUT int* y, P_OUT int* data_length, P_OUT ImageFormat* format)
 {
     return load_image(mem, length, x, y, data_length, format);
 }

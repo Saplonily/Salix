@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Numerics;
-using Salix;
-using Salix.EC;
-using Color = Salix.Color;
+using Saladim.Salix;
+using Saladim.Salix.EC;
+using Color = Saladim.Salix.Color;
 
 namespace Test.Win32;
 
@@ -28,7 +28,7 @@ public class MyGame : ECGame
         }
         TestTexture = ResourceManager.Load<Texture2D>("64x64");
         ExpectedFps = VSyncFps;
-        VSyncEnabled = true;
+        //VSyncEnabled = true;
         GotoScene(new MyScene());
     }
 
@@ -37,7 +37,7 @@ public class MyGame : ECGame
         base.Update();
         if (KeyboardState.IsJustPressed(Key.Esc))
             RequestExit();
-        if (KeyboardState.IsPressing(Key.S))
+        if (KeyboardState.IsPressing(Key.S) && Ticks % 4 == 0)
         {
             Window.Width -= 2;
             Window.X += 1;
