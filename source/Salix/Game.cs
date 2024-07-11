@@ -1,17 +1,20 @@
-﻿namespace Saladim.Salix;
+﻿using System.Diagnostics;
+
+namespace Saladim.Salix;
 
 public class Game
 {
     public const int DefaultWindowWidth = 1280;
     public const int DefaultWindowHeight = 720;
-    public const string DefaultWindowTitle = nameof(Saladim.Salix);
+    public const string DefaultWindowTitle = nameof(Salix);
 
     private readonly Platform platform;
-    private long ticks;
+    private int ticks;
     private int laggedFrames;
     private bool requestedExit;
     private bool deferredInvoking;
-    private List<Action> deferredActions;
+    private readonly List<Action> deferredActions;
+    private readonly Stopwatch stopwatch;
 
     public RenderContext RenderContext { get; private set; }
     public Window Window { get; private set; }
@@ -19,27 +22,29 @@ public class Game
     public ResourceLoader ResourceLoader { get; private set; }
 
     /// <summary>Indicates whether the game is lagging
-    /// (<see cref="Fps"/> less than <see cref="ExpectedFps"/> remains for over 16 frames).</summary>
-    public bool IsRunningSlowly => laggedFrames > 5;
+    /// (<see cref="Fps"/> less than <see cref="TargetFps"/> remains for over 16 frames).</summary>
+    public bool IsRunningSlowly => laggedFrames >= 16;
 
     /// <summary>Indicates how many frames have passed since the game started.</summary>
-    public long Ticks => ticks;
+    public int Ticks => ticks;
 
-    /// <summary>Expected frame time of the game.</summary>
-    public double ExpectedFrameTime { get; set; }
+    public TimeSpan ElapsedTime => stopwatch.Elapsed;
 
-    /// <summary>Expected frame time of the game.</summary>
-    public float ExpectedFrameTimeF => (float)ExpectedFrameTime;
+    /// <summary>Target frame time of the game.</summary>
+    public double TargetFrameTime { get; set; }
 
-    /// <summary>Expected Fps of the game. This is just a shortcut to access '1.0 / <see cref="ExpectedFrameTime"/>'.</summary>
-    public double ExpectedFps
+    /// <summary>Target frame time of the game.</summary>
+    public float TargetFrameTimeF => (float)TargetFrameTime;
+
+    /// <summary>Target Fps of the game. This is just a shortcut to access '1.0 / <see cref="TargetFrameTime"/>'.</summary>
+    public double TargetFps
     {
-        get => 1.0 / ExpectedFrameTime;
+        get => 1.0 / TargetFrameTime;
         set
         {
             if (value <= 0)
                 throw new ArgumentOutOfRangeException(nameof(value), SR.ValueMustBePositive);
-            ExpectedFrameTime = 1.0 / value;
+            TargetFrameTime = 1.0 / value;
         }
     }
 
@@ -71,7 +76,8 @@ public class Game
         platform = new Platform();
         platform.Initialize();
         ticks = 0;
-        ExpectedFps = 60d;
+        stopwatch = new();
+        TargetFps = 60d;
         FrameTime = 1d / 60d;
         Window = new Window(this, DefaultWindowWidth, DefaultWindowHeight, DefaultWindowTitle);
         RenderContext = new RenderContext();
@@ -87,50 +93,42 @@ public class Game
 
     public void InvokeDeferred(Action action)
     {
-        if (deferredInvoking) 
-            action(); 
-        else 
+        if (deferredInvoking)
+            action();
+        else
             deferredActions.Add(action);
     }
 
     public void RequestExit()
         => requestedExit = true;
 
-    public void Tick()
+    private void Tick()
     {
-        long pdrawcalls = RenderContext.TotalDrawCalls;
         Update();
         Render();
         Window.Update();
         Window.SwapBuffers();
-        LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
-        RenderContext.ProcessQueuedActions();
-        deferredInvoking = true;
-        foreach (var item in deferredActions) item();
-        deferredActions.Clear();
-        deferredInvoking = false;
         ticks++;
     }
 
     public void Run()
     {
+        long GetTimeUsec() => stopwatch.ElapsedTicks * 1_000_000 / Stopwatch.Frequency;
+
         RunBegin();
         Window.Show();
         Window.PollEvents();
-        FrameTime = ExpectedFrameTime;
+        FrameTime = TargetFrameTime;
 
-        //// FIXME this is a silly method to sync with the display
-        //if (!VSyncEnabled)
-        //{
-        //    VSyncEnabled = true;
-        //    Window.SwapBuffers();
-        //    Window.SwapBuffers();
-        //    Window.SwapBuffers();
-        //    VSyncEnabled = false;
-        //}
+        // FIXME This strange operation avoids screen stuttering on the OpenGL33 backend and
+        // minimizes tearing on the D3D11 backend as much as possible (without enabling VSync)
+        bool needSync = platform.GraphicsBackend is GraphicsBackend.OpenGL33 or GraphicsBackend.DirectX11;
+        if (needSync) SyncWithMonitor();
 
-        long currentTimeLine = Interop.SLX_GetUsecTimeline();
-        long expectedTimeLine = currentTimeLine + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
+        stopwatch.Start();
+
+        long current = GetTimeUsec();
+        long target = current + (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : TargetFrameTime));
         LastDrawCalls = 0;
         while (true)
         {
@@ -145,48 +143,73 @@ public class Game
             if (requestedExit)
                 break;
             Window.PollEvents();
+
+            long pdrawcalls = RenderContext.TotalDrawCalls;
             Tick();
+            LastDrawCalls = (int)(RenderContext.TotalDrawCalls - pdrawcalls);
+
+            RenderContext.ProcessQueuedActions();
+
+            deferredInvoking = true;
+            foreach (var item in deferredActions) item();
+            deferredActions.Clear();
+            deferredInvoking = false;
             if (Window.IsClosed)
                 break;
 
             // now do sleep
-            long realFrameTimeUsec = (long)(1_000_000 * (VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime));
-            long pCurrentTimeLine = currentTimeLine;
-            currentTimeLine = Interop.SLX_GetUsecTimeline();
-            int toSleepUsec = (int)(expectedTimeLine - currentTimeLine);
+            double frameTime = VSyncEnabled ? VSyncFrameTime : TargetFrameTime;
+            long frameTimeUsec = (long)(1_000_000 * frameTime);
+            long previous = current;
+            current = GetTimeUsec();
+
             if (!VSyncEnabled)
             {
-                if (toSleepUsec > 1000)
-                    Thread.Sleep(toSleepUsec / 1000);
+                int sleepTime = (int)(target - current);
+                if (sleepTime > 1000)
+                    Thread.Sleep(sleepTime / 1000);
             }
-            FrameTime = (currentTimeLine - pCurrentTimeLine) / 1_000_000d;
+            FrameTime = (current - previous) / 1_000_000d;
 
-            // TODO This fps implementation is a bit weird
-            var fpsFT = VSyncEnabled ? VSyncFrameTime : ExpectedFrameTime;
-            if (currentTimeLine > expectedTimeLine)
-                fpsFT += (currentTimeLine - expectedTimeLine) / 1_000_000d;
-            Fps = 1 / fpsFT;
+            // TODO better fps calculation?
+            var fpsFrameTime = frameTime;
+            if (current > target)
+                fpsFrameTime += (current - target) / 1_000_000d;
+
+            Fps = 1 / fpsFrameTime;
 
             // if we're facing lagging
-            if (currentTimeLine > expectedTimeLine)
+            if (current > target)
             {
-                long times = (currentTimeLine - expectedTimeLine) / realFrameTimeUsec + 1;
-                expectedTimeLine += times * realFrameTimeUsec;
+                long times = (current - target) / frameTimeUsec + 1;
+                target += times * frameTimeUsec;
                 laggedFrames += 1;
                 if (laggedFrames > 16)
                     laggedFrames = 16;
             }
             else
             {
-                expectedTimeLine += realFrameTimeUsec;
+                target += frameTimeUsec;
                 laggedFrames -= 1;
                 if (laggedFrames < 0)
                     laggedFrames = 0;
             }
         }
+        stopwatch.Stop();
         // usually graphics resource deletions
         RenderContext.ProcessQueuedActions();
         RunEnd();
+    }
+
+    internal void SyncWithMonitor()
+    {
+        if (VSyncEnabled) return;
+
+        VSyncEnabled = true;
+        Window.SwapBuffers();
+        Window.SwapBuffers();
+        Window.SwapBuffers();
+        VSyncEnabled = false;
     }
 
     public virtual void RunBegin()

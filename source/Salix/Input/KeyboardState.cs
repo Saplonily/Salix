@@ -38,13 +38,11 @@ public sealed class KeyboardState
         }
     }
 
-    private static Window? window;
     private Bits128 bitsCurrent;
     private Bits128 bitsPrevious;
 
-    internal KeyboardState(Window window)
+    internal KeyboardState()
     {
-        KeyboardState.window = window;
         bitsCurrent = new();
         bitsPrevious = new();
     }

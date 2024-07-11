@@ -7,27 +7,6 @@
 
 s_bool slxapi_render_context_init()
 {
-    pixelFormatDescriptor = {
-        sizeof(PIXELFORMATDESCRIPTOR),
-        1,                     // version number  
-        PFD_DRAW_TO_WINDOW |   // support window  
-        PFD_SUPPORT_OPENGL |   // support OpenGL  
-        PFD_DOUBLEBUFFER,      // double buffered  
-        PFD_TYPE_RGBA,         // RGBA type  
-        24,                    // 24-bit color depth  
-        0, 0, 0, 0, 0, 0,      // color bits ignored  
-        0,                     // no alpha buffer  
-        0,                     // shift bit ignored  
-        0,                     // no accumulation buffer  
-        0, 0, 0, 0,            // accum bits ignored  
-        24,                    // 24-bit z-buffer      
-        0,                     // no stencil buffer  
-        0,                     // no auxiliary buffer  
-        PFD_MAIN_PLANE,        // main layer  
-        0,                     // reserved  
-        0, 0, 0                // layer masks ignored  
-    };
-
     WNDCLASSW wc{};
     wc.lpfnWndProc = DefWindowProcW;
     wc.lpszClassName = L"rccfg";
@@ -75,7 +54,6 @@ SLX_API opengl_render_context* SLX_CALLCONV SLX_CreateRenderContext()
     {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
         WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-
     #ifndef SLX_COMPATIBILITY_GL
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
     #else

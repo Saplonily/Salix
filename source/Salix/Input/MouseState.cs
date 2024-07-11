@@ -13,7 +13,6 @@ public sealed class MouseState
     private Vector2 positionPrevious;
     private float wheelOffset;
     private float wheelOffsetPrevious;
-    private static Window? window;
 
     public Vector2 Position => position;
     public Vector2 PositionPrevious => positionPrevious;
@@ -25,9 +24,8 @@ public sealed class MouseState
     public bool IsRightButtonPressing => IsPressing(MouseButton.Right);
     public bool IsMiddleButtonPressing => IsPressing(MouseButton.Middle);
 
-    internal MouseState(Window window)
+    internal MouseState()
     {
-        MouseState.window = window;
         Clear();
     }
 

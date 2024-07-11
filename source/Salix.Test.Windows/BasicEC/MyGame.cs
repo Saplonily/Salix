@@ -1,10 +1,9 @@
 ﻿using System.Buffers;
 using System.Numerics;
-using Saladim.Salix;
 using Saladim.Salix.EC;
 using Color = Saladim.Salix.Color;
 
-namespace Test.Win32;
+namespace Saladim.Salix.Tests.BasicEC;
 
 public class MyGame : ECGame
 {
@@ -27,7 +26,7 @@ public class MyGame : ECGame
             throw new Exception("Run TextAtlasMaker and copy the 'atlas.png' and 'atlas.bin' to the Content folder of Test.Win32!", e);
         }
         TestTexture = ResourceManager.Load<Texture2D>("64x64");
-        ExpectedFps = VSyncFps;
+        TargetFps = VSyncFps;
         //VSyncEnabled = true;
         GotoScene(new MyScene());
     }
@@ -37,7 +36,7 @@ public class MyGame : ECGame
         base.Update();
         if (KeyboardState.IsJustPressed(Key.Esc))
             RequestExit();
-        if (KeyboardState.IsPressing(Key.S) && Ticks % 4 == 0)
+        if (KeyboardState.IsPressing(Key.S))
         {
             Window.Width -= 2;
             Window.X += 1;

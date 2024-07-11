@@ -10,4 +10,3 @@
 **/*.pubxml.user
 **/Salix.Native/build*/**
 TestResults/**
-_private_**

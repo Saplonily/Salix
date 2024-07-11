@@ -9,8 +9,6 @@ unsafe partial class Interop
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern NBool SLX_Initialize();
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
-	internal static extern long SLX_GetUsecTimeline();
-	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern IntPtr SLX_CreateRenderContext();
 	[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]
 	internal static extern NBool SLX_AttachRenderContext(IntPtr win, IntPtr hrc);

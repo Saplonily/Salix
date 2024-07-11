@@ -33,7 +33,7 @@ internal static partial class Interop
             => @bool.Value == 0;
     }
 
-    [DoesNotReturn, DebuggerHidden, StackTraceHidden]
+    [DoesNotReturn, DebuggerStepThrough, StackTraceHidden]
     public static void Throw()
     {
         ErrorCode err = SLX_GetError();

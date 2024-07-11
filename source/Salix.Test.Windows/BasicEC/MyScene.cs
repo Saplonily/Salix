@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
-using Saladim.Salix;
 using Saladim.Salix.EC;
 
-namespace Test.Win32;
+namespace Saladim.Salix.Tests.BasicEC;
 
 public class MyScene : Scene
 {
@@ -16,7 +15,7 @@ public class MyScene : Scene
     public override void Render()
     {
         base.Render();
-        var batch = MyGame.Current.SpriteBatch;
+        var batch = Game.SpriteBatch;
         batch.DrawTexture(batch.Texture1x1White, new DrawTransform(Vector2.Zero, Vector2.One * 50f), Color.Known.Aqua with { A = 0.5f });
         batch.DrawCircle(Color.Known.Bisque, 100f, new DrawTransform(Vector2.One * 100f), 24);
     }

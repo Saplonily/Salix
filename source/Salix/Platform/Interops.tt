@@ -15,7 +15,6 @@ unsafe partial class Interop
 <#
 /* api_system */
 AddMethod("NBool SLX_Initialize()");
-AddMethod("long SLX_GetUsecTimeline()");
 
 /* api_render_context */
 AddMethod("IntPtr SLX_CreateRenderContext()");

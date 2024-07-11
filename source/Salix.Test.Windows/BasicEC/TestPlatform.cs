@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
-using Saladim.Salix;
 using Saladim.Salix.EC;
 
-namespace Test.Win32;
+namespace Saladim.Salix.Tests.BasicEC;
 
 public class TestPlatform : Entity
 {
@@ -11,8 +10,8 @@ public class TestPlatform : Entity
 
     public TestPlatform(Vector2 position, Vector2 size)
     {
-        this.Position = position;
-        this.Size = size;
+        Position = position;
+        Size = size;
     }
 
     public override void Update()

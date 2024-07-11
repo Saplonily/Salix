@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Saladim.Salix;
 
-[StackTraceHidden]
+[StackTraceHidden, DebuggerStepThrough]
 internal static class ThrowHelper
 {
     /// <summary>Throws <see cref="ObjectDisposedException"/> when <paramref name="condition"/> is true.</summary>

@@ -18,10 +18,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="BasicEC/**" />
-    <!--<Compile Remove="BasicTest/**"/>-->
-  </ItemGroup>
-
+  
 </Project>

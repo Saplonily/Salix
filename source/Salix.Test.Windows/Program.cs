@@ -1,16 +1,15 @@
-﻿using System.Diagnostics;
-using System.Runtime.Versioning;
+﻿using System.Runtime.Versioning;
 
 [assembly: SupportedOSPlatform("windows")]
 
-namespace Test.Win32;
+namespace Saladim.Salix.Tests;
 
 public class Program
 {
     public static void Main()
     {
 #if DEBUG
-        MyGame game = new();
+        BasicEC.MyGame game = new();
         game.Run();
 #else
         try

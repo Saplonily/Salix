@@ -24,11 +24,7 @@ public sealed class RenderContext
 
     public Rectangle Viewport
     {
-        get
-        {
-            EnsureState();
-            return viewport;
-        }
+        get { EnsureState(); return viewport; }
         set
         {
             EnsureState();
@@ -43,36 +39,19 @@ public sealed class RenderContext
     /// <summary>Indicates is this <see cref="RenderContext"/> enabled the Vertical Synchronization.</summary>
     public bool VSyncEnabled
     {
-        get
-        {
-            EnsureState();
-            return vSyncEnabled;
-        }
-        set
-        {
-            EnsureState();
-            Interop.SLX_SetVSyncEnabled(value);
-            vSyncEnabled = value;
-        }
+        get { EnsureState(); return vSyncEnabled; }
+        set { EnsureState(); Interop.SLX_SetVSyncEnabled(value); vSyncEnabled = value; }
     }
 
     /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
     public double VSyncFrameTime
     {
-        get
-        {
-            EnsureState();
-            return vSyncFrameTime;
-        }
+        get { EnsureState(); return vSyncFrameTime; }
     }
 
     public RenderTarget? RenderTarget
     {
-        get
-        {
-            EnsureState();
-            return currentRenderTarget;
-        }
+        get { EnsureState(); return currentRenderTarget; }
         set
         {
             if (currentRenderTarget == value) return;
@@ -96,11 +75,7 @@ public sealed class RenderContext
 
     public Shader? Shader
     {
-        get
-        {
-            EnsureState();
-            return currentShader;
-        }
+        get { EnsureState(); return currentShader; }
         set
         {
             if (currentShader == value) return;
@@ -124,7 +99,7 @@ public sealed class RenderContext
         creationThreadId = Environment.CurrentManagedThreadId;
         vSyncFrameTime = Interop.SLX_GetVSyncFrameTime();
         var rc = Interop.SLX_CreateRenderContext();
-        if (rc == IntPtr.Zero) 
+        if (rc == IntPtr.Zero)
             throw new FrameworkException(SR.FailedToCreateRenderContext, Interop.SLX_GetError());
         nativeHandle = rc;
     }
@@ -187,8 +162,6 @@ public sealed class RenderContext
         return vertexType;
     }
 
-    // TODO check if the bound textures are actually disposed
-
     /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
     public unsafe void DrawPrimitives<T>(
         VertexDeclaration vertexDeclaration,
@@ -237,25 +210,29 @@ public sealed class RenderContext
     public void SetTexture(int index, Texture2D texture)
     {
         EnsureState();
-        if (index < 0)
-            throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
+        if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
+        ThrowHelper.ThrowIfNull(texture);
+        ThrowHelper.ThrowIfDisposed(texture.IsDisposed, texture);
+
         PreviewStateChanged?.Invoke(RenderContextState.Texture);
-        if (Interop.SLX_SetTexture(index, texture.NativeHandle)) 
+        if (Interop.SLX_SetTexture(index, texture.NativeHandle))
             Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Texture);
     }
 
     internal void OnResourceDisposed(GraphicsResource resource)
     {
-        // HERE
-        Console.WriteLine($"Resource Dispose: {resource}");
+        // nothing here (just for now)
+        // TODO set references to this resource to null
     }
 
     public void SetSampler(int index, Sampler sampler)
     {
         EnsureState();
-        if (index < 0)
-            throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
+        if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), SR.ValueCannotBeNegative);
+        ThrowHelper.ThrowIfNull(sampler);
+        ThrowHelper.ThrowIfDisposed(sampler.IsDisposed, sampler);
+
         PreviewStateChanged?.Invoke(RenderContextState.Sampler);
         bool result = Interop.SLX_SetSampler(index, sampler.NativeHandle);
         if (result) Interop.Throw();

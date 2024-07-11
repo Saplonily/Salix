@@ -1,10 +1,9 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using Saladim.Salix;
 using Saladim.Salix.EC;
 using Color = Saladim.Salix.Color;
 
-namespace Test.Win32;
+namespace Saladim.Salix.Tests.BasicEC;
 
 public class TestPlayer : Entity
 {
@@ -20,17 +19,17 @@ public class TestPlayer : Entity
     public override void Update()
     {
         base.Update();
-        var game = MyGame.Current;
-        var ks = MyGame.Current.KeyboardState;
-        velocity += Vector2.UnitY * 900f * game.ExpectedFrameTimeF;
+        var game = Scene.Game;
+        var ks = game.KeyboardState;
+        velocity += Vector2.UnitY * 900f * game.TargetFrameTimeF;
 
         if (ks.IsPressing(Key.A))
         {
-            TryMove(-Vector2.UnitX * 640f * game.ExpectedFrameTimeF);
+            TryMove(-Vector2.UnitX * 640f * game.TargetFrameTimeF);
         }
         if (ks.IsPressing(Key.D))
         {
-            TryMove(Vector2.UnitX * 640f * game.ExpectedFrameTimeF);
+            TryMove(Vector2.UnitX * 640f * game.TargetFrameTimeF);
         }
         if (ks.IsJustPressed(Key.W))
         {
@@ -38,11 +37,11 @@ public class TestPlayer : Entity
         }
         if (ks.IsJustPressed(Key.P))
         {
-            position = MyGame.Current.MouseState.Position;
+            position = game.MouseState.Position;
             velocity = Vector2.Zero;
         }
 
-        TestPlatform? p = TryMove(velocity * game.ExpectedFrameTimeF);
+        TestPlatform? p = TryMove(velocity * game.TargetFrameTimeF);
         if (p is not null)
         {
             position.Y = p.Position.Y - size.Y;

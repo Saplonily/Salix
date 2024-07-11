@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Saladim.Salix;
 
-public partial class Window
+partial class Window
 {
     private enum event_type : int
     {
