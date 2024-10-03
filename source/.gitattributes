@@ -1,0 +1,11 @@
+*.cpp linguist-language=c++
+*.h linguist-language=c++
+# hm?
+*.c linguist-language=c++ 
+
+*.frag linguist-language=glsl
+*.vert linguist-language=glsl
+*.hlsl linguist-language=hlsl
+thirdparty/** linguist-vendored
+
+Salix.Windows/Interops.cs linguist-generated

@@ -70,7 +70,7 @@ public sealed partial class SpriteBatch
         indices = new ushort[6 * 16];
         transform2d = Matrix3x2.Identity;
         projection2d = Matrix3x2.Identity;
-        buffer = new(context, VertexType.VertexDeclaration, VertexBufferDataUsage.StreamDraw, true);
+        buffer = new(context, VertexType.VertexDeclaration, BufferDataUsage.StreamDraw, true);
         ReadOnlySpan<byte> imgData = [255, 255, 255, 255];
         Texture1x1White = new Texture2D(context, 1, 1, imgData, ImageFormat.Rgba32);
         Texture1x1White.Filter = TextureFilterType.Nearest;

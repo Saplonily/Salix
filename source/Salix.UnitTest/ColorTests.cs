@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Globalization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Saladim.Salix.UnitTest;
 
@@ -86,10 +87,23 @@ public class ColorTests
     }
 
     [TestMethod]
-    public void TestToString()
+    public void ToHexString()
     {
         var color = new Color(0.5f, 0.25f, 0.75f, 0.5f);
-        var str = color.ToString();
-        Assert.AreEqual("(0.50, 0.25, 0.75, 0.50)", str);
+        var str = color.ToHexString();
+        Assert.AreEqual("7F3FBF7F", str);
+    }
+
+    [TestMethod]
+    public void TestDeconstruct()
+    {
+        float r = 0.2f, g = 0.3f, b = 0.4f, a = 0.5f;
+        float dr, dg, db, da;
+        Color color = new(r, g, b, a);
+        (dr, dg, db, da) = color;
+        Assert.AreEqual(r, dr);
+        Assert.AreEqual(g, dg);
+        Assert.AreEqual(b, db);
+        Assert.AreEqual(a, da);
     }
 }

@@ -1,0 +1,120 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Runtime" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System.Runtime.InteropServices;
+
+#pragma warning disable SYSLIB1054
+
+namespace Saladim.Salix.Windows;
+
+unsafe partial class Interop
+{
+<#
+/* api_system */
+AddMethod("NBool", "SLX_Initialize");
+
+/* api_windowing */
+AddMethod("IntPtr", "SLX_CreateWindow", "int width, int height, char* title");
+AddMethod("void", "SLX_DestroyWindow", "IntPtr win");
+AddMethod("void", "SLX_PollEvents", "IntPtr win");
+AddMethod("void*", "SLX_BeginProcessEvents", "IntPtr win, out nint count, out void* events");
+AddMethod("void", "SLX_EndProcessEvents", "IntPtr win, void* ehandle");
+AddMethod("void", "SLX_ShowWindow", "IntPtr win");
+AddMethod("void", "SLX_HideWindow", "IntPtr win");
+AddMethod("void", "SLX_GetWindowRect", "IntPtr win, out RECT rect");
+AddMethod("void", "SLX_SetWindowSize", "IntPtr win, int width, int height");
+AddMethod("void", "SLX_SetWindowPos", "IntPtr win, int x, int y");
+AddMethod("void", "SLX_SetWindowTitle", "IntPtr win, char* title");
+AddMethod("int", "SLX_GetWindowTitle", "IntPtr win, char* title");
+
+/* api_render_context */
+AddMethod("IntPtr", "SLX_CreateRenderContext", "IntPtr win");
+AddMethod("void", "SLX_SwapBuffers", "IntPtr win");
+AddMethod("void", "SLX_SetVSyncEnabled", "NBool enable");
+AddMethod("double", "SLX_GetVSyncFrameTime");
+
+/* api_graphics */
+//AddMethod("NBool", "SLX_QueryRenderContextInfo", "out RenderContextInfo info");
+AddMethod("NBool", "SLX_Viewport", "int x, int y, int width, int height");
+AddMethod("NBool", "SLX_Clear", "float r, float g, float b, float a");
+
+AddMethod("IntPtr", "SLX_CreateVertexBuffersInput", "int count, NVertexBufferBinding* bindings");
+AddMethod("IntPtr", "SLX_CreateSingleVertexBufferInput", "int elementsCount, VertexElementType* type");
+
+AddMethod("NBool", "SLX_ReplaceInputBuffer", "IntPtr input, int index, IntPtr buffer, int offset, int stride");
+
+AddMethod("IntPtr", "SLX_CreateVertexBuffer", "int size");
+AddMethod("NBool", "SLX_DeleteVertexBuffer", "IntPtr vertexBuffer");
+AddMethod("NBool", "SLX_SetVertexBufferData", "IntPtr vertexBuffer, void* data, int offset, int dataSize");
+
+AddMethod("IntPtr", "SLX_CreateIndexBuffer", "int size");
+AddMethod("NBool", "SLX_DeleteIndexBuffer", "IntPtr indexBuffer");
+AddMethod("NBool", "SLX_SetIndexBufferData", "IntPtr indexBuffer, ushort* data, int offset, int dataSize");
+
+AddMethod("NBool", "SLX_DrawPrimitives", "IntPtr input, PrimitiveType primitiveType, int verticesCount");
+AddMethod("NBool", "SLX_DrawIndexedPrimitives", "IntPtr input, IntPtr indexBuffer, PrimitiveType primitiveType, int indicesCount");
+
+AddMethod("IntPtr", "SLX_CreateTexture", "int width, int height");
+AddMethod("NBool", "SLX_DeleteTexture", "IntPtr texture");
+AddMethod("NBool", "SLX_SetTextureData", "IntPtr texture, int width, int height, void* data, ImageFormat format");
+AddMethod("NBool", "SLX_SetTexture", "int index, IntPtr texture");
+
+AddMethod("IntPtr", "SLX_CreateShaderFromGlsl", "byte* vertSource, byte* fragSource");
+AddMethod("NBool", "SLX_DeleteShader", "IntPtr shader");
+AddMethod("NBool", "SLX_SetShader", "IntPtr shader");
+
+AddMethod("int", "SLX_GetShaderParamLocation", "IntPtr shader, byte* nameUtf8");
+ConditionBegin("NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER");
+AddMethod("int", "SLX_GetShaderParamLocation", "IntPtr shader, [MarshalAs(UnmanagedType.LPUTF8Str)] string name");
+ConditionEnd();
+AddMethod("NBool", "SLX_SetShaderParamInt", "IntPtr shader, int location, int value");
+AddMethod("NBool", "SLX_SetShaderParamFloat", "IntPtr shader, int location, float value");
+AddMethod("NBool", "SLX_SetShaderParamVec4", "IntPtr shader, int location, float* value");
+AddMethod("NBool", "SLX_SetShaderParamMat4", "IntPtr shader, int location, float* value");
+AddMethod("NBool", "SLX_SetShaderParamMat3x2", "IntPtr shader, int location, float* value");
+
+AddMethod("IntPtr", "SLX_CreateSampler", "TextureFilterType filter, TextureWrapType wrap");
+AddMethod("NBool", "SLX_DeleteSampler", "IntPtr sampler");
+AddMethod("NBool", "SLX_SetSampler", "int index, IntPtr sampler");
+
+AddMethod("IntPtr", "SLX_CreateRenderTarget", "IntPtr texture");
+AddMethod("NBool", "SLX_DeleteRenderTarget", "IntPtr renderTarget");
+AddMethod("NBool", "SLX_SetRenderTarget", "IntPtr renderTarget");
+
+/* api_error */
+ConditionBegin("NET5_0_OR_GREATER");
+ExtAttr("SuppressGCTransition");
+ConditionEnd();
+AddMethod("ErrorCode", "SLX_GetError");
+
+ConditionBegin("NET5_0_OR_GREATER");
+ExtAttr("SuppressGCTransition");
+ConditionEnd();
+AddMethod("int", "SLX_GetPlatformError");
+
+/* api_resource_loading */
+AddMethod("void*", "SLX_LoadImage", "void* memory, int length, out int width, out int height, out int dataLength, out ImageFormat textureFormat");
+AddMethod("void", "SLX_FreeImage", "void* texData");
+#>
+}
+<#+
+
+void AddMethod(string returnValue, string name, string sig = "")
+{
+	WriteLine("\t[DllImport(LibName, CallingConvention = CallConv, ExactSpelling = true)]");
+	WriteLine($"\tinternal static extern {returnValue} {name}({sig});");
+}
+
+void ExtAttr(string extAttr) 
+	=> WriteLine($"\t[{extAttr}]");
+
+void ConditionBegin(string cond)
+	=> WriteLine($"#if {cond}");
+
+void ConditionEnd() 
+	=> WriteLine($"#endif");
+
+#>

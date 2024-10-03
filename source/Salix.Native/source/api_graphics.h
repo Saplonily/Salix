@@ -7,81 +7,124 @@
 #include <cstdint>
 #include "common.h"
 #include "error.h"
-#include "graphics_enums.h"
 
-struct vertex_type_handle
+#pragma region enums & mapping
+
+// Salix/Graphics/Vertex/VertexElementType.cs
+enum class VertexElementType
 {
-    VertexElementType* type_ptr;
-    int length;
-    // for the default 'DrawPrimitive' method 
-    // TODO: did we really need that?
-    GLuint default_vao;
+    Single,
+    Color,
+    Vector2,
+    Vector3,
+    Vector4,
 };
 
-struct buffer_handle
+// Salix/Graphics/Vertex/PrimitiveType.cs
+enum class PrimitiveType
 {
-    GLuint vbo, vao, ibo;
+    TriangleList,
+    TriangleStrip,
+    TriangleFan,
+    LineList,
+    LineStrip,
+    PointList
 };
 
-typedef struct HGLRC__* HGLRC;
-
-struct opengl_render_context
+// Salix/Graphics/ImageFormat.cs
+enum class ImageFormat
 {
-    HGLRC hglrc;
-
-    GLuint current_vbo;
-    GLuint current_vao;
-    GLuint current_texture;
-    GLuint current_shader;
-    GLuint current_fbo;
-
-    GLuint default_vbo;
-
-    GLuint expected_texture;
-    GLuint expected_shader;
-    GLuint expected_fbo;
+    R8,
+    Rg16,
+    Rgb24,
+    Rgba32
 };
 
-extern opengl_render_context* current_context;
-
-struct render_context_info
+// Salix/Graphics/TextureFilterType.cs
+enum class TextureFilterType
 {
-    int32_t max_textures;
+    Linear,
+    Nearest,
+    LinearMipmapLinear,
+    LinearMipmapNearest,
+    NearestMipmapLinear,
+    NearestMipmapNearest
+};
+
+// Salix/Graphics/TextureWrapType.cs
+enum class TextureWrapType
+{
+    ClampToEdge,
+    Repeat,
+    MirroredRepeat
+};
+
+GLsizei slxVertexElementTypeGetSize(VertexElementType type);
+struct VertexElementTypeGLSize { int count; GLenum type; int size; };
+VertexElementTypeGLSize slxVertexElementTypeGetGLSize(VertexElementType type);
+GLenum slxMapPrimitiveType(PrimitiveType type);
+GLenum slxMapImageFormat(ImageFormat format);
+int slxImageFormatGetSize(ImageFormat format);
+GLenum slxMapTextureFilterType(TextureFilterType type);
+GLenum slxMapTextureWrapType(TextureWrapType type);
+ErrorCode slxMapGLError(GLenum glerr);
+
+#pragma endregion
+
+struct VertexBufferBinding
+{
+    void* buffer;
+    int32_t elementsCount;
+    VertexElementType* type;
+    int32_t offset;
+    int32_t instanceFrequency;
 };
 
 void graphics_initialize();
 
-SLX_API s_bool SLX_CALLCONV SLX_QueryRenderContextInfo(P_OUT render_context_info* out_render_context_info);
 SLX_API s_bool SLX_CALLCONV SLX_Viewport(int32_t x, int32_t y, int32_t width, int32_t height);
 SLX_API s_bool SLX_CALLCONV SLX_Clear(float r, float g, float b, float a);
-SLX_API void* SLX_CALLCONV SLX_RegisterVertexType(P_IN VertexElementType* type, int32_t len);
-SLX_API buffer_handle* SLX_CALLCONV SLX_CreateVertexBuffer(P_IN vertex_type_handle* vertex_type, s_bool use_ibo);
-SLX_API s_bool SLX_CALLCONV SLX_DeleteVertexBuffer(P_IN buffer_handle* buffer);
-SLX_API s_bool SLX_CALLCONV SLX_DrawPrimitives(P_IN vertex_type_handle* vertex_type, PrimitiveType pt, void* data, int32_t data_size, int32_t vertices_to_draw);
-SLX_API s_bool SLX_CALLCONV SLX_SetVertexBufferData(buffer_handle* buffer_handle, void* data, int32_t dataSize, VertexBufferDataUsage data_usage);
-SLX_API s_bool SLX_CALLCONV SLX_DrawBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int32_t verticesCount);
-SLX_API s_bool SLX_CALLCONV SLX_SetIndexBufferData(buffer_handle* buffer_handle, void* data, int32_t dataSize, VertexBufferDataUsage data_usage);
-SLX_API s_bool SLX_CALLCONV SLX_DrawIndexedBufferPrimitives(buffer_handle* buffer_handle, PrimitiveType primitiveType, int32_t verticesCount);
+
+SLX_API void* SLX_CALLCONV SLX_CreateVertexBuffersInput(int32_t count, VertexBufferBinding* bindings);
+SLX_API void* SLX_CALLCONV SLX_CreateSingleVertexBufferInput(int32_t elementsCount, VertexElementType* type);
+
+SLX_API s_bool SLX_CALLCONV SLX_ReplaceInputBuffer(void* input, int32_t index, void* buffer, int32_t offset, int32_t stride);
+
+SLX_API void* SLX_CALLCONV SLX_CreateVertexBuffer(int32_t size);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteVertexBuffer(void* buffer);
+SLX_API s_bool SLX_CALLCONV SLX_SetVertexBufferData(void* buffer, void* data, int32_t offset, int32_t dataSize);
+
+SLX_API void* SLX_CALLCONV SLX_CreateIndexBuffer(int32_t size);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteIndexBuffer(void* buffer);
+SLX_API s_bool SLX_CALLCONV SLX_SetIndexBufferData(void* buffer, void* data, int32_t offset, int32_t dataSize);
+
+SLX_API s_bool SLX_CALLCONV SLX_DrawPrimitives(void* input, PrimitiveType primitiveType, int32_t verticesCount);
+SLX_API s_bool SLX_CALLCONV SLX_DrawIndexedPrimitives(void* input, void* indexBuffer, PrimitiveType primitiveType, int32_t indicesCount);
+
 SLX_API void* SLX_CALLCONV SLX_CreateTexture(int32_t width, int32_t height);
-SLX_API s_bool SLX_CALLCONV SLX_SetTextureFilter(void* tex_handle, TextureFilterType min, TextureFilterType max);
-SLX_API s_bool SLX_CALLCONV SLX_SetTextureWrap(void* tex_handle, TextureWrapType wrap);
-SLX_API s_bool SLX_CALLCONV SLX_SetTextureData(void* tex_handle, int32_t width, int32_t height, void* data, ImageFormat imageFormat);
-SLX_API s_bool SLX_CALLCONV SLX_DeleteTexture(void* tex_handle);
-SLX_API s_bool SLX_CALLCONV SLX_SetTexture(int32_t index, void* tex_handle);
-SLX_API void* SLX_CALLCONV SLX_CreateShaderFromGlsl(const char* vert_source, const char* frag_source);
-SLX_API s_bool SLX_CALLCONV SLX_DeleteShader(void* shader_handle);
-SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader_handle);
-SLX_API void* SLX_CALLCONV SLX_CreateSampler(TextureFilterType filter_type, TextureWrapType wrap_type);
-SLX_API s_bool SLX_CALLCONV SLX_DeleteSampler(void* sampler_handle);
-SLX_API s_bool SLX_CALLCONV SLX_SetSampler(int32_t index, void* sampler_handle);
-SLX_API int SLX_CALLCONV SLX_GetShaderParamLocation(void* shader_handle, const char* name_utf8);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamInt(void* shader_handle, int32_t loc, int32_t value);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamFloat(void* shader_handle, int32_t loc, float value);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(void* shader_handle, int32_t loc, P_IN float* vec);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(void* shader_handle, int32_t loc, P_IN float* mat);
-SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(void* shader_handle, int32_t loc, P_IN float* mat);
-SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* tex_handle);
-SLX_API s_bool SLX_CALLCONV SLX_DeleteRenderTarget(void* fbo_handle);
-SLX_API s_bool SLX_CALLCONV SLX_SetRenderTarget(void* fbo_handle);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteTexture(void* texture);
+SLX_API s_bool SLX_CALLCONV SLX_SetTextureData(void* texture, int32_t width, int32_t height, void* data, ImageFormat imageFormat);
+SLX_API s_bool SLX_CALLCONV SLX_SetTextureFilter(void* texture, TextureFilterType min, TextureFilterType max);
+SLX_API s_bool SLX_CALLCONV SLX_SetTextureWrap(void* texture, TextureWrapType wrap);
+SLX_API s_bool SLX_CALLCONV SLX_SetTexture(int32_t index, void* texture);
+
+SLX_API void* SLX_CALLCONV SLX_CreateShaderFromGlsl(const char* vertSource, const char* fragSource);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteShader(void* shader);
+SLX_API s_bool SLX_CALLCONV SLX_SetShader(void* shader);
+
+SLX_API int SLX_CALLCONV SLX_GetShaderParamLocation(void* shader, const char* nameUtf8);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamInt(void* shader, int32_t loc, int32_t value);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamFloat(void* shader, int32_t loc, float value);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamVec4(void* shader, int32_t loc, P_IN float* vec);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat4(void* shader, int32_t loc, P_IN float* mat);
+SLX_API s_bool SLX_CALLCONV SLX_SetShaderParamMat3x2(void* shader, int32_t loc, P_IN float* mat);
+
+SLX_API void* SLX_CALLCONV SLX_CreateSampler(TextureFilterType filterType, TextureWrapType wrapType);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteSampler(void* sampler);
+SLX_API s_bool SLX_CALLCONV SLX_SetSampler(int32_t index, void* sampler);
+
+SLX_API void* SLX_CALLCONV SLX_CreateRenderTarget(void* texture);
+SLX_API s_bool SLX_CALLCONV SLX_DeleteRenderTarget(void* renderTarget);
+SLX_API s_bool SLX_CALLCONV SLX_SetRenderTarget(void* renderTarget);
 
 #endif

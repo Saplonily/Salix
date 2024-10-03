@@ -19,6 +19,11 @@ public partial struct Color : IEquatable<Color>
     /// <summary>Alpha component.</summary>
     public float A;
 
+    public readonly byte R8 => (byte)(R * 255.0f);
+    public readonly byte G8 => (byte)(G * 255.0f);
+    public readonly byte B8 => (byte)(B * 255.0f);
+    public readonly byte A8 => (byte)(A * 255.0f);
+
     /// <summary>
     /// Construct a color with RGBA in floats.
     /// </summary>
@@ -61,7 +66,7 @@ public partial struct Color : IEquatable<Color>
         => $"({R:F2}, {G:F2}, {B:F2}, {A:F2})";
 
     public readonly string ToHexString()
-        => $"{(int)R:X2}{(int)G:X2}{(int)B:X2}{(int)A:X2}";
+        => $"{(int)R8:X2}{(int)G8:X2}{(int)B8:X2}{(int)A8:X2}";
 
     public readonly Color Inverted()
         => new(1.0f - R, 1.0f - G, 1.0f - B, A);

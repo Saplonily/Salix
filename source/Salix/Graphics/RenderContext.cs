@@ -1,24 +1,27 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 
 namespace Saladim.Salix;
 
 // TODO dispose impl
 public sealed class RenderContext
 {
-    private readonly Dictionary<VertexDeclaration, IntPtr> vertexDeclarations;
-    private readonly List<Action> queuedActions;
-    private readonly int creationThreadId;
-    private readonly IntPtr nativeHandle;
-    private readonly double vSyncFrameTime = 0d;
+    private IRenderContextImpl? impl;
+    internal IRenderContextImpl Impl { get { EnsureState(); return impl; } }
+
+    private int creationThreadId;
+    private List<Action> queuedActions;
+    private bool vSyncEnabled = false;
+    private double vSyncFrameTime = 0d;
     private Shader? currentShader;
     private RenderTarget? currentRenderTarget = null;
     private Rectangle viewport;
-    private bool vSyncEnabled = false;
+    private Texture2D?[] textureSlots;
+    private Sampler?[] samplerSlots;
 
     private long totalDrawCalls;
     private Size windowSize;
-
-    internal IntPtr NativeHandle => nativeHandle;
 
     public long TotalDrawCalls => totalDrawCalls;
 
@@ -29,18 +32,17 @@ public sealed class RenderContext
         {
             EnsureState();
             PreviewStateChanged?.Invoke(RenderContextState.Viewport);
-            if (Interop.SLX_Viewport(value.X, value.Y, value.Width, value.Height))
-                Interop.Throw();
+            impl.Viewport(value.X, value.Y, value.Width, value.Height);
             viewport = value;
             StateChanged?.Invoke(RenderContextState.Viewport);
         }
     }
 
-    /// <summary>Indicates is this <see cref="RenderContext"/> enabled the Vertical Synchronization.</summary>
+    /// <summary>Indicates weather this <see cref="RenderContext"/> is enabled the Vertical Synchronization.</summary>
     public bool VSyncEnabled
     {
         get { EnsureState(); return vSyncEnabled; }
-        set { EnsureState(); Interop.SLX_SetVSyncEnabled(value); vSyncEnabled = value; }
+        set { EnsureState(); impl.VSyncEnabled = value; vSyncEnabled = value; }
     }
 
     /// <summary>The frame time will be when the <see cref="VSyncEnabled"/> is true.</summary>
@@ -54,18 +56,19 @@ public sealed class RenderContext
         get { EnsureState(); return currentRenderTarget; }
         set
         {
+            EnsureState();
             if (currentRenderTarget == value) return;
-            PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
             if (value is null)
             {
-                if (Interop.SLX_SetRenderTarget(IntPtr.Zero))
-                    Interop.Throw();
+                PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
+                impl.RenderTarget = null;
                 Viewport = new(0, 0, windowSize.Width, windowSize.Height);
             }
             else
             {
-                if (Interop.SLX_SetRenderTarget(value.NativeHandle))
-                    Interop.Throw();
+                ThrowHelper.ThrowIfDisposed(value.IsDisposed, value);
+                PreviewStateChanged?.Invoke(RenderContextState.RenderTarget);
+                impl.RenderTarget = value.Impl;
                 Viewport = new(0, 0, value.Width, value.Height);
             }
             currentRenderTarget = value;
@@ -92,16 +95,16 @@ public sealed class RenderContext
     public event Action<RenderContextState>? StateChanged;
     public event Action<RenderContextState>? PreviewStateChanged;
 
-    public RenderContext()
+    internal RenderContext(Platform platform, Window window)
     {
-        vertexDeclarations = new();
+        impl = platform.CreateRenderContextImpl(window.Impl);
         queuedActions = new(8);
         creationThreadId = Environment.CurrentManagedThreadId;
-        vSyncFrameTime = Interop.SLX_GetVSyncFrameTime();
-        var rc = Interop.SLX_CreateRenderContext();
-        if (rc == IntPtr.Zero)
-            throw new FrameworkException(SR.FailedToCreateRenderContext, Interop.SLX_GetError());
-        nativeHandle = rc;
+        vSyncFrameTime = impl.VSyncFrameTime;
+
+        int length = 8;
+        textureSlots = new Texture2D[length];
+        samplerSlots = new Sampler[length];
     }
 
     internal void ProcessQueuedActions()
@@ -114,18 +117,11 @@ public sealed class RenderContext
         }
     }
 
-    internal void OnWindowResized(Window _, int width, int height)
+    internal void OnWindowResized(Window? _, int width, int height)
     {
         windowSize = new(width, height);
         if (RenderTarget is null)
             Viewport = new(0, 0, width, height);
-    }
-
-    internal void AttachToWindow(Window window)
-    {
-        if (Interop.SLX_AttachRenderContext(window.NativeHandle, NativeHandle))
-            throw new FrameworkException(SR.FailedToAttachRenderContext, Interop.SLX_GetError());
-        window.Resized += OnWindowResized;
     }
 
     /// <summary>Invoke an action on the RenderContext creation thread.</summary>
@@ -142,69 +138,32 @@ public sealed class RenderContext
     public void Clear(Color color)
     {
         EnsureState();
-        if (Interop.SLX_Clear(color.R, color.G, color.B, color.A))
-            Interop.Throw();
+        impl.Clear(color);
     }
 
-    internal unsafe IntPtr SafeGetVertexType(VertexDeclaration vertexDeclaration)
+    internal ISingleVertexBufferInputImpl FetchSingleVBI(VertexDeclaration vertexDeclaration)
     {
+        // TODO: dictionary
         EnsureState();
-        ThrowHelper.ThrowIfNull(vertexDeclaration);
-        if (!vertexDeclarations.TryGetValue(vertexDeclaration, out IntPtr vertexType))
-        {
-            fixed (VertexElementType* ptr = vertexDeclaration.Attributes)
-            {
-                vertexType = Interop.SLX_RegisterVertexType(ptr, vertexDeclaration.Count);
-                if (vertexType == IntPtr.Zero) Interop.Throw();
-                vertexDeclarations.Add(vertexDeclaration, vertexType);
-            }
-        }
-        return vertexType;
-    }
-
-    /// <summary>Draw primitives with <typeparamref name="T"/>* on this RenderContext.</summary>
-    public unsafe void DrawPrimitives<T>(
-        VertexDeclaration vertexDeclaration,
-        PrimitiveType primitiveType,
-        ReadOnlySpan<T> vertices
-        ) where T : unmanaged
-    {
-        EnsureState();
-        ThrowHelper.ThrowIfNull(vertexDeclaration);
-        totalDrawCalls++;
-
-        IntPtr vertexType = SafeGetVertexType(vertexDeclaration);
-        fixed (T* vptr = vertices)
-        {
-            bool result = Interop.SLX_DrawPrimitives(vertexType, primitiveType, vptr, vertices.Length * sizeof(T), vertices.Length);
-            if (result) Interop.Throw();
-        }
+        return impl.CreateSingleVertexBufferInputImpl(vertexDeclaration);
     }
 
     /// <summary>Draw primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
-    public void DrawPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged
+    public void DrawPrimitives<T>(PrimitiveType primitiveType, VertexBuffer<T> buffer) where T : unmanaged
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
-        if (buffer.Indexed)
-            throw new InvalidOperationException(SR.BufferIsIndexed);
         totalDrawCalls++;
-
-        bool result = Interop.SLX_DrawBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.VerticesCount);
-        if (result) Interop.Throw();
+        impl.DrawPrimitives(primitiveType, buffer.InputImpl, 0, buffer.VerticesCount);
     }
 
     /// <summary>Draw <strong>indexed</strong> primitives with <see cref="VertexBuffer{T}"/> on this RenderContext.</summary>
-    public void DrawIndexedPrimitives<T>(VertexBuffer<T> buffer, PrimitiveType primitiveType) where T : unmanaged
+    public void DrawIndexedPrimitives<T>(PrimitiveType primitiveType, VertexBuffer<T> buffer, IndexBuffer indexBuffer) where T : unmanaged
     {
         EnsureState();
         ThrowHelper.ThrowIfNull(buffer);
-        if (!buffer.Indexed)
-            throw new InvalidOperationException(SR.BufferIsNotIndexed);
         totalDrawCalls++;
-
-        bool result = Interop.SLX_DrawIndexedBufferPrimitives(buffer.NativeHandle, primitiveType, buffer.IndicesCount);
-        if (result) Interop.Throw();
+        impl.DrawIndexedPrimitives(primitiveType, buffer.InputImpl, indexBuffer.Impl, 0, indexBuffer.IndicesCount);
     }
 
     public void SetTexture(int index, Texture2D texture)
@@ -215,15 +174,10 @@ public sealed class RenderContext
         ThrowHelper.ThrowIfDisposed(texture.IsDisposed, texture);
 
         PreviewStateChanged?.Invoke(RenderContextState.Texture);
+        textureSlots[index] = texture;
         if (Interop.SLX_SetTexture(index, texture.NativeHandle))
             Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Texture);
-    }
-
-    internal void OnResourceDisposed(GraphicsResource resource)
-    {
-        // nothing here (just for now)
-        // TODO set references to this resource to null
     }
 
     public void SetSampler(int index, Sampler sampler)
@@ -234,11 +188,32 @@ public sealed class RenderContext
         ThrowHelper.ThrowIfDisposed(sampler.IsDisposed, sampler);
 
         PreviewStateChanged?.Invoke(RenderContextState.Sampler);
+        samplerSlots[index] = sampler;
         bool result = Interop.SLX_SetSampler(index, sampler.NativeHandle);
         if (result) Interop.Throw();
         StateChanged?.Invoke(RenderContextState.Sampler);
     }
 
+    internal void OnResourceDisposed(GraphicsResource resource)
+    {
+        switch (resource)
+        {
+        case Texture2D texture: CleanSlots(textureSlots, texture); break;
+        case Sampler sampler: CleanSlots(samplerSlots, sampler); break;
+        }
+    }
+
+    internal static void CleanSlots<T>(T?[] array, T value) where T : class
+    {
+        for (int i = 0; i < array.Length; i++)
+        {
+            if (ReferenceEquals(array[i], value))
+                array[i] = null;
+        }
+    }
+
+    [DebuggerStepThrough]
+    [MemberNotNull(nameof(impl))]
     private void EnsureState()
-        => ThrowHelper.ThrowIfDisposed(nativeHandle == IntPtr.Zero, this);
+        => ThrowHelper.ThrowIfDisposed(impl is null, this);
 }

@@ -1,12 +1,16 @@
 #include "error.h"
 
-error_code last_error_code;
+#include <stdio.h>
 
-void slx_set_last_error(error_code error_code)
+#include "common.h"
+
+ErrorCode lastErrorCode;
+
+void slxSetLastError(ErrorCode errorCode)
 {
 #ifdef SLX_DEBUG
-    if (last_error_code != error_code::ok)
-        printf("[set_last_error] WARNING: overwriting last error %d.\n", last_error_code);
+    if (lastErrorCode != ErrorCode::OK)
+        printf("[set_last_error] WARNING: overwriting last error %d.\n", lastErrorCode);
 #endif
-    last_error_code = error_code;
+    lastErrorCode = errorCode;
 }

@@ -1,10 +1,12 @@
-﻿namespace Saladim.Salix;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Saladim.Salix;
 
 public abstract class GraphicsResource : IResource, IDisposable
 {
     private RenderContext? renderContext;
 
-    public RenderContext RenderContext { get { EnsureState(); return renderContext!; } }
+    public RenderContext RenderContext { get { EnsureState(); return renderContext; } }
 
     public bool IsDisposed => renderContext == null;
 
@@ -14,21 +16,29 @@ public abstract class GraphicsResource : IResource, IDisposable
         this.renderContext = renderContext;
     }
 
-    protected virtual void Dispose(bool disposing)
-        => RenderContext.OnResourceDisposed(this);
-
     public void Dispose()
     {
         if (renderContext == null)
             return;
-        Dispose(true);
-        renderContext = null;
-        GC.SuppressFinalize(this);
+        try
+        {
+            Dispose(true);
+        }
+        finally
+        {
+            renderContext = null;
+            GC.SuppressFinalize(this);
+        }
     }
 
+    protected virtual void Dispose(bool disposing)
+        => renderContext!.OnResourceDisposed(this);
+
+    [MemberNotNull(nameof(renderContext))]
     protected void EnsureState()
         => ThrowHelper.ThrowIfDisposed(renderContext is null, this);
 
+    // TODO don't use lambda capture
     ~GraphicsResource()
         => renderContext!.Invoke(() => Dispose(false));
 }

@@ -1,47 +1,51 @@
 #pragma once
-#ifndef H_ERROR_CODE
-#define H_ERROR_CODE
+#ifndef H_ERROR
+#define H_ERROR
 
 #include <cstdint>
 
-enum class error_code : int32_t
+enum class ErrorCode : int32_t
 {
-    ok = 0,
-    invalid_parameter = 0x01,
-    null_parameter = 0x02,
-    enum_mapping_failed = 0x03,
+    OK = 0x000,
+    InvalidParameter = 0x001,
+    NullParameter = 0x002,
+    MapEnumFailed = 0x003,
 
-    platform_error = 0x10,
-    graphics_api_error = 0x11,
-    register_window_failed = 0x12,
+    PlatformError = 0x100,
+    GraphicsApiError = 0x101,
+    RegisterWindowFailed = 0x102,
 
-    context_created_twice = 0x20,
-    context_gl_load_failed = 0x21,
-    context_gl_swap_control_not_supported = 0x22,
-    context_gl_debug_output_not_supported = 0x23,
+    ContextCreatedTwice = 0x200,
+    ContextGLLoadFailed = 0x201,
 
-    context_gl_invalid_enum = 0x24,
-    context_gl_invalid_value = 0x25,
-    context_gl_invalid_operation = 0x26,
-    context_gl_invalid_framebuffer_operation = 0x27,
-    context_gl_out_of_memory = 0x29,
-    context_gl_stack_underflow = 0x2a,
-    context_gl_stack_overflow = 0x2b,
-    context_gl_unknown_error = 0x2c,
-    
-    gl_framebuffer_not_complete = 0x30
+    ContextGLDebugOutputNotSupported = 0x202,
+    ContextSwapControlNotSupported = 0x203,
+    ContextWGLCreateContextNotSupported = 0x204,
+    ContextWGLPixelFormatNotSupported = 0x205,
+
+    ContextGLInvalidEnum = 0x304,
+    ContextGLInvalidValue = 0x305,
+    ContextGLInvalidOperation = 0x306,
+    ContextGLInvalidFramebufferOperation = 0x307,
+    ContextGLOutOfMemory = 0x308,
+    ContextGLStackUnderflow = 0x309,
+    ContextGLStackOverflow = 0x30a,
+    ContextGLUnknownError = 0x30b,
+    ContextGLFramebufferNotComplete = 0x30c
 };
 
-extern error_code last_error_code;
-void slx_set_last_error(error_code error_code);
+extern ErrorCode lastErrorCode;
+void slxSetLastError(ErrorCode errorCode);
 
-#define SLX_FAIL(code) { slx_set_last_error(code); return true; }
+#define SLX_FAIL(code) { slxSetLastError(code); return true; }
 #define SLX_FAIL_COND(cond, code) { if (cond) SLX_FAIL(code); }
-#define SLX_FAIL_NULL(code) { slx_set_last_error(code); return nullptr; }
+#define SLX_FAIL_NULL(code) { slxSetLastError(code); return nullptr; }
 #define SLX_FAIL_COND_NULL(cond, code) { if (cond) SLX_FAIL_NULL(code); }
-#define SLX_FAIL_RET(code, ret) { slx_set_last_error(code); return ret; }
+#define SLX_FAIL_RET(code, ret) { slxSetLastError(code); return ret; }
 #define SLX_FAIL_COND_RET(cond, code, ret) { if (cond) SLX_FAIL_RET(code, ret); }
-#define SLX_FAIL_GOTO(code, label) { slx_set_last_error(code); goto label; }
+#define SLX_FAIL_GOTO(code, label) { slxSetLastError(code); goto label; }
 #define SLX_FAIL_COND_GOTO(cond, code, label) { if (cond) SLX_FAIL_GOTO(code, label); }
+#define SLX_FAIL_MAP_ENUM() { assert(false); SLX_FAIL_RET(ErrorCode::MapEnumFailed, -1); }
+#define SLX_FAIL_MAP_ENUM_RET(ret) { assert(false); SLX_FAIL_RET(ErrorCode::MapEnumFailed, ret); }
 
 #endif

@@ -1,90 +1,61 @@
-﻿using System.Diagnostics;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Saladim.Salix;
 
-public partial class Window
+public partial class Window : IDisposable
 {
+    private IWindowImpl? impl;
+    internal IWindowImpl Impl { get { EnsureState(); return impl; } }
+
     private bool isClosed = false;
 
-    private Size size;
-    private Point position;
     private readonly KeyboardState keyboardState;
     private readonly MouseState mouseState;
 
-    private IntPtr nativeHandle;
-
-    internal IntPtr NativeHandle { get { EnsureState(); return nativeHandle; } }
-
-    /// <summary>Whether this window is closed, will be <see langword="true"/> when the window is closed or disposed.</summary>
+    /// <summary>Indicates whether this window is closed or disposed.</summary>
     public bool IsClosed => isClosed;
-
-    /// <summary>The <see cref="Salix.Game"/> instance this window belongs to.</summary>
-    public Game Game { get; private set; }
 
     public unsafe string Title
     {
-        get
-        {
-            EnsureState();
-            int len = Interop.SLX_GetWindowTitle(nativeHandle, null);
-            if (len < 0) throw new FrameworkException(SR.FailedToGetWindowTitle);
-            byte[] chars = ByteArrayPool.Shared.Rent(len * sizeof(char));
-            string str;
-            try
-            {
-                fixed (byte* pchar = chars)
-                {
-                    _ = Interop.SLX_GetWindowTitle(nativeHandle, (char*)pchar);
-                    str = new string((char*)pchar, 0, len);
-                }
-            }
-            finally
-            {
-                ByteArrayPool.Shared.Return(chars);
-            }
-            return str;
-        }
+        get { EnsureState(); return impl.Title; }
         set
         {
             EnsureState();
             ThrowHelper.ThrowIfNull(value);
-            fixed (char* str = value)
-                Interop.SLX_SetWindowTitle(nativeHandle, str);
+            impl.Title = value;
         }
     }
 
-    /// <summary>The X coord of this window.</summary>
-    public int X { get => position.X; set => Position = new(value, Y); }
+    /// <summary>The x position of this window.</summary>
+    public int X { get => Position.X; set => Position = new(value, Y); }
 
-    /// <summary>The Y coord of this window.</summary>
-    public int Y { get => position.Y; set => Position = new(X, value); }
+    /// <summary>The y position of this window.</summary>
+    public int Y { get => Position.Y; set => Position = new(X, value); }
 
-    /// <summary>The Width of this window.</summary>
-    public int Width { get => size.Width; set => Size = new(value, Height); }
+    /// <summary>The width of this window.</summary>
+    public int Width { get => Size.Width; set => Size = new(value, Height); }
 
-    /// <summary>The Height of this window.</summary>
-    public int Height { get => size.Height; set => Size = new(Width, value); }
+    /// <summary>The height of this window.</summary>
+    public int Height { get => Size.Height; set => Size = new(Width, value); }
 
-    /// <summary>The Position of this window on the screen.</summary>
+    /// <summary>The position of this window on the screen.</summary>
     public Point Position
     {
-        get { EnsureState(); return position; }
-        set { EnsureState(); Interop.SLX_SetWindowPos(nativeHandle, value.X, value.Y); }
+        get { EnsureState(); return impl.Position; }
+        set { EnsureState(); impl.Position = value; }
     }
 
-    /// <summary>The Size of this window.</summary>
+    /// <summary>The size of this window.</summary>
     public Size Size
     {
-        get { EnsureState(); return size; }
+        get { EnsureState(); return impl.Size; }
         set
         {
             EnsureState();
             if (value.Width < 1 || value.Height < 1)
                 throw new ArgumentOutOfRangeException(nameof(value), SR.InvalidWindowSize);
-            Interop.SLX_SetWindowSize(nativeHandle, value.Width, value.Height);
+            impl.Size = value;
         }
     }
 
@@ -108,57 +79,16 @@ public partial class Window
     public event Action<Window>? PreviewSwapBuffer;
 
     /// <summary>Construct a window.</summary>
-    internal unsafe Window(Game game, int width, int height, string title)
+    public Window(Platform platform, WindowConfig config)
     {
-        ThrowHelper.ThrowIfNull(game);
-        if (width < 1) throw new ArgumentOutOfRangeException(nameof(width), SR.InvalidWindowSize);
-        if (height < 1) throw new ArgumentOutOfRangeException(nameof(height), SR.InvalidWindowSize);
-        ThrowHelper.ThrowIfNull(title);
+        ThrowHelper.ThrowIfNull(platform);
+        ThrowHelper.ThrowIfNull(config);
+        config.Verify();
 
-        Game = game;
+        impl = platform.CreateWindowImpl(config.Width, config.Height, config.Title);
+
         keyboardState = new();
         mouseState = new();
-
-        IntPtr winHandle;
-        fixed (char* ptitle = title)
-        {
-            winHandle = Interop.SLX_CreateWindow(width, height, ptitle, (IntPtr)GCHandle.Alloc(this, GCHandleType.Weak));
-            if (winHandle == IntPtr.Zero)
-                throw new FrameworkException(SR.FailedToCreateWindow, Interop.SLX_GetError());
-        }
-        nativeHandle = winHandle;
-    }
-
-    public void Show()
-    {
-        EnsureState();
-        Interop.SLX_ShowWindow(nativeHandle);
-    }
-
-    public void Hide()
-    {
-        EnsureState();
-        Interop.SLX_HideWindow(nativeHandle);
-    }
-
-    public void Close()
-    {
-        EnsureState();
-        Game.InvokeDeferred(() =>
-        {
-            if (nativeHandle == IntPtr.Zero) return;
-            Interop.SLX_DestroyWindow(nativeHandle);
-            isClosed = true;
-            nativeHandle = IntPtr.Zero;
-            OnClosed();
-        });
-    }
-
-    internal void SwapBuffers()
-    {
-        EnsureState();
-        PreviewSwapBuffer?.Invoke(this);
-        Interop.SLX_SwapBuffers(nativeHandle);
     }
 
     internal void Update()
@@ -168,39 +98,68 @@ public partial class Window
         mouseState.Update();
     }
 
-    /// <summary>Called when the window closed.</summary>
-    public virtual void OnClosed()
+    internal void PollEvents()
+    {
+        EnsureState();
+        impl.PollEvents(this);
+    }
+
+    public void Show()
+    {
+        EnsureState();
+        impl.Show();
+    }
+
+    public void Hide()
+    {
+        EnsureState();
+        impl.Hide();
+    }
+
+    public void Close()
+    {
+        EnsureState();
+        impl.Close();
+        impl.Dispose();
+        isClosed = true;
+        impl = null;
+        OnClosed();
+    }
+
+    internal void SwapBuffers()
+    {
+        EnsureState();
+        PreviewSwapBuffer?.Invoke(this);
+        impl.SwapBuffers();
+    }
+
+    /// <summary>Called when the window is closed. This is happened <strong>after</strong> the disposing.</summary>
+    protected internal virtual void OnClosed()
         => Closed?.Invoke(this);
 
-    /// <summary>Called when the user requests a closing. (for example, click the close button)</summary>
+    /// <summary>Called when the user requests a closing. (For example click the close button)</summary>
     /// <returns><see langword="false"/> to reject the closing.</returns>
-    public virtual bool OnClosing()
+    protected internal virtual bool OnClosing()
         => true;
 
     /// <summary>Called when the window moved.</summary>
-    public virtual void OnMoved(int x, int y)
-    {
-        position = new(x, y);
-        Moved?.Invoke(this, x, y);
-    }
+    protected internal virtual void OnMoved(int x, int y)
+        => Moved?.Invoke(this, x, y);
 
     /// <summary>Called when the window resized.</summary>
-    public virtual void OnResized(int width, int height)
-    {
-        size = new(width, height);
-        Resized?.Invoke(this, width, height);
-    }
+    protected internal virtual void OnResized(int width, int height)
+        => Resized?.Invoke(this, width, height);
 
     /// <summary>Called when a key pressed.</summary>
-    public virtual void OnKeyPressed(Key key)
+    protected internal virtual void OnKeyPressed(Key key)
         => KeyboardState.SetTrue(key);
 
     /// <summary>Called when a key released.</summary>
-    public virtual void OnKeyReleased(Key key)
+    protected internal virtual void OnKeyReleased(Key key)
         => KeyboardState.SetFalse(key);
 
     /// <summary>Called when the window lost focus.</summary>
-    public virtual void OnLostFocus()
+    protected internal virtual void OnLostFocus()
     {
         KeyboardState.Clear();
         MouseState.Clear();
@@ -208,21 +167,31 @@ public partial class Window
     }
 
     /// <summary>Called when the window got focus.</summary>
-    public virtual void OnGotFocus()
+    protected internal virtual void OnGotFocus()
         => GotFocus?.Invoke(this);
 
-    public virtual void OnMouseButtonPressed(int x, int y, MouseButton button)
+    protected internal virtual void OnMouseButtonPressed(int x, int y, MouseButton button)
         => MouseState.SetTrue(1 << (int)button);
 
-    public virtual void OnMouseButtonReleased(int x, int y, MouseButton button)
+    protected internal virtual void OnMouseButtonReleased(int x, int y, MouseButton button)
         => MouseState.SetFalse(1 << (int)button);
 
-    public virtual void OnMouseMoved(int x, int y)
+    protected internal virtual void OnMouseMoved(int x, int y)
         => MouseState.SetPosition(new(x, y));
 
-    public virtual void OnMouseWheelMoved(float delta)
+    protected internal virtual void OnMouseWheelMoved(float delta)
         => MouseState.AddWheelDelta(delta);
 
+    [MemberNotNull(nameof(impl))]
     private void EnsureState()
-        => ThrowHelper.ThrowIfDisposed(nativeHandle == IntPtr.Zero, this);
+        => ThrowHelper.ThrowIfDisposed(impl is null, this);
+
+#pragma warning disable CA1816
+    public virtual void Dispose()
+    {
+        if (impl is null) return;
+        impl.Dispose();
+        impl = null;
+    }
+#pragma warning restore CA1816
 }

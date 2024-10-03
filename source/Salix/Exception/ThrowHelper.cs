@@ -29,6 +29,12 @@ internal static class ThrowHelper
         if (argument is null) throw new ArgumentNullException(paramName);
     }
 
+    /// <summary>Throws <see cref="ArgumentNullException"/> when <paramref name="argument"/> is empty.</summary>
+    public static unsafe void ThrowIfNull<T>(ReadOnlySpan<T> argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    {
+        if (argument.IsEmpty) throw new ArgumentNullException(paramName);
+    }
+
     /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="condition"/> is true.</summary>
     public static void ThrowIfInvalid([DoesNotReturnIf(true)] bool condition, string message)
     {

@@ -21,12 +21,14 @@ internal static class SR
     public static readonly string BufferIsNotIndexed = "This buffer is not indexed.";
     public static readonly string UnmatchedShaderParamOwner = "Unmatched shader of ShaderParameter.";
     public static readonly string ImageDataIsNull = "Image data is null.";
-    public static readonly string VerticesDataIsNull = "Vertices or indices data is null";
+    public static readonly string VerticesDataIsNull = "Vertices data is null";
+    public static readonly string IndicesDataIsNull = "Indices data is null";
     public static readonly string UnknownWindowEventType = "Unknown window event type {0}.";
     public static readonly string ResourceLoadFailed = "Resource type of {0} load failed. {1}";
     public static readonly string InvalidWindowSize = "Invalid window size.";
-    public static readonly string FailedToAttachRenderContext = "Failed to attach RenderContext.";
-    public static readonly string ThrowOnOK = "Attempt to throw FrameworkException on ErrorCode OK, if this is not expected please report this bug.";
+    public static readonly string ThrowOnOK = "Attempt to throw FrameworkException on ErrorCode OK.";
     public static readonly string FailedToGetWindowTitle = "Failed to get the title of the window.";
     public static readonly string ShaderParamNotFound = "Shader parameter '{0}' does not exist.";
+    public static readonly string FrameworkExceptionMessage = "Internal framework error. {0}";
+    public static readonly string EnumOutOfRange = "Enum value is out of range.";
 }

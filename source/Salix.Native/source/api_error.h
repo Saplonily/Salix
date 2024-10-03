@@ -5,6 +5,7 @@
 #include "error.h"
 #include "common.h"
 
-SLX_API error_code SLX_CALLCONV SLX_GetError();
+SLX_API ErrorCode SLX_CALLCONV SLX_GetError();
+SLX_API int32_t SLX_CALLCONV SLX_GetPlatformError();
 
 #endif

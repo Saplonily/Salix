@@ -1,4 +1,6 @@
-﻿#if NETSTANDARD2_0
+﻿// TODO use something like FEATURE_MATHF, FEATURE_NULLANALYZE etc.
+
+#if NETSTANDARD2_0
 
 namespace System
 {
@@ -53,6 +55,17 @@ namespace System.Runtime.CompilerServices
     {
         public CallerArgumentExpressionAttribute(string parameterName) => ParameterName = parameterName;
         public string ParameterName { get; }
+    }
+}
+
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    internal sealed class MemberNotNullAttribute : Attribute
+    {
+        public MemberNotNullAttribute(string member) => Members = new[] { member };
+        public MemberNotNullAttribute(params string[] members) => Members = members;
+        public string[] Members { get; }
     }
 }
 

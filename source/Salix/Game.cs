@@ -4,10 +4,6 @@ namespace Saladim.Salix;
 
 public class Game
 {
-    public const int DefaultWindowWidth = 1280;
-    public const int DefaultWindowHeight = 720;
-    public const string DefaultWindowTitle = nameof(Salix);
-
     private readonly Platform platform;
     private int ticks;
     private int laggedFrames;
@@ -15,10 +11,14 @@ public class Game
     private bool deferredInvoking;
     private readonly List<Action> deferredActions;
     private readonly Stopwatch stopwatch;
+    private const int RunningSlowlyLaggedFrames = 16;
 
     public RenderContext RenderContext { get; private set; }
+
     public Window Window { get; private set; }
+
     public Platform Platform => platform;
+
     public ResourceLoader ResourceLoader { get; private set; }
 
     /// <summary>Indicates whether the game is lagging
@@ -70,17 +70,16 @@ public class Game
     public KeyboardState KeyboardState => Window.KeyboardState;
     public MouseState MouseState => Window.MouseState;
 
-    public Game()
+    public Game(Platform platform, Window? window = null)
     {
+        this.platform = platform;
         deferredActions = new();
-        platform = new Platform();
-        platform.Initialize();
         ticks = 0;
         stopwatch = new();
         TargetFps = 60d;
         FrameTime = 1d / 60d;
-        Window = new Window(this, DefaultWindowWidth, DefaultWindowHeight, DefaultWindowTitle);
-        RenderContext = new RenderContext();
+        Window = window ?? new Window(platform, new());
+        RenderContext = new RenderContext(platform);
         RenderContext.AttachToWindow(Window);
         ResourceLoader = new(this);
     }
@@ -184,8 +183,8 @@ public class Game
                 long times = (current - target) / frameTimeUsec + 1;
                 target += times * frameTimeUsec;
                 laggedFrames += 1;
-                if (laggedFrames > 16)
-                    laggedFrames = 16;
+                if (laggedFrames > RunningSlowlyLaggedFrames)
+                    laggedFrames = RunningSlowlyLaggedFrames;
             }
             else
             {

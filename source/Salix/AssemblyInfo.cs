@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
 [assembly: CLSCompliant(true)]
-[assembly: InternalsVisibleTo("Salix.EC")]
+[assembly: InternalsVisibleTo("Salix.Windows")]
 [assembly: InternalsVisibleTo("Salix.UnitTest")]

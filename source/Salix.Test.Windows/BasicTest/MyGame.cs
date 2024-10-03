@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Saladim.Salix.Windows;
 
 namespace Saladim.Salix.Tests.BasicTest;
 
@@ -9,7 +10,7 @@ public class MyGame : Game
     private SpriteShader myShader;
     private Texture2D tex;
 
-    public MyGame()
+    public MyGame() : base(new WindowsPlatform())
     {
         res = new(ResourceLoader);
 
@@ -38,6 +39,5 @@ public class MyGame : Game
     {
         if (Ticks % 10 == 0)
             Window.Title = $"Salix.Test.Windows | Fps: {Fps} | FrameTime: {FrameTimeF:F2} | DrawCall: {LastDrawCalls}";
-
     }
 }

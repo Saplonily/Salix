@@ -9,7 +9,7 @@ public class Program
     public static void Main()
     {
 #if DEBUG
-        BasicEC.MyGame game = new();
+        BasicTest.MyGame game = new();
         game.Run();
 #else
         try

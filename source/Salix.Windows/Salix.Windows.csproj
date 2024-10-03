@@ -1,30 +1,44 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MsdTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>$(RootNamespace).Windows</RootNamespace>
+    <TargetFrameworks>$(SlxTargetFrameworks)</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SLX_WINDOWS</DefineConstants>
   </PropertyGroup>
 
-  <!--Any other ways to simplify these?-->
+  <ItemGroup>
+    <ProjectReference Include="..\Salix\Salix.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <None Include="..\Salix.Native\bin\win-x64\slx.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackagePath>runtimes\win-x64\native</PackagePath>
       <Pack>true</Pack>
-      <!--<Visible>false</Visible>-->
+      <Visible>false</Visible>
     </None>
 
     <None Include="..\Salix.Native\bin\win-x32\slx.dll">
       <PackagePath>runtimes\win-x32\native</PackagePath>
       <Pack>true</Pack>
-      <!--<Visible>false</Visible>-->
+      <Visible>false</Visible>
     </None>
   </ItemGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="..\Salix\Salix.csproj" />
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    <None Update="Interops.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Interops.cs</LastGenOutput>
+    </None>
+    <Compile Update="Interops.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Interops.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
-
-
+  
 </Project>
